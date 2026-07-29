@@ -747,21 +747,26 @@
             const buffer = evt.target.result;
             let rows = [];
 
-            if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
+if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
                 let rawText = '';
                 try {
                     rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
                 } catch (err) {
                     rawText = new TextDecoder('euc-kr').decode(buffer);
                 }
-                
                 const lines = rawText.split('\n');
+                
+                // ★ 이 줄을 추가하면 역순으로 들어오는 현상을 바로잡을 수 있습니다.
+                // 만약 이 줄을 추가했는데도 반대로 들어온다면 `.reverse()`를 지우시면 됩니다.
+                // lines.reverse(); 
+
                 rows = lines.map(line => {
                     if (line.includes('\t')) return line.split('\t');
                     if (line.includes(',')) return line.split(',');
                     return [line];
                 });
             } else {
+...
                 const data = new Uint8Array(buffer);
                 const workbook = XLSX.read(data, { type: 'array' });
                 rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
