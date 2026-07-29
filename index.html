@@ -230,12 +230,11 @@
                 <div class="control-group" style="margin-bottom: 8px;">
                     <select id="presetUrlSelect" style="flex: 2;">
                         <option value="">기본 파일 선택...</option>
-                        <!-- value 안에 본인의 깃허브 Raw URL을 넣어주세요 -->
-                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EB%B0%B0%ED%84%B0%EB%A6%AC%EA%B0%80%20%EC%97%86%EC%96%B4.txt">배터리가 얼마 없어</option>
+                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EB%B0%B0%ED%84%B0%EB%A6%AC%EA%B0%80%20%EC%97%86%EC%96%B4.txt">배터리가 없어</option>
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%95%94%EA%B8%B0%EC%B1%8C%EB%A6%B0%EC%A7%80.txt">암기챌린지</option>
-                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%BA%94%EC%9E%89%EA%B8%80%EB%A6%AC%EC%8B%9C.txt">캔잉글리시</option>
-                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/10%EB%85%84%EC%9D%98%20%EC%98%81%EC%96%B4%EB%B0%A9%EC%86%A1%20%ED%9A%8C%ED%99%94%ED%91%9C%ED%98%84%209400.txt">영어방송9400</option>
-                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%98%81%ED%99%94%20%EC%8B%9C%EB%86%89%EC%8B%9C%EC%8A%A4.txt">영화 시놉시스</option>
+                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%BA%94%EC%9E%89%EA%B8%80%EB%A6%AC%EC%8B%9C.txt">캔잉글시</option>
+                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/10%EB%85%84%EC%9D%98%20%EC%98%81%EC%96%B4%EB%B0%A9%EC%86%A1%20%ED%9A%8C%ED%99%94%ED%91%9C%ED%98%84%209400.txt">10년의 영어방송 회화표현 9400</option>
+                        <option value="여기에_5번_Raw_URL을_입력하세요">기본 단어장 5</option>
                     </select>
                     <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="loadFromPresetUrl()">내려받기</button>
                 </div>
@@ -747,26 +746,21 @@
             const buffer = evt.target.result;
             let rows = [];
 
-if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
+            if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
                 let rawText = '';
                 try {
                     rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
                 } catch (err) {
                     rawText = new TextDecoder('euc-kr').decode(buffer);
                 }
-                const lines = rawText.split('\n');
                 
-                // ★ 이 줄을 추가하면 역순으로 들어오는 현상을 바로잡을 수 있습니다.
-                // 만약 이 줄을 추가했는데도 반대로 들어온다면 `.reverse()`를 지우시면 됩니다.
-                // lines.reverse(); 
-
+                const lines = rawText.split('\n');
                 rows = lines.map(line => {
                     if (line.includes('\t')) return line.split('\t');
                     if (line.includes(',')) return line.split(',');
                     return [line];
                 });
             } else {
-...
                 const data = new Uint8Array(buffer);
                 const workbook = XLSX.read(data, { type: 'array' });
                 rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
@@ -805,24 +799,29 @@ if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
         document.getElementById('pasteArea').value = '';
     }
 
-    // ★ 5개의 미리 지정된 깃허브 URL을 불러오는 함수 ★
+    // ★ 깃허브 URL 불러올 때 파일명을 자동으로 추출하여 슬롯 이름으로 지정하는 함수 ★
     async function loadFromPresetUrl() {
         const selectElement = document.getElementById('presetUrlSelect');
         const urlInput = selectElement.value;
-        const presetName = selectElement.options[selectElement.selectedIndex].text;
         
-        if (!urlInput || urlInput === "") return alert('기본 등록 파일을 선택해주세요.');
+        if (!urlInput || urlInput === "" || urlInput.includes("여기에")) {
+            return alert('유효한 기본 등록 파일을 선택해주세요.');
+        }
         
-        // URL에서 파일명 추출 (확장자 유추)
-        let fileName = urlInput.split('/').pop() || presetName;
-        if (!fileName.includes('.')) fileName += '.txt';
+        // URL에서 파일명 추출 (예: %EB%B0%B0...txt -> 디코딩하여 깨끗한 파일명으로 변환)
+        let rawFileName = urlInput.split('/').pop().split('?')[0] || '단어장';
+        try {
+            rawFileName = decodeURIComponent(rawFileName);
+        } catch(e) {}
+        
+        let cleanFileName = rawFileName.replace(/\.[^/.]+$/, ""); // 확장자 제거
 
         try {
             const response = await fetch(urlInput);
-            if (!response.ok) throw new Error("파일을 불러오는데 실패했습니다.");
+            if (!response.ok) throw new Error(`파일을 불러오지 못했습니다. (상태 코드: ${response.status})`);
             
             const buffer = await response.arrayBuffer();
-            const ext = fileName.split('.').pop().toLowerCase();
+            const ext = rawFileName.split('.').pop().toLowerCase();
             let rows = [];
 
             if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
@@ -844,9 +843,9 @@ if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
                 rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             }
 
-            // 슬롯 이름을 선택한 드롭다운의 텍스트로 지정
-            await handleParsedRows(rows, presetName);
-            selectElement.selectedIndex = 0; // 선택 초기화
+            // 추출한 깃허브 파일명을 슬롯 이름으로 전달
+            await handleParsedRows(rows, cleanFileName);
+            selectElement.selectedIndex = 0;
         } catch (error) {
             alert("데이터 로드 오류: " + error.message);
         }
