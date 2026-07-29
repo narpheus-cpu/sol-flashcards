@@ -113,12 +113,17 @@
         .badge-mid { background: #dee2e6; color: #212529; }
         .badge-max { background: #ffffff; color: #212529; }
 
-        /* Quiz UI */
-        .quiz-container { display: flex; flex-direction: column; height: 100%; align-items: center; justify-content: flex-start; overflow-y: auto; padding-bottom: 20px;}
+        /* Quiz UI (레이아웃 밀림 방지 수정됨) */
+        .quiz-container { 
+            display: flex; flex-direction: column; 
+            height: 100%; max-height: calc(100vh - 130px); /* 화면을 벗어나지 않게 제한 */
+            align-items: center; justify-content: space-between; /* 카드와 버튼 간격을 유연하게 배분 */
+            padding-bottom: 10px; overflow: hidden;
+        }
         
         .quiz-header-row {
             display: flex; align-items: center; justify-content: space-between;
-            width: 100%; max-width: 360px; margin-bottom: 16px;
+            width: 100%; max-width: 360px; margin-bottom: 12px; flex-shrink: 0;
         }
         .btn-icon { 
             background: var(--primary); border-radius: 8px; width: 40px; height: 40px; 
@@ -128,14 +133,17 @@
         .btn-icon span { filter: grayscale(100%) brightness(0) invert(100%); }
         .status-bar { font-size: 14px; color: var(--primary); font-weight: 800; flex: 1; text-align: center; }
 
-        /* 카드 영역 */
+        /* 카드 영역 (스크롤 가능하게 수정됨) */
         .swipe-card {
-            background: var(--card-bg); width: 100%; max-width: 360px; min-height: 240px;
+            background: var(--card-bg); width: 100%; max-width: 360px; 
+            flex: 1; /* 가용 공간을 차지하되 */
+            max-height: 55vh; /* 화면의 55%를 넘지 않음 */
+            overflow-y: auto; /* 문장이 길면 카드 내부에서 스크롤됨 */
             border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 24px; position: relative; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
-            text-align: center; margin-bottom: 16px; border: 1px solid var(--border);
-            user-select: none; touch-action: none; 
+            text-align: center; margin-bottom: 12px; border: 1px solid var(--border);
+            user-select: none; touch-action: pan-y; /* 수직 네이티브 스크롤 허용 */
         }
         .quiz-target { font-size: 24px; font-weight: 800; margin-bottom: 16px; word-break: keep-all; line-height: 1.4; color: var(--primary); }
         
@@ -169,13 +177,14 @@
         .edit-card {
             background: #ffffff; border: 1px solid var(--border); border-radius: 8px;
             padding: 16px; width: 100%; max-width: 360px; margin-bottom: 16px; display: none; text-align: left;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.03);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.03); flex-shrink: 0;
         }
         .edit-card-title { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
 
-        /* [이전] [AI+] [다음] 버튼 라인 */
+        /* [이전] [AI+] [다음] 버튼 라인 (고정됨) */
         .nav-btn-row {
-            display: flex; width: 100%; max-width: 360px; gap: 10px; align-items: center; justify-content: space-between; margin-top: 4px;
+            display: flex; width: 100%; max-width: 360px; gap: 10px; align-items: center; justify-content: space-between; 
+            margin-top: 4px; flex-shrink: 0; /* 밀려나거나 찌그러지지 않도록 고정 */
         }
         .btn-nav-small {
             background: #ffffff; color: var(--primary); border: 1px solid var(--border); border-radius: 8px;
@@ -234,7 +243,7 @@
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%95%94%EA%B8%B0%EC%B1%8C%EB%A6%B0%EC%A7%80.txt">암기챌린지</option>
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%BA%94%EC%9E%89%EA%B8%80%EB%A6%AC%EC%8B%9C.txt">캔잉글리시</option>
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/10%EB%85%84%EC%9D%98%20%EC%98%81%EC%96%B4%EB%B0%A9%EC%86%A1%20%ED%9A%8C%ED%99%94%ED%91%9C%ED%98%84%209400.txt">10년의 영어방송 회화표현 9400</option>
-                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%98%81%ED%99%94%20%EC%8B%9C%EB%86%89%EC%8B%9C%EC%8A%A4.txt">영화 시놉시스</option>
+                        <option value="여기에_5번_Raw_URL을_입력하세요">기본 단어장 5</option>
                     </select>
                     <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="loadFromPresetUrl()">내려받기</button>
                 </div>
@@ -799,7 +808,7 @@
         document.getElementById('pasteArea').value = '';
     }
 
-    // ★ 깃허브 URL 불러올 때 파일명을 자동으로 추출하여 슬롯 이름으로 지정하는 함수 ★
+    // ★ 깃허브 URL 불러올 때 파일명을 자동으로 추출하여 슬롯 이름으로 지정 및 역순 방지 ★
     async function loadFromPresetUrl() {
         const selectElement = document.getElementById('presetUrlSelect');
         const urlInput = selectElement.value;
@@ -832,6 +841,7 @@
                     rawText = new TextDecoder('euc-kr').decode(buffer);
                 }
                 const lines = rawText.split('\n');
+                
                 rows = lines.map(line => {
                     if (line.includes('\t')) return line.split('\t');
                     if (line.includes(',')) return line.split(',');
@@ -843,7 +853,7 @@
                 rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             }
 
-            // 추출한 깃허브 파일명을 슬롯 이름으로 전달
+            // 추출한 깃허브 파일명을 슬롯 이름으로 자동 적용
             await handleParsedRows(rows, cleanFileName);
             selectElement.selectedIndex = 0;
         } catch (error) {
@@ -1103,7 +1113,6 @@
     });
 
     card.addEventListener('touchmove', e => {
-        e.preventDefault(); 
         let dx = e.touches[0].clientX - startX;
         let dy = e.touches[0].clientY - startY;
 
@@ -1113,6 +1122,14 @@
                 swipeAxis = Math.abs(dx) > Math.abs(dy) ? 'X' : 'Y';
             }
         }
+
+        // 수직 스크롤(Y축 스와이프) 중이고 카드 내부에 스크롤 영역이 남아있다면 
+        // preventDefault를 호출하지 않아 네이티브 스크롤을 허용함
+        if (isSwipeLocked && swipeAxis === 'Y' && card.scrollHeight > card.clientHeight) {
+            return;
+        }
+        
+        e.preventDefault(); 
 
         if (isSwipeLocked) {
             if (swipeAxis === 'X') {
