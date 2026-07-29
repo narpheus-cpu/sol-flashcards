@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>모바일 슬롯 퀴즈 앱</title>
+    <!-- 엑셀/텍스트 파싱 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f1f3f5;
+            --card-bg: #ffffff;
+            --primary: #000000;
+            --accent: #868e96;
+            --text-main: #212529;
+            --text-sub: #868e96;
+            --border: #dee2e6;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; padding: 0; color: var(--text-main);
+            display: flex; flex-direction: column; height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        header {
+            background: var(--card-bg); padding: 16px; font-size: 18px; font-weight: 800;
+            text-align: center; border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 10;
+            display: flex; align-items: center; justify-content: center; position: relative;
+            color: var(--primary); height: 56px;
+        }
+        .back-btn {
+            position: absolute; left: 16px; font-size: 24px; color: var(--primary);
+            cursor: pointer; display: none; padding: 0 8px; font-weight: bold;
+        }
+        
+        #appHeader {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70vw;
+        }
+
+        /* Main Content Area */
+        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 110px; }
+
+        /* Bottom Navigation */
+        nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 50px;
+            background: var(--primary);
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 10; padding-bottom: env(safe-area-inset-bottom);
+        }
+        nav button {
+            flex: 1; height: 100%; border: none; background: transparent;
+            font-size: 15px; font-weight: 700; color: #868e96;
+            display: flex; align-items: center; justify-content: center;
+        }
+        nav button.active { color: #ffffff; font-weight: 800; }
+        
+        /* Views */
+        .view-content { display: none; min-height: 100%; }
+        .view-content.active { display: block; }
+
+        /* Buttons & Inputs */
+        button { border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.15s; border: none; }
+        button:active { transform: scale(0.96); }
+        .btn-primary { background: var(--primary); color: #fff; padding: 14px; font-size: 15px; width: 100%; }
+        .btn-outline { background: #fff; color: var(--primary); border: 1px solid var(--primary); padding: 12px; font-size: 14px; width: 100%; }
+        .btn-danger-outline { background: #fff; color: var(--primary); border: 1px solid #495057; padding: 12px; font-size: 14px; width: 100%; }
+        
+        input, textarea, select {
+            width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; outline: none; background: #fff; transition: border 0.2s; color: var(--primary);
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary); }
+
+        /* Compact Slot Rows (Spreadsheet Style) */
+        .slot-list-container {
+            background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);
+            margin-bottom: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .slot-row-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 16px; border-bottom: 1px solid var(--border);
+            cursor: pointer; transition: background 0.1s;
+        }
+        .slot-row-item:last-child { border-bottom: none; }
+        .slot-row-item:active { background: #f8f9fa; }
+        .slot-title { font-size: 15px; font-weight: 700; color: var(--primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .slot-info { font-size: 13px; color: var(--text-sub); font-weight: 600; text-align: right; min-width: 80px; }
+        .slot-arrow { font-size: 14px; color: #adb5bd; margin-left: 12px; }
+        
+        /* Management UI */
+        .control-group { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .control-group select, .control-group input { flex: 1; min-width: 100px; padding: 12px; }
+
+        .list-card { background: var(--card-bg); border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--border); }
+        .word-item { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; }
+        .word-item:active { background: #f1f3f5; }
+        .word-item:last-child { border-bottom: none; }
+        .word-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;}
+        .word-main { font-weight: 700; font-size: 15px; flex: 1; word-break: break-all; color: var(--primary); }
+        .word-sub { color: var(--text-sub); font-size: 14px; flex: 1; word-break: break-all; font-weight: 500; }
+        
+        /* 모노톤 뱃지 */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; white-space: nowrap; height: fit-content; border: 1px solid var(--border); }
+        .badge-minus { background: #212529; color: #fff; border-color: #212529; }
+        .badge-zero { background: #495057; color: #fff; border-color: #495057; }
+        .badge-low { background: #868e96; color: #fff; border-color: #868e96; }
+        .badge-mid { background: #dee2e6; color: #212529; }
+        .badge-max { background: #ffffff; color: #212529; }
+
+        /* Quiz UI */
+        .quiz-container { display: flex; flex-direction: column; height: 100%; align-items: center; justify-content: flex-start; overflow-y: auto; padding-bottom: 20px;}
+        
+        .quiz-header-row {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; max-width: 360px; margin-bottom: 16px;
+        }
+        .btn-icon { 
+            background: var(--primary); border-radius: 8px; width: 40px; height: 40px; 
+            display: flex; align-items: center; justify-content: center; font-size: 18px; 
+            border: none; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+        }
+        .btn-icon span { filter: grayscale(100%) brightness(0) invert(100%); }
+        .status-bar { font-size: 14px; color: var(--primary); font-weight: 800; flex: 1; text-align: center; }
+
+        /* 카드 영역 */
+        .swipe-card {
+            background: var(--card-bg); width: 100%; max-width: 360px; min-height: 240px;
+            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 24px; position: relative; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+            text-align: center; margin-bottom: 16px; border: 1px solid var(--border);
+            user-select: none; touch-action: none; 
+        }
+        .quiz-target { font-size: 24px; font-weight: 800; margin-bottom: 16px; word-break: keep-all; line-height: 1.4; color: var(--primary); }
+        
+        /* 스와이프 인디케이터 */
+        .swipe-indicator { position: absolute; font-weight: 800; font-size: 14px; opacity: 0; transition: opacity 0.2s; padding: 6px 12px; border-radius: 6px; background: #e9ecef; border: 1px solid var(--border); color: var(--primary); }
+        .swipe-left-text { left: 16px; top: 16px; } 
+        .swipe-up-text { bottom: 16px; left: 50%; transform: translateX(-50%); } 
+
+        /* 마스킹 기능 */
+        .quiz-meaning { 
+            font-size: 22px; color: var(--text-sub); font-weight: 800;
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; line-height: 1.3;
+        }
+        .quiz-mask-word {
+            display: inline-grid; place-items: center; cursor: pointer;
+            padding: 4px 8px; margin: 0; border-radius: 6px;
+            transition: background-color 0.2s; user-select: none; -webkit-user-select: none;
+        }
+        .quiz-mask-word > span { grid-area: 1 / 1; transition: opacity 0.15s ease-in-out; font-size: 22px; }
+        .mask-layer { color: #ced4da; opacity: 1; }
+        .real-layer { color: var(--primary); opacity: 0; font-weight: 800; }
+        
+        @media (hover: hover) {
+            .quiz-mask-word:hover .mask-layer { opacity: 0; }
+            .quiz-mask-word:hover .real-layer { opacity: 1; }
+        }
+        .quiz-mask-word.revealed .mask-layer { opacity: 0; }
+        .quiz-mask-word.revealed .real-layer { opacity: 1; }
+
+        /* 실시간 수정 영역 */
+        .edit-card {
+            background: #ffffff; border: 1px solid var(--border); border-radius: 8px;
+            padding: 16px; width: 100%; max-width: 360px; margin-bottom: 16px; display: none; text-align: left;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.03);
+        }
+        .edit-card-title { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
+
+        /* [이전] [AI+] [다음] 버튼 라인 */
+        .nav-btn-row {
+            display: flex; width: 100%; max-width: 360px; gap: 10px; align-items: center; justify-content: space-between; margin-top: 4px;
+        }
+        .btn-nav-small {
+            background: #ffffff; color: var(--primary); border: 1px solid var(--border); border-radius: 8px;
+            font-size: 13px; padding: 12px 14px; font-weight: 800; box-shadow: 0 1px 3px rgba(0,0,0,0.02); flex: 1;
+        }
+        .btn-ai-mono {
+            background: #ffffff; color: var(--primary); border-radius: 8px; 
+            font-size: 14px; font-weight: 800; padding: 12px 0; border: 1px solid var(--border); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02); flex: 2;
+        }
+
+        /* O X 잔상 효과 (고스트) */
+        .ghost-image {
+            position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+            font-size: 150px; opacity: 0; pointer-events: none; z-index: 9999; 
+            transition: all 0.5s ease-out; font-family: sans-serif;
+        }
+
+        /* 모달 오버레이 */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0, 0, 0, 0.6); z-index: 100; align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .modal-card { background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .modal-card h3 { margin-top: 0; font-size: 16px; color: var(--primary); margin-bottom: 16px; font-weight: 800; }
+    </style>
+</head>
+<body>
+
+    <!-- O / X 잔상 엘리먼트 -->
+    <div id="ghostImage" class="ghost-image"></div>
+
+    <header>
+        <div id="btnBack" class="back-btn" onclick="goBack()">❮</div>
+        <span id="appHeader">목록 관리</span>
+    </header>
+
+    <main>
+        <!-- 1-1. 슬롯 목록 뷰 -->
+        <div id="viewSlotList" class="view-content active">
+            <!-- 스프레드시트 흉내낸 컴팩트 리스트 컨테이너 -->
+            <div id="slotCardsContainer" class="slot-list-container"></div>
+        </div>
+
+        <!-- 1-2. 단어 관리 뷰 -->
+        <div id="viewWordManage" class="view-content">
+            <div class="list-card">
+                <h3 style="margin-top:0; font-size:15px;">데이터 추가</h3>
+                <div class="control-group">
+                    <button class="btn-outline" onclick="document.getElementById('fileInput').click()">파일 불러오기 (엑셀, 텍스트 등)</button>
+                    <!-- accept 속성을 제거하여 모든 텍스트 기반 파일을 자유롭게 선택 가능 -->
+                    <input type="file" id="fileInput" style="display:none;" onchange="importExcel(event)">
+                </div>
+                <textarea id="pasteArea" rows="2" placeholder="탭 또는 콤마로 구분된 텍스트 붙여넣기"></textarea>
+                <button class="btn-primary" style="margin-top:8px;" onclick="importText()">텍스트 등록</button>
+            </div>
+
+            <div class="list-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="margin:0; font-size:15px;">단어 목록 (<span id="totalCount">0</span>)</h3>
+                    <button class="btn-outline" style="width:auto; padding:6px 12px; font-size:12px;" onclick="clearCurrentSlot()">슬롯 비우기</button>
+                </div>
+                <div class="control-group">
+                    <input type="text" id="searchInput" placeholder="🔍 검색어 입력..." oninput="renderWordList()">
+                    <select id="filterSelect" onchange="renderWordList()">
+                        <option value="ALL">전체 보기</option>
+                        <option value="MINUS">마이너스 단어</option>
+                        <option value="ZERO">0점 단어</option>
+                        <option value="LOW">1-2점 단어</option>
+                        <option value="MID">3-4점 단어</option>
+                        <option value="MAX">만점 단어</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <select id="sortSelect" onchange="renderWordList()">
+                        <option value="CREATED_DESC">입력 역순 (최신순)</option>
+                        <option value="CREATED_ASC">입력 순</option>
+                        <option value="LAST_QUERIED_DESC">최근 출제된 순</option>
+                        <option value="LAST_QUERIED_ASC">오래 출제 안 된 순</option>
+                        <option value="ABC_ASC">알파벳 순 (A-Z)</option>
+                        <option value="ABC_DESC">알파벳 역순 (Z-A)</option>
+                        <option value="SCORE_ASC">점수 낮은 순</option>
+                        <option value="SCORE_DESC">점수 높은 순</option>
+                    </select>
+                </div>
+                <div id="wordListArea"></div>
+            </div>
+        </div>
+
+        <!-- 2-1. 퀴즈 슬롯 뷰 -->
+        <div id="viewQuizSlotList" class="view-content">
+            <div id="quizSlotCardsContainer" class="slot-list-container"></div>
+        </div>
+
+        <!-- 2-2. 퀴즈 설정 뷰 -->
+        <div id="viewQuizSetup" class="view-content">
+            <div class="list-card" style="padding: 24px;">
+                <h2 style="text-align: center; margin-top:0; margin-bottom:20px; color:var(--primary); font-size:18px;">라운드 퀴즈 설정</h2>
+                <div class="control-group" style="flex-direction: column;">
+                    <label style="font-size: 13px; font-weight:700; color:var(--text-main);">대상 그룹</label>
+                    <select id="quizGroupFilter">
+                        <option value="ALL">전체 문장</option>
+                        <option value="MINUS">마이너스 문장만</option>
+                        <option value="ZERO">0점 문장만</option>
+                        <option value="LOW">1-2점 문장만</option>
+                        <option value="MID">3-4점 문장만</option>
+                        <option value="MAX">만점 문장만</option>
+                    </select>
+                </div>
+                <div class="control-group" style="flex-direction: column;">
+                    <label style="font-size: 13px; font-weight:700; color:var(--text-main);">출제 세분화 조건</label>
+                    <select id="quizSubCondition">
+                        <option value="CONTINUE" selected>최근 카드에 이어서 (기본)</option>
+                        <option value="RANDOM">무작위</option>
+                        <option value="OLDEST_QUERIED">오래 안 푼 단어 우선</option>
+                        <option value="RECENT_WRONG">최근 틀린 단어 (직전 오답)</option>
+                        <option value="RECENT_24H">최근 24시간 이내 학습</option>
+                    </select>
+                </div>
+                <div class="control-group" style="flex-direction: column;">
+                    <label style="font-size: 13px; font-weight:700; color:var(--text-main);">출제 문장 수</label>
+                    <input type="number" id="quizCount" value="10" min="1" max="100">
+                </div>
+                <button class="btn-primary" style="margin-top: 16px; font-size: 15px;" onclick="startQuiz()">퀴즈 시작하기</button>
+            </div>
+        </div>
+
+        <!-- 2-3. 퀴즈 플레이 뷰 -->
+        <div id="viewQuizPlay" class="view-content">
+            <div class="quiz-container">
+                
+                <!-- [듣기] [점수] [수정] 한 줄 배치 -->
+                <div class="quiz-header-row">
+                    <button class="btn-icon" onclick="playTTS()" title="발음 듣기"><span>🔊</span></button>
+                    <div class="status-bar" id="quizStatus">1 / 10 (현재 0점)</div>
+                    <button class="btn-icon" onclick="toggleEditCard()" title="수정하기"><span>✏️</span></button>
+                </div>
+                
+                <div class="swipe-card" id="quizCard">
+                    <!-- 스와이프 인디케이터 -->
+                    <div class="swipe-indicator swipe-left-text" id="indO">⭕ 맞음!</div>
+                    <div class="swipe-indicator swipe-up-text" id="indX">❌ 틀림!</div>
+                    
+                    <div class="quiz-target" id="qKorean">로딩중...</div>
+                    <div class="quiz-meaning" id="qEnglishMasked"></div>
+                </div>
+
+                <!-- 실시간 단어 수정 박스 -->
+                <div class="edit-card" id="quizEditCard">
+                    <div class="edit-card-title">현재 데이터 수정</div>
+                    <input type="text" id="editKoreanInput" placeholder="한국어 원문" style="margin-bottom:8px;">
+                    <input type="text" id="editEnglishInput" placeholder="영어 번역문" style="margin-bottom:12px;">
+                    <button class="btn-primary" style="padding:10px; font-size:13px;" onclick="saveLiveEdit()">즉시 저장</button>
+                </div>
+
+                <!-- [이전] [AI+] [다음] 한 줄 배치 -->
+                <div class="nav-btn-row">
+                    <button class="btn-nav-small" onclick="prevQuestion()">이전</button>
+                    <button class="btn-ai-mono" onclick="copyStudyFurther()">[AI+]</button>
+                    <button class="btn-nav-small" onclick="skipQuestion()">다음</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2-4. 퀴즈 결과 뷰 -->
+        <div id="viewQuizResult" class="view-content">
+            <div class="quiz-container" style="justify-content: center;">
+                <h2 style="color:var(--primary); margin-bottom: 0;">라운드 종료!</h2>
+                <div style="font-size: 56px; font-weight: 900; margin: 16px 0; color:var(--primary);" id="resultScore">100%</div>
+                <div id="resultDetails" style="font-size: 14px; color: var(--text-sub); margin-bottom: 32px; text-align:center; line-height: 1.5; font-weight:600;"></div>
+                <button class="btn-primary" style="padding: 14px; font-size: 15px; max-width: 300px;" onclick="goBackToQuizSetup()">새 라운드 설정하기</button>
+            </div>
+        </div>
+    </main>
+
+    <nav>
+        <button id="navBtnList" class="active" onclick="switchMainTab('List')">목록 관리</button>
+        <button id="navBtnQuiz" onclick="switchMainTab('Quiz')">라운드 퀴즈</button>
+    </nav>
+
+    <!-- 단어 수정/삭제 모달 -->
+    <div id="wordEditModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3>단어 수정</h3>
+            <input type="hidden" id="modalWordId">
+            <input type="text" id="modalWordKor" placeholder="한국어 원문" style="margin-bottom: 12px;">
+            <input type="text" id="modalWordEng" placeholder="영어 번역문" style="margin-bottom: 24px;">
+            <div style="display:flex; gap:8px;">
+                <button class="btn-outline" onclick="closeWordModal()">취소</button>
+                <button class="btn-danger-outline" onclick="deleteWordFromModal()">삭제</button>
+                <button class="btn-primary" style="flex: 1.5;" onclick="saveWordFromModal()">저장</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    /* ==========================================
+       1. IndexedDB 설정 및 데이터베이스 접근 (유지)
+       ========================================== */
+    const DB_NAME = 'AllInOneMobileDB_Final2'; // 기존 DB 식별자 유지
+    const STORE_NAME = 'words';
+    let db;
+    let currentSlotId = 1;
+    let currentMode = 'List';
+
+    let slotNames = JSON.parse(localStorage.getItem('mobileQuizSlotNames_Final2')) || ["슬롯 1", "슬롯 2", "슬롯 3", "슬롯 4", "슬롯 5"];
+    function saveSlotNames() { localStorage.setItem('mobileQuizSlotNames_Final2', JSON.stringify(slotNames)); }
+
+    function initDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (e) => {
+                let tempDb = e.target.result;
+                if (!tempDb.objectStoreNames.contains(STORE_NAME)) {
+                    const store = tempDb.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    store.createIndex('slotId', 'slotId', { unique: false });
+                }
+            };
+            request.onsuccess = (e) => { db = e.target.result; resolve(); };
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function addWords(wordsArray) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            wordsArray.forEach(w => store.put(w));
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function updateWord(wordObj) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).put(wordObj);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function getWordById(id) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const request = tx.objectStore(STORE_NAME).get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function deleteWord(id) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).delete(id);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function getWordsBySlot(slotId) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const index = tx.objectStore(STORE_NAME).index('slotId');
+            const request = index.getAll(IDBKeyRange.only(slotId));
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function getSlotStats() {
+        const stats = [0,0,0,0,0];
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const request = tx.objectStore(STORE_NAME).getAll();
+            request.onsuccess = () => {
+                request.result.forEach(w => { if(w.slotId >= 1 && w.slotId <= 5) stats[w.slotId - 1]++; });
+                resolve(stats);
+            };
+        });
+    }
+
+    async function clearCurrentSlot() {
+        if(!confirm(`[${slotNames[currentSlotId-1]}] 슬롯의 모든 데이터를 삭제하시겠습니까?`)) return;
+        const words = await getWordsBySlot(currentSlotId);
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            words.forEach(w => store.delete(w.id));
+            tx.oncomplete = () => { 
+                slotNames[currentSlotId-1] = `슬롯 ${currentSlotId}`; 
+                saveSlotNames();
+                document.getElementById('appHeader').innerText = slotNames[currentSlotId-1];
+                renderWordList(); 
+                resolve(); 
+            };
+        });
+    }
+
+    /* ==========================================
+       2. 화면 이동 및 공통 UI
+       ========================================== */
+    function switchMainTab(tab) {
+        currentMode = tab;
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+        document.getElementById('navBtn' + tab).classList.add('active');
+        
+        if (tab === 'List') {
+            showView('viewSlotList', '목록 관리', false);
+            renderSlotCards('slotCardsContainer');
+        } else {
+            showView('viewQuizSlotList', '라운드 퀴즈', false);
+            renderSlotCards('quizSlotCardsContainer');
+        }
+    }
+
+    function showView(viewId, headerText, showBack) {
+        document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        document.getElementById('appHeader').innerText = headerText;
+        document.getElementById('btnBack').style.display = showBack ? 'block' : 'none';
+    }
+
+    function goBack() {
+        if (currentMode === 'List') {
+            showView('viewSlotList', '목록 관리', false);
+            renderSlotCards('slotCardsContainer');
+        } else {
+            showView('viewQuizSlotList', '라운드 퀴즈', false);
+            renderSlotCards('quizSlotCardsContainer');
+        }
+    }
+
+    function goBackToQuizSetup() {
+        showView('viewQuizSetup', `[${slotNames[currentSlotId-1]}] 퀴즈 설정`, true);
+    }
+
+    async function selectSlot(slotId) {
+        currentSlotId = slotId;
+        const sName = slotNames[slotId-1];
+        if (currentMode === 'List') {
+            showView('viewWordManage', sName, true);
+            renderWordList();
+        } else {
+            const words = await getWordsBySlot(currentSlotId);
+            if(words.length === 0) return alert('해당 슬롯에 단어가 없습니다. 목록 관리에서 먼저 추가해주세요.');
+            showView('viewQuizSetup', `${sName} 퀴즈 설정`, true);
+        }
+    }
+
+    async function renderSlotCards(containerId) {
+        const stats = await getSlotStats();
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+            container.innerHTML += `
+                <div class="slot-row-item" onclick="selectSlot(${i})">
+                    <div class="slot-title">${slotNames[i-1]}</div>
+                    <div class="slot-info">${stats[i-1]}개 데이터</div>
+                    <div class="slot-arrow">❯</div>
+                </div>
+            `;
+        }
+    }
+
+    /* ==========================================
+       3. 단어장 관리 (등록, 필터, 정렬, 최적화 렌더링)
+       ========================================== */
+    function getScoreBadge(score) {
+        if(score < 0) return `<span class="badge badge-minus">${score}점</span>`;
+        if(score === 0) return `<span class="badge badge-zero">${score}점</span>`;
+        if(score <= 2) return `<span class="badge badge-low">${score}점</span>`;
+        if(score <= 4) return `<span class="badge badge-mid">${score}점</span>`;
+        return `<span class="badge badge-max">${score}점</span>`;
+    }
+
+    function getGroup(word) {
+        const s = word.score || 0;
+        if(s < 0) return 'MINUS';
+        if(s === 0) return 'ZERO';
+        if(s <= 2) return 'LOW';
+        if(s <= 4) return 'MID';
+        return 'MAX';
+    }
+
+    async function renderWordList() {
+        let words = await getWordsBySlot(currentSlotId);
+        const filter = document.getElementById('filterSelect').value;
+        const sortOrder = document.getElementById('sortSelect').value;
+        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+
+        words = words.filter(w => {
+            const matchGroup = filter === 'ALL' || getGroup(w) === filter;
+            const matchSearch = !searchQuery || 
+                String(w.korean || "").toLowerCase().includes(searchQuery) || 
+                String(w.english || "").toLowerCase().includes(searchQuery);
+            return matchGroup && matchSearch;
+        });
+
+        words.sort((a, b) => {
+            switch(sortOrder) {
+                case 'CREATED_DESC': return (b.createdAt || 0) - (a.createdAt || 0);
+                case 'CREATED_ASC': return (a.createdAt || 0) - (b.createdAt || 0);
+                case 'LAST_QUERIED_DESC': return (b.lastQueriedAt || 0) - (a.lastQueriedAt || 0);
+                case 'LAST_QUERIED_ASC': return (a.lastQueriedAt || 0) - (b.lastQueriedAt || 0);
+                case 'ABC_ASC': return String(a.english || "").localeCompare(String(b.english || ""), 'en', { sensitivity: 'base' });
+                case 'ABC_DESC': return String(b.english || "").localeCompare(String(a.english || ""), 'en', { sensitivity: 'base' });
+                case 'SCORE_ASC': return (a.score || 0) - (b.score || 0);
+                case 'SCORE_DESC': return (b.score || 0) - (a.score || 0);
+                default: return 0;
+            }
+        });
+
+        document.getElementById('totalCount').innerText = words.length;
+        
+        const container = document.getElementById('wordListArea');
+        const displayWords = words.slice(0, 100); 
+        
+        let htmlStr = '';
+        displayWords.forEach(w => {
+            const safeKor = String(w.korean || "").replace(/</g, "&lt;");
+            const safeEng = String(w.english || "").replace(/</g, "&lt;");
+            htmlStr += `
+                <div class="word-item" onclick="openWordModal('${w.id}')">
+                    <div class="word-row">
+                        <span class="word-main">${safeKor}</span>
+                        ${getScoreBadge(w.score || 0)}
+                    </div>
+                    <div class="word-sub">${safeEng}</div>
+                </div>
+            `;
+        });
+        
+        if(words.length > 100) {
+            htmlStr += `<div style="text-align:center; padding:16px; color:var(--text-sub); font-size:12px; font-weight:600;">...외 ${words.length - 100}개 (최근 100개만 표시)</div>`;
+        }
+        container.innerHTML = htmlStr;
+    }
+
+    async function openWordModal(id) {
+        const w = await getWordById(id);
+        if(!w) return;
+        document.getElementById('modalWordId').value = w.id;
+        document.getElementById('modalWordKor').value = w.korean;
+        document.getElementById('modalWordEng').value = w.english;
+        document.getElementById('wordEditModal').style.display = 'flex';
+    }
+
+    function closeWordModal() {
+        document.getElementById('wordEditModal').style.display = 'none';
+    }
+
+    async function saveWordFromModal() {
+        const id = document.getElementById('modalWordId').value;
+        const kor = document.getElementById('modalWordKor').value.trim();
+        const eng = document.getElementById('modalWordEng').value.trim();
+        if(!kor || !eng) return alert('한국어와 영어를 모두 입력하세요.');
+
+        const w = await getWordById(id);
+        if(w) {
+            w.korean = kor;
+            w.english = eng;
+            await updateWord(w);
+            closeWordModal();
+            renderWordList();
+        }
+    }
+
+    async function deleteWordFromModal() {
+        if(!confirm('정말 이 데이터를 삭제하시겠습니까?')) return;
+        const id = document.getElementById('modalWordId').value;
+        await deleteWord(id);
+        closeWordModal();
+        renderWordList();
+    }
+
+    // 1열 영어, 2열 한국어 구조 자동 감지 및 스마트 파싱 핵심 로직
+    async function handleParsedRows(rows, titleString) {
+        let parseMode = "STANDARD"; 
+        
+        let validSamples = 0;
+        let engKorCount = 0;
+        
+        // 상위 5개 행을 분석하여 형식 유추
+        for(let r of rows) {
+            if(!r || r.length < 2) continue;
+            if(validSamples >= 5) break;
+            
+            let col0 = String(r[0] || "").trim();
+            let col1 = String(r[1] || "").trim();
+            
+            let col0HasEng = /[a-zA-Z]/.test(col0);
+            let col0HasKor = /[가-힣]/.test(col0);
+            let col1HasKor = /[가-힣]/.test(col1);
+            
+            // 1열이 순수 영문(한국어 없음)이고 2열이 한국어인 경우
+            if (col0HasEng && !col0HasKor && col1HasKor) {
+                engKorCount++;
+            }
+            validSamples++;
+        }
+        
+        if (validSamples > 0 && engKorCount >= validSamples / 2) {
+            parseMode = "REVERSE_ENG_KOR";
+        }
+
+        let parsed = [];
+        let now = Date.now();
+
+        rows.forEach((r, idx) => {
+            if(!r || r.length < 2) return;
+            
+            let kor = "", eng = "";
+            if (parseMode === "REVERSE_ENG_KOR") {
+                eng = String(r[0] || "").trim();
+                kor = String(r[1] || "").trim();
+            } else {
+                kor = String(r.length >= 3 ? r[1] : r[0] || "").trim();
+                eng = String(r.length >= 3 ? r[2] : r[1] || "").trim();
+            }
+            
+            if(kor && eng) {
+                parsed.push({ 
+                    id: `${currentSlotId}_${now + idx}`, slotId: currentSlotId, 
+                    createdAt: now + idx, korean: kor, english: eng, 
+                    score: 0, lastQueriedAt: 0, lastResult: null
+                });
+            }
+        });
+
+        if(parsed.length > 0) {
+            slotNames[currentSlotId-1] = titleString;
+            saveSlotNames();
+            document.getElementById('appHeader').innerText = slotNames[currentSlotId-1];
+
+            await addWords(parsed);
+            alert(`[${slotNames[currentSlotId-1]}] 슬롯에 ${parsed.length}개의 데이터가 추가되었습니다.`);
+            renderWordList();
+        } else {
+            alert('유효한 데이터가 없습니다. 열이 올바르게 구분되었는지 확인하세요.');
+        }
+    }
+
+async function importExcel(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        
+        const fileName = file.name;
+        slotNames[currentSlotId-1] = fileName.replace(/\.[^/.]+$/, "");
+        saveSlotNames();
+        document.getElementById('appHeader').innerText = slotNames[currentSlotId-1];
+
+        const ext = fileName.split('.').pop().toLowerCase();
+        const reader = new FileReader();
+
+        reader.onload = async function(evt) {
+            const buffer = evt.target.result;
+            let rows = [];
+
+            // 확장자가 텍스트 형식일 경우 인코딩(UTF-8 -> EUC-KR) 자동 감지 적용
+            if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
+                let rawText = '';
+                try {
+                    // 먼저 표준 UTF-8로 엄격하게 읽기 시도
+                    rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+                } catch (err) {
+                    // 실패할 경우 윈도우 기본 한글 인코딩(EUC-KR)으로 디코딩
+                    rawText = new TextDecoder('euc-kr').decode(buffer);
+                }
+                
+                const lines = rawText.split('\n');
+                rows = lines.map(line => {
+                    if (line.includes('\t')) return line.split('\t');
+                    if (line.includes(',')) return line.split(',');
+                    return [line];
+                });
+            } else {
+                // 엑셀 파일(.xlsx, .xls)인 경우 기존 XLSX 라이브러리 사용
+                const data = new Uint8Array(buffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+            }
+            
+            await handleParsedRows(rows, slotNames[currentSlotId-1]);
+            e.target.value = '';
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    async function importText() {
+        const text = document.getElementById('pasteArea').value.trim();
+        if(!text) return alert('텍스트를 입력해주세요.');
+        
+        const lines = text.split('\n');
+        let rows = lines.map(line => {
+            if (line.includes('\t')) return line.split('\t');
+            if (line.includes(',')) return line.split(',');
+            return [line];
+        });
+        
+        let firstWord = "";
+        for(let r of rows) {
+            if(r.length >= 2) {
+                let maybeKor = r.find(col => /[가-힣]/.test(col));
+                if(maybeKor) { firstWord = maybeKor.trim(); break; }
+            }
+        }
+        if(!firstWord && rows[0] && rows[0].length > 0) firstWord = rows[0][0].trim();
+        
+        let titleString = firstWord.length > 15 ? firstWord.substring(0, 15) + '...' : firstWord;
+        if(!titleString) titleString = `슬롯 ${currentSlotId}`;
+
+        await handleParsedRows(rows, titleString);
+        document.getElementById('pasteArea').value = '';
+    }
+
+    /* ==========================================
+       4. 라운드 퀴즈 (출제 및 진행)
+       ========================================== */
+    let quizQueue = [];
+    let currentQIdx = 0;
+    let roundCorrectCount = 0;
+
+    async function startQuiz() {
+        let words = await getWordsBySlot(currentSlotId);
+        if(words.length === 0) return;
+
+        const groupFilter = document.getElementById('quizGroupFilter').value;
+        const subCondition = document.getElementById('quizSubCondition').value;
+        const requestedCount = parseInt(document.getElementById('quizCount').value) || 10;
+
+        let targetWords = words.filter(w => groupFilter === 'ALL' || getGroup(w) === groupFilter);
+        if (targetWords.length === 0) return alert("선택한 그룹에 해당하는 데이터가 없습니다.");
+
+        const now = Date.now();
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+        let isQueueReady = false;
+
+        switch (subCondition) {
+            case 'CONTINUE':
+                targetWords.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                let maxQueryTime = -1;
+                let lastQueriedIndex = -1;
+                for(let i=0; i<targetWords.length; i++) {
+                    if((targetWords[i].lastQueriedAt || 0) > maxQueryTime) {
+                        maxQueryTime = targetWords[i].lastQueriedAt || 0;
+                        lastQueriedIndex = i;
+                    }
+                }
+                
+                let startIndex = 0;
+                if (lastQueriedIndex !== -1 && maxQueryTime > 0) {
+                    startIndex = (lastQueriedIndex + 1) % targetWords.length;
+                }
+                
+                quizQueue = [];
+                for(let i=0; i<requestedCount; i++) {
+                    if(quizQueue.length >= targetWords.length) break;
+                    quizQueue.push(targetWords[(startIndex + i) % targetWords.length]);
+                }
+                isQueueReady = true;
+                break;
+            case 'OLDEST_QUERIED':
+                targetWords.sort((a, b) => (a.lastQueriedAt || 0) - (b.lastQueriedAt || 0));
+                break;
+            case 'RECENT_WRONG':
+                const wrongWords = targetWords.filter(w => w.lastResult === false);
+                if (wrongWords.length > 0) targetWords = wrongWords;
+                else alert("최근에 틀린 데이터가 없어 전체 대상에서 무작위 출제합니다.");
+                targetWords.sort(() => Math.random() - 0.5);
+                break;
+            case 'RECENT_24H':
+                const recentWords = targetWords.filter(w => w.lastQueriedAt && (now - w.lastQueriedAt <= ONE_DAY_MS));
+                if (recentWords.length > 0) targetWords = recentWords;
+                else alert("최근 24시간 이내 학습한 데이터가 없어 전체 대상에서 무작위 출제합니다.");
+                targetWords.sort(() => Math.random() - 0.5);
+                break;
+            case 'RANDOM':
+            default:
+                targetWords.sort(() => Math.random() - 0.5);
+                break;
+        }
+
+        if (!isQueueReady) {
+            quizQueue = targetWords.slice(0, Math.min(requestedCount, targetWords.length));
+        }
+        
+        currentQIdx = 0;
+        roundCorrectCount = 0;
+
+        showView('viewQuizPlay', `[${slotNames[currentSlotId-1]}] 진행 중`, true);
+        setupMediaSession();
+        renderCurrentQuestion();
+    }
+
+    function renderMaskedText(container, textToProcess) {
+        container.innerHTML = '';
+        if (!textToProcess) return;
+
+        const wordsArr = textToProcess.trim().split(/\s+/);
+        wordsArr.forEach((word) => {
+            if (!word) return;
+            const pureWordCheck = word.replace(/^[()\[\]{}<>?.,!\~\/\-]+|[()\[\]{}<>?.,!\~\/\-]+$/g, '');
+            const isUnmasked = (pureWordCheck === '') || (/^(?:and|or)$/i.test(pureWordCheck));
+
+            if (isUnmasked) {
+                const plainSpan = document.createElement('span');
+                plainSpan.style.margin = '0 2px'; plainSpan.style.color = 'var(--text-main)';
+                plainSpan.innerText = word;
+                container.appendChild(plainSpan);
+            } else {
+                const span = document.createElement('span');
+                span.className = 'quiz-mask-word';
+                span.onclick = function(e) {
+                    e.stopPropagation();
+                    this.classList.toggle('revealed');
+                };
+                
+                const maskSpan = document.createElement('span');
+                maskSpan.className = 'mask-layer';
+                maskSpan.innerText = word.replace(/[a-zA-Z0-9\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/g, '■');
+                
+                const realSpan = document.createElement('span');
+                realSpan.className = 'real-layer';
+                realSpan.innerText = word;
+                
+                span.appendChild(maskSpan);
+                span.appendChild(realSpan);
+                container.appendChild(span);
+            }
+        });
+    }
+
+    function renderCurrentQuestion() {
+        if(currentQIdx >= quizQueue.length) { endQuiz(); return; }
+        
+        const q = quizQueue[currentQIdx];
+        document.getElementById('quizStatus').innerText = `${currentQIdx + 1} / ${quizQueue.length} (현재: ${q.score || 0}점)`;
+        document.getElementById('qKorean').innerText = q.korean;
+        
+        renderMaskedText(document.getElementById('qEnglishMasked'), q.english);
+        
+        document.getElementById('editKoreanInput').value = q.korean;
+        document.getElementById('editEnglishInput').value = q.english;
+        document.getElementById('quizEditCard').style.display = 'none';
+
+        document.getElementById('quizCard').style.transform = 'translate(0px, 0px) rotate(0deg)';
+        document.getElementById('quizCard').style.opacity = '1';
+        
+        updateMediaSessionMetadata(q.korean, q.english);
+    }
+
+    function prevQuestion() {
+        if (currentQIdx > 0) {
+            currentQIdx--;
+            renderCurrentQuestion();
+        } else {
+            alert('첫번째 문제입니다.');
+        }
+    }
+
+    function skipQuestion() {
+        if (currentQIdx < quizQueue.length - 1) {
+            currentQIdx++;
+            renderCurrentQuestion();
+        } else {
+            endQuiz();
+        }
+    }
+
+    function toggleEditCard() {
+        const card = document.getElementById('quizEditCard');
+        if (card.style.display === 'block') {
+            card.style.display = 'none';
+        } else {
+            const q = quizQueue[currentQIdx];
+            document.getElementById('editKoreanInput').value = q.korean;
+            document.getElementById('editEnglishInput').value = q.english;
+            card.style.display = 'block';
+        }
+    }
+
+    async function saveLiveEdit() {
+        const q = quizQueue[currentQIdx];
+        const newKor = document.getElementById('editKoreanInput').value.trim();
+        const newEng = document.getElementById('editEnglishInput').value.trim();
+
+        if(!newKor || !newEng) return alert('한국어와 영어를 모두 입력하세요.');
+
+        q.korean = newKor;
+        q.english = newEng;
+        await updateWord(q);
+        
+        document.getElementById('quizEditCard').style.display = 'none';
+        renderCurrentQuestion();
+    }
+
+    function showGhostImage(type) {
+        const ghost = document.getElementById('ghostImage');
+        ghost.innerText = (type === 'O') ? '⭕' : '❌';
+        
+        ghost.style.transition = 'none';
+        ghost.style.opacity = '0.7';
+        ghost.style.transform = 'translate(-50%, -50%) scale(0.6)';
+        
+        void ghost.offsetWidth;
+
+        ghost.style.transition = 'all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        ghost.style.opacity = '0';
+        ghost.style.transform = 'translate(-50%, -50%) scale(1.6)';
+    }
+
+    async function handleQuizResult(isCorrect, directionAxis) {
+        const q = quizQueue[currentQIdx];
+        q.lastQueriedAt = Date.now();
+        q.lastResult = isCorrect;
+        
+        if(isCorrect) {
+            q.score = Math.min(5, (q.score || 0) + 1);
+            roundCorrectCount++;
+        } else {
+            q.score = (q.score || 0) - 1;
+        }
+        await updateWord(q);
+
+        const card = document.getElementById('quizCard');
+        
+        let tx = 0, ty = 0, rot = 0;
+        if (directionAxis === 'X' || isCorrect) {
+            tx = -window.innerWidth;
+            rot = -20;
+        } else if (directionAxis === 'Y' || !isCorrect) {
+            ty = window.innerHeight; // 아래로 떨어짐
+            rot = 10;
+        }
+        
+        card.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg)`;
+        card.style.opacity = '0';
+        
+        setTimeout(() => {
+            currentQIdx++;
+            renderCurrentQuestion();
+        }, 200);
+    }
+
+    function endQuiz() {
+        showView('viewQuizResult', '퀴즈 결과', true);
+        const rate = Math.round((roundCorrectCount / quizQueue.length) * 100);
+        document.getElementById('resultScore').innerText = `${rate}%`;
+        document.getElementById('resultDetails').innerText = `총 ${quizQueue.length}문제 중\n${roundCorrectCount}문제를 맞춰 점수가 반영되었습니다.`;
+        navigator.mediaSession.metadata = null;
+    }
+
+    const card = document.getElementById('quizCard');
+    let startX = 0, startY = 0;
+    let currentX = 0, currentY = 0;
+    let swipeAxis = ''; 
+    let isSwipeLocked = false;
+    
+    card.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        card.style.transition = 'none';
+        isSwipeLocked = false;
+        swipeAxis = '';
+    });
+
+    card.addEventListener('touchmove', e => {
+        e.preventDefault(); 
+        let dx = e.touches[0].clientX - startX;
+        let dy = e.touches[0].clientY - startY;
+
+        if (!isSwipeLocked) {
+            if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                isSwipeLocked = true;
+                swipeAxis = Math.abs(dx) > Math.abs(dy) ? 'X' : 'Y';
+            }
+        }
+
+        if (isSwipeLocked) {
+            if (swipeAxis === 'X') {
+                currentX = dx;
+                card.style.transform = `translate(${currentX}px, 0px) rotate(${currentX * 0.05}deg)`;
+                
+                if (currentX < -40) {
+                    document.getElementById('indO').style.opacity = '1';
+                } else {
+                    document.getElementById('indO').style.opacity = '0';
+                }
+                document.getElementById('indX').style.opacity = '0';
+
+            } else if (swipeAxis === 'Y') {
+                currentY = dy;
+                // 위->아래 (양수 Y)
+                card.style.transform = `translate(0px, ${currentY}px) rotate(${currentY * 0.02}deg)`;
+                
+                if (currentY > 40) {
+                    document.getElementById('indX').style.opacity = '1';
+                } else {
+                    document.getElementById('indX').style.opacity = '0';
+                }
+                document.getElementById('indO').style.opacity = '0';
+            }
+        }
+    });
+
+    card.addEventListener('touchend', e => {
+        card.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease';
+        document.getElementById('indO').style.opacity = '0';
+        document.getElementById('indX').style.opacity = '0';
+
+        if (swipeAxis === 'X' && currentX < -80) {
+            showGhostImage('O');
+            handleQuizResult(true, 'X');
+        } 
+        else if (swipeAxis === 'Y' && currentY > 80) {
+            showGhostImage('X');
+            handleQuizResult(false, 'Y');
+        } 
+        else {
+            card.style.transform = 'translate(0px, 0px) rotate(0deg)';
+        }
+        
+        currentX = 0; currentY = 0; swipeAxis = ''; isSwipeLocked = false;
+    });
+
+    /* ==========================================
+       5. 부가 기능 (TTS, MediaSession, 클립보드)
+       ========================================== */
+    function playTTS() {
+        const q = quizQueue[currentQIdx];
+        if(!q) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(q.english);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function setupMediaSession() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', playTTS);
+            navigator.mediaSession.setActionHandler('pause', () => window.speechSynthesis.cancel());
+            navigator.mediaSession.setActionHandler('nexttrack', () => skipQuestion());
+            navigator.mediaSession.setActionHandler('previoustrack', () => prevQuestion());
+        }
+    }
+
+    function updateMediaSessionMetadata(kor, eng) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: kor, artist: '모바일 퀴즈 앱', album: slotNames[currentSlotId-1]
+            });
+        }
+    }
+
+function copyStudyFurther() {
+        const q = quizQueue[currentQIdx];
+        if(!q) return;
+        // 복사되는 프롬프트 문구에 요청하신 조건을 추가했습니다.
+        const promptText = `'${q.korean}(${q.english})'의 [영어 문장 패턴 분석], [유의어별 뉘앙스 차이], [비슷한 패턴 예문] 순으로 알려줘. [만약 영어표현이 오타나 문법실수 등으로 인해 어색한 경우 교정해서 설명할 것]`;
+        
+        const tempElem = document.createElement('textarea');
+        tempElem.value = promptText;
+        document.body.appendChild(tempElem);
+        tempElem.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempElem);
+        
+        alert(`📋 질문 프롬프트가 복사되었습니다!\nAI에게 붙여넣어 학습하세요.\n\n${promptText}`);
+    }
+
+    window.onload = async () => {
+        try {
+            await initDB();
+            switchMainTab('List');
+        } catch (e) {
+            alert('데이터베이스 초기화 실패: ' + e);
+        }
+    };
+</script>
+</body>
+</html>
