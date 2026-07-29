@@ -19,12 +19,14 @@
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        body { 
+        /* 브라우저 UI 변화로 인한 화면 밀림 원천 차단 */
+        html, body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
             background-color: var(--bg-color); 
             margin: 0; padding: 0; color: var(--text-main);
-            display: flex; flex-direction: column; height: 100vh;
-            overflow: hidden;
+            display: flex; flex-direction: column; 
+            height: 100%; width: 100%;
+            position: fixed; overflow: hidden; 
         }
 
         /* Top Header */
@@ -45,7 +47,7 @@
         }
 
         /* Main Content Area */
-        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 70px; }
+        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 70px; display: flex; flex-direction: column; }
 
         /* Bottom Navigation */
         nav {
@@ -62,7 +64,7 @@
         nav button.active { color: #ffffff; font-weight: 800; }
         
         /* Views */
-        .view-content { display: none; height: 100%; }
+        .view-content { display: none; flex: 1; height: 100%; min-height: 0; }
         .view-content.active { display: flex; flex-direction: column; }
 
         /* Buttons & Inputs */
@@ -115,16 +117,14 @@
         .badge-max { background: #ffffff; color: #212529; }
 
         /* ====================================
-           ✅ Quiz UI Layout 완벽 고정 영역
+           ✅ Quiz UI Layout 이중 래퍼 구조 적용
            ==================================== */
         .quiz-container { 
-            display: flex; flex-direction: column; 
-            height: calc(100vh - 140px); /* 화면 크기에서 헤더, 네비게이션 여백 제외 */
+            flex: 1; display: flex; flex-direction: column; 
             align-items: center; justify-content: space-between; 
-            overflow: hidden; 
+            overflow: hidden; width: 100%;
         }
         
-        /* 상단 상태창 (듣기, 점수, 수정) */
         .quiz-header-row {
             display: flex; align-items: center; justify-content: space-between;
             width: 100%; max-width: 360px; margin-bottom: 12px; flex-shrink: 0;
@@ -138,10 +138,10 @@
         .btn-icon span { filter: grayscale(100%) brightness(0) invert(100%); }
         .status-bar { font-size: 14px; color: var(--primary); font-weight: 800; flex: 1; text-align: center; }
 
-        /* 카드 래퍼 (min-height: 0 적용으로 레이아웃 팽창 완벽 차단) */
+        /* 카드 외곽 컨테이너 (레이아웃 팽창 완벽 차단) */
         .swipe-card-wrapper {
             flex: 1; width: 100%; max-width: 360px; 
-            min-height: 0; /* 이 속성이 핵심입니다. */
+            min-height: 0; 
             display: flex; flex-direction: column;
             overflow: hidden; margin-bottom: 12px;
             border-radius: 12px; border: 1px solid var(--border);
@@ -150,10 +150,15 @@
             position: relative; user-select: none; touch-action: pan-y; 
         }
 
-        /* 카드 내부 콘텐츠 (글이 길면 여기서만 스크롤 됨) */
+        /* 카드 스크롤 영역 */
         .swipe-card-content {
-            flex: 1; overflow-y: auto; padding: 24px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex: 1; overflow-y: auto; width: 100%;
+        }
+
+        /* 짧은 문장 중앙 정렬, 긴 문장 스크롤 여백 확보를 위한 내부 래퍼 */
+        .swipe-card-inner {
+            min-height: 100%; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; padding: 24px;
         }
 
         .quiz-target { font-size: 24px; font-weight: 800; margin-bottom: 16px; word-break: keep-all; line-height: 1.4; color: var(--primary); text-align: center; }
@@ -184,7 +189,7 @@
         .quiz-mask-word.revealed .mask-layer { opacity: 0; }
         .quiz-mask-word.revealed .real-layer { opacity: 1; }
 
-        /* 실시간 수정 영역 (수정 시 카드 영역 위를 덮도록 변경) */
+        /* 실시간 수정 영역 */
         .edit-card {
             background: #ffffff; border-radius: 8px;
             padding: 16px; width: 100%; max-width: 360px; display: none; text-align: left;
@@ -237,7 +242,6 @@
     <main>
         <!-- 1-1. 슬롯 목록 뷰 -->
         <div id="viewSlotList" class="view-content active">
-            <!-- 스프레드시트 흉내낸 컴팩트 리스트 컨테이너 -->
             <div id="slotCardsContainer" class="slot-list-container"></div>
         </div>
 
@@ -246,7 +250,6 @@
             <div class="list-card" style="flex-shrink: 0;">
                 <h3 style="margin-top:0; font-size:15px;">데이터 추가</h3>
                 
-                <!-- 기본 등록 파일 5개 선택 영역 -->
                 <div class="control-group" style="margin-bottom: 8px;">
                     <select id="presetUrlSelect" style="flex: 2;">
                         <option value="">기본 파일 선택...</option>
@@ -255,6 +258,7 @@
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%BA%94%EC%9E%89%EA%B8%80%EB%A6%AC%EC%8B%9C.txt">캔잉글리시</option>
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/10%EB%85%84%EC%9D%98%20%EC%98%81%EC%96%B4%EB%B0%A9%EC%86%A1%20%ED%9A%8C%ED%99%94%ED%91%9C%ED%98%84%209400.txt">10년의 영어방송 회화표현 9400</option>
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%98%81%ED%99%94%20%EC%8B%9C%EB%86%89%EC%8B%9C%EC%8A%A4.txt">영화 시놉시스</option>
+                        <option value="여기에_5번_Raw_URL을_입력하세요">기본 단어장 5</option>
                     </select>
                     <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="loadFromPresetUrl()">내려받기</button>
                 </div>
@@ -295,7 +299,6 @@
                         <option value="SCORE_DESC">점수 높은 순</option>
                     </select>
                 </div>
-                <!-- 단어 목록 스크롤 영역 -->
                 <div id="wordListArea" style="flex: 1; overflow-y: auto; padding-bottom: 10px;"></div>
             </div>
         </div>
@@ -349,7 +352,7 @@
                     <button class="btn-icon" onclick="toggleEditCard()" title="수정하기"><span>✏️</span></button>
                 </div>
                 
-                <!-- 수정된 카드 래퍼 영역 (유연하게 조절됨) -->
+                <!-- 이중 래퍼가 적용된 퀴즈 카드 -->
                 <div class="swipe-card-wrapper" id="quizCard">
                     <!-- 인디케이터 -->
                     <div class="swipe-indicator swipe-left-text" id="indO">⭕ 맞음!</div>
@@ -357,11 +360,13 @@
                     
                     <!-- 카드 내부 스크롤 콘텐츠 -->
                     <div class="swipe-card-content">
-                        <div class="quiz-target" id="qKorean">로딩중...</div>
-                        <div class="quiz-meaning" id="qEnglishMasked"></div>
+                        <div class="swipe-card-inner">
+                            <div class="quiz-target" id="qKorean">로딩중...</div>
+                            <div class="quiz-meaning" id="qEnglishMasked"></div>
+                        </div>
                     </div>
 
-                    <!-- 실시간 단어 수정 박스 (카드 안쪽 하단에 뜨도록 이동) -->
+                    <!-- 실시간 단어 수정 박스 -->
                     <div class="edit-card" id="quizEditCard">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
                             <span class="edit-card-title" style="margin:0;">현재 데이터 수정</span>
