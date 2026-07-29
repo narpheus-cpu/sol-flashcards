@@ -1,0 +1,734 @@
+1	배터리가 얼마 없어.	I'm low on battery.
+2	핸드폰 배터리가 나갔어.	My phone battery is dead.
+3	배터리를 충전해야 돼.	I need to charge my battery.
+4	충전기가 어디 갔지?	Where's my charger?
+5	배터리가 너무 빨리 달아.	The battery drains too quickly.
+6	콘센트가 어디 있어?	Where's the power outlet?
+7	전화 좀 받아.	Answer the phone.
+8	지금 통화 괜찮아?	Is this a good time to talk?
+9	내가 이따 전화할게.	I will call you back later.
+10	그 여자 전화번호를 땄어.	I got her number.
+11	내 전화를 왜 끊었어?	Why did you hang up on me?
+12	왜 계속 내 전화 안 받아?	Why are you ignoring my calls?
+13	핸드폰 진동으로 해 놔.	Put your phone on vibrate.
+14	무음으로 해 놨어.	I put mine on silent.
+15	꺼 버려.	Turn it off.
+16	네 벨소리 좋은데.	I like your ringtone.
+17	미안해, 나도 모르게 걸렸어.	Sorry, I butt-dialed you.
+18	너 어느 통신사 써?	What's your mobile carrier?
+19	핸드폰이 안 터지네.	I'm getting no service.
+20	자꾸 끊기네.	You're breaking up.
+21	잡음이 들려.	I'm getting static.
+22	잘 안 들려.	I'm losing you.
+23	연결 상태가 좋아.	I'm getting good reception.
+24	전화가 끊겨 버렸어.	The call got disconnected.
+25	제 핸드폰이 고장 났어요.	My phone isn't working.
+26	화면이 깨졌어요.	The screen is cracked.
+27	무상 수리 가능한가요?	Is it eligible for a free repair?
+28	스마트폰 바꿀 거야.	I'm going to get a new smartphone.
+29	보상 판매 가능한가요?	Can I trade in my old phone?
+30	2년 약정이 끝나 간다.	My two-year contract is almost over.
+31	이건 사용하기 편리해.	It's user-friendly.
+32	이건 최신 모델이야.	This is the latest model.
+33	새로운 기능이 많아.	It has many new features.
+34	비밀번호 걸어 놨어.	It's password-protected.
+35	쟤는 스마트폰에서 눈을 떼질 않아.	He's glued to his smartphone.
+36	와이파이가 안 터지네.	There's no Wi-Fi connection.
+37	너 카톡해?	Do you use KakaoTalk?
+38	나중에 문자 보낼게.	I will text you later.
+39	걔가 내 문자를 계속 씹어.	She's ignoring my text messages.
+40	그거 오타였어.	That was a typo.
+41	단체 채팅방에 날 초대해줘.	Invite me to your group chat.
+42	메신저로 그 사진 좀 보내줘.	Send me that photo via messenger.
+43	같이 사진 찍자.	Let's take a picture together.
+44	그대로 있어 봐.	Hold still.
+45	김치!	Say cheese!
+46	한 번 더 찍어줘.	Take one more shot.
+47	이게 내 인증샷이야.	Here's my proof shot.
+48	네 사진 망쳐서 미안해.	Sorry I photobombed you.
+49	나 셀카 찍고 있었어.	I was taking a selfie.
+50	셀카봉을 사용하자.	Let's use a selfie stick.
+51	흐릿하게 나왔어.	It came out blurry.
+52	초점이 안 맞았어.	It was out of focus.
+53	사진이 역광으로 찍혔어.	The photo was backlit.
+54	적목 현상이야.	There's a red-eye effect.
+55	어떻게 나왔는지 보자.	Let's see how it came out.
+56	너 사진발 잘 받는다!	You're very photogenic!
+57	넌 실물이 더 낫다.	You look better in person.
+58	이 사진 완전 굴욕이다!	This photo is so humiliating!
+59	이거 나 한 장 줘라.	I'd like a copy of this.
+60	액자에 넣자.	Let's frame it.
+61	그 음식이 입에 맞니?	Is the food to your taste?
+62	엄청 맵다.	It's super spicy.
+63	너무 싱거워.	It's too bland.
+64	내 입엔 너무 달아.	It's too sweet for my taste.
+65	새콤달콤한데.	It's sweet and sour.
+66	독특한 맛이 나.	It has a unique taste.
+67	너무 느끼해.	It's too greasy.
+68	끝맛이 좋은데.	It has a good aftertaste.
+69	맛이 진하고 풍부해.	It's rich and flavorful.
+70	달콤쌉싸름한 맛이 나네.	It has a bittersweet taste.
+71	감칠맛 난다.	It has a savory taste.
+72	난 저 향이 싫어.	I don't like that smell.
+73	밥이 질어.	The rice is mushy.
+74	김이 빠졌어.	It's gone flat.
+75	국물이 시원하다!	The broth is refreshing!
+76	국수가 불어 터졌어.	My noodles have gone soggy.
+77	쌀밥은 김이랑 잘 어울려.	Rice goes well with seaweed.
+78	한 입에 먹어.	Eat it in one bite.
+79	난 입맛이 까다로워.	I'm a picky eater.
+80	나는 대식가야.	I have a big appetite.
+81	쟤는 군것질을 너무 좋아해.	He loves snacking.
+82	난 단 것을 좋아해.	I have a sweet tooth.
+83	난 날생선은 못 먹어.	I can't eat raw fish.
+84	난 채식주의자야.	I'm a vegetarian.
+85	난 진한 커피를 좋아해.	I like strong coffee.
+86	난 블랙으로 마실게.	I will take mine black.
+87	커피가 미지근해.	The coffee is lukewarm.
+88	난 주로 녹차를 마셔.	I usually drink green tea.
+89	난 커피보다 홍차를 좋아해.	I prefer black tea to coffee.
+90	차는 내 기분을 안정시켜줘.	Tea calms my nerves.
+91	배고파 죽겠어.	I'm starving.
+92	배에서 꼬르륵 소리가 나.	My stomach is growling.
+93	피자가 당겨.	I'm craving pizza.
+94	입맛이 없어.	I've lost my appetite.
+95	뭐 좀 간단히 먹자.	Let's grab a bite to eat.
+96	외식하자.	Let's eat out.
+97	중국 음식 어때?	How about Chinese food?
+98	초밥을 포장해 가자.	Let's get some sushi to go.
+99	여기 새로 생겼어.	This place just opened.
+100	한번 가 보자.	Let's check it out.
+101	맛집 좀 찾아줘.	Find me a great restaurant.
+102	손님이 미어터지네.	This place is packed with customers.
+103	얼마나 기다려야 하나요?	How long is the wait?
+104	이 집에서 잘하는 게 뭐죠?	What's the house specialty?
+105	삼겹살 2인분 주세요.	Two servings of pork belly, please.
+106	저도 같은 걸로 주세요.	I will have the same.
+107	곱빼기로 주세요.	Make it a double size.
+108	양파는 빼주세요.	Hold the onions, please.
+109	그냥 레모네이드로 할래.	I will just have a lemonade.
+110	탄산음료 있나요?	Do you have soda?
+111	물은 셀프예요.	Water is self-serve.
+112	이건 무료로 드리는 겁니다.	It's on the house.
+113	이 쿠폰 사용할 수 있나요?	Is this coupon valid?
+114	각자 내자.	Let's go Dutch.
+115	어서 먹자.	Let's dig in.
+116	마음껏 드세요.	Please help yourself.
+117	군침 도네.	My mouth is watering.
+118	한 입만 줄래?	Can I have a bite?
+119	딱 한 모금만.	Just a sip.
+120	한 그릇 더 주세요.	Another helping, please.
+121	걔는 170cm도 안 돼.	He's not even 170 centimeters tall.
+122	걔는 1년에 10cm나 컸어.	She grew 10 centimeters in a year.
+123	많이 컸구나!	Look how much you've grown!
+124	걔는 약간 통통해.	He's a bit chubby.
+125	걔는 체격이 좋아.	He's well-built.
+126	걔는 키가 보통이고 날씬해.	She's of medium height and slim.
+127	걔는 쌍꺼풀이 있어.	She has double eyelids.
+128	걔는 보조개가 있어.	He has dimples.
+129	쟤는 왼손잡이야.	She's left-handed.
+130	걔는 외모가 호감형이야.	He has a likable look.
+131	그는 배가 나왔어.	He's got a potbelly.
+132	그 남자 복근이 끝내줘.	He's got killer abs.
+133	나 살쪘어.	I've gained weight.
+134	머리가 빠지고 있어.	I'm losing my hair.
+135	머리가 벗겨지고 있어.	My hairline is receding.
+136	흰머리가 나고 있어.	I'm going gray.
+137	눈가에 잔주름이 생겼어.	I have crow's feet.
+138	기미가 끼고 있어.	I'm getting dark spots.
+139	난 20대 후반이야.	I'm in my late twenties.
+140	내일모레면 서른이야.	I'm pushing thirty.
+141	서른이 됐어.	I've turned thirty.
+142	너 하나도 안 늙었다!	You haven't aged a bit!
+143	그는 저보다 4살 많아요.	He's four years older than me.
+144	난 소띠야.	I was born in the Year of the Ox.
+145	너 동안이다.	You have a baby face.
+146	넌 나이에 비해 젊어 보여.	You look young for your age.
+147	너 스무 살이라 해도 믿겠다.	You could pass for twenty.
+148	나랑 동갑이네.	You're my age.
+149	나이는 숫자에 불과해.	Age is just a number.
+150	나이는 못 속여.	I'm feeling my age.
+151	입을 옷이 하나도 없네.	I have nothing to wear.
+152	멋지게 차려입었네!	You're all dressed up!
+153	옷을 끝내주게 입었네.	You're dressed to kill.
+154	너 넥타이가 너무 튄다.	Your tie is too loud.
+155	난 유행하는 옷을 입어.	I wear what's in fashion.
+156	난 주로 정장을 입어.	I usually wear a suit.
+157	그 옷 너한테 잘 어울린다.	That dress looks good on you.
+158	너 분홍색이 잘 어울린다.	You look good in pink.
+159	옷 보는 안목이 있구나.	You have good taste in clothes.
+160	쟤는 옷을 잘 입어.	She's a sharp dresser.
+161	옷태가 산다.	You make the clothes look good.
+162	너니까 소화하는 거야.	Only you can pull that off.
+163	나 머리했어.	I had my hair done.
+164	넌 단발머리가 어울려.	A bob cut suits you.
+165	난 머릿결이 너무 안 좋아.	My hair is so rough.
+166	난 머리카락이 가늘어.	I have fine hair.
+167	너 머리숱 진짜 많다.	You have thick hair.
+168	머리를 빨갛게 염색했네!	You dyed your hair red!
+169	그냥 다듬어만 주세요.	Just a trim, please.
+170	전체적으로 다듬어 주세요.	Trim it all over, please.
+171	앞머리는 자르지 마세요.	Leave my bangs, please.
+172	파마하고 싶어요.	I'd like to get a perm.
+173	숱 좀 쳐 주세요.	Thin out my hair, please.
+174	두피 마사지 해주세요.	I'd like a scalp massage.
+175	나 화장했어.	I've put on some makeup.
+176	너 화장이 너무 진한데.	Your makeup is too heavy.
+177	스킨이 다 떨어졌어.	I ran out of toner.
+178	여기에 블러셔 좀 발라봐.	Apply some blush here.
+179	화장이 뜨네.	My makeup is cakey.
+180	너 스타일 좀 바꿔야겠다.	You need a makeover.
+181	어떻게 작동하는 거예요?	Can you show me how it works?
+182	그냥 둘러보는 거예요.	I'm just browsing.
+183	이게 최고급품인가요?	Is this the top of the line?
+184	장난감도 파나요?	Do you carry toys?
+185	이거 흰색으로도 있나요?	Do you have this in white as well?
+186	조금 더 보고 올게요.	I think I will look around a bit more.
+187	입어 봐도 될까요?	Can I try it on?
+188	탈의실이 어디예요?	Where's the fitting room?
+189	이걸로 66사이즈 주세요.	I'd like this in size 66.
+190	안 맞아요.	It doesn't fit.
+191	허벅지 쪽이 너무 끼네요.	It's too tight around the thighs.
+192	한 치수 큰 걸로 보여 주세요.	Show me this in the next size up.
+193	나한테 어울려?	Does it suit me?
+194	나 어때?	How do I look?
+195	이거 세탁기에 돌려도 되나요?	Is it machine washable?
+196	이거 방수되나요?	Is it waterproof?
+197	유행이 지난 것 같은데.	It seems outdated.
+198	색상이 안 어울려.	The colors don't match.
+199	나 장 보러 간다.	I'm going grocery shopping.
+200	치약이 다 떨어졌어.	We're out of toothpaste.
+201	뭐 필요한 거 있어?	Do you need anything?
+202	마침 마트 가는 길이었어.	I was just on my way to the store.
+203	재고가 있으면 좋겠네.	I hope they're in stock.
+204	편의점에 가볼게.	I will try the convenience store.
+205	시식해 볼게요.	I will try a sample.
+206	유통기한 확인해.	Check the expiration date.
+207	묶음으로 사자.	Let's buy a bundle.
+208	맥주 6개짜리 묶음 좀 가져와.	Get me a 6-pack of beer.
+209	이거 유기농이에요?	Is this organic?
+210	고기는 6번 통로에 있어요.	The meat is in aisle six.
+211	전부 얼마예요?	How much is it in total?
+212	정가는 얼마예요?	What's the regular price?
+213	공동 구매 하면 얼마예요?	How much is the group-buy price?
+214	원가는 얼마예요?	What's the cost price?
+215	할부로 결제할 거야.	I'm going to pay in installments.
+216	이거 완전 바가지잖아요!	This is a total rip-off!
+217	오늘 고기 할인해요.	Meat is on sale today.
+218	30% 할인받을 수 있어요.	You can get 30% off.
+219	할인된 가격으로 샀어.	I got it at a discounted price.
+220	충동구매 했어.	I bought it on impulse.
+221	원 플러스 원이야.	It's buy one, get one free.
+222	선착순이에요.	It's first-come, first-served.
+223	좀 깎아줄 수 있어요?	Can you give me a discount?
+224	얼마까지 깎아줄 수 있어요?	What's your best price?
+225	50달러면 살게요.	I will take it for $50.
+226	몇 개 더 덤으로 주세요.	Can you throw in a few more?
+227	3달러만 빼주세요.	Can you take three dollars off?
+228	200달러로 합시다.	Let's settle on 200 dollars.
+229	이걸로 할게요.	I will take this one.
+230	얼마 내면 되나요?	How much do I owe you?
+231	신용카드로 계산할게요.	I will charge it to my card.
+232	현금으로 낼게요.	I will pay in cash.
+233	영수증 주세요.	Can I have a receipt, please?
+234	잔돈이 부족해요.	I'm short on change.
+235	선물 포장 좀 해주세요.	I'd like it gift-wrapped, please.
+236	남은 음식 좀 싸주세요.	Can I get a doggy bag?
+237	이것 좀 교환해 주세요.	I'd like to exchange this, please.
+238	환불해 주세요.	I'd like a refund, please.
+239	상자를 이미 뜯었어요.	I've already opened the box.
+240	환불을 보장해 준대.	It comes with a money-back guarantee.
+241	오늘 날씨가 맑아.	It's clear today.
+242	날씨가 포근하네.	The weather is mild.
+243	빗방울이 떨어지네.	It's beginning to sprinkle.
+244	비가 오락가락하네.	It's raining on and off.
+245	그냥 지나가는 비야.	It's just a passing shower.
+246	바람이 잠잠해졌어.	The wind has died down.
+247	비가 억수같이 퍼붓고 있어.	It's raining cats and dogs.
+248	안개가 자욱해.	The fog is thick.
+249	태풍이 온대.	There's a typhoon coming.
+250	공기가 건조해.	The air is dry.
+251	외풍이 있어.	There's a draft.
+252	날씨가 점점 더 안 좋아지네.	The weather is getting worse.
+253	날씨가 딱이야.	The weather is perfect.
+254	종잡을 수 없는 날씨야!	The weather is so unpredictable!
+255	난 추위를 많이 타.	I get cold easily.
+256	난 땀을 많이 흘려.	I sweat a lot.
+257	날씨가 좋아질 거야.	The weather is going to clear up.
+258	이 안은 갑갑하다.	It's stuffy in here.
+259	시간이 벌써 이렇게 됐어?	Look at the time!
+260	시간이 너무 안 가네.	Time is dragging.
+261	내 손목시계는 정확해.	My watch keeps perfect time.
+262	저 뻐꾸기시계는 시간이 안 맞네.	That cuckoo clock doesn't keep good time.
+263	저 시계는 3분 빨라.	That clock is three minutes fast.
+264	시간을 착각했어.	I got the time wrong.
+265	지금 몇 시인지 알 수 있을까요?	Do you have the time?
+266	12시 정각이야.	It's twelve o'clock sharp.
+267	10시 반이야.	It's half past ten.
+268	막 6시가 넘었어.	It's just past six.
+269	8시 10분 전이야.	It's ten to eight.
+270	5시 15분 전이야.	It's a quarter to five.
+271	봄이 왔어.	Spring has sprung.
+272	난 봄을 타.	I get spring fever.
+273	꽃샘추위가 기승을 부리네.	We're having a spring cold snap.
+274	날씨가 풀렸어.	The weather has warmed up.
+275	봄기운이 완연하다.	Spring is in the air.
+276	황사 경보가 내렸어.	There's a yellow dust warning.
+277	푹푹 찐다.	It's scorching hot.
+278	더워서 못 참겠어.	The heat is unbearable.
+279	열대야 현상이네.	It's a tropical night.
+280	목말라 죽겠어.	I'm dying of thirst.
+281	후덥지근하군.	It's muggy.
+282	곰팡이 냄새가 나.	It smells musty.
+283	가을이 코앞이야.	Autumn is just around the corner.
+284	나뭇잎들이 물들고 있어.	The leaves are changing colors.
+285	우리 단풍 구경 가자.	Let's go see the autumn foliage.
+286	낙엽 쌓인 것 좀 봐.	Look at the piles of fallen leaves.
+287	가을이면 감상에 빠져.	I get sentimental in autumn.
+288	가을은 독서의 계절이야.	Autumn is the perfect season for reading.
+289	함박눈이 내리고 있어.	It's snowing big, fluffy flakes.
+290	온 세상이 하얗다.	Everything is covered in white.
+291	밤새도록 눈이 내렸나 봐.	It must have snowed all night.
+292	고드름이 얼었네.	There are icicles hanging.
+293	얼음에 미끄러졌어.	I slipped on the ice.
+294	걔 동상 걸렸어.	He got frostbite.
+295	다음 일요일은 며칠이야?	What's the date next Sunday?
+296	올해 추석은 9월 27일이네.	Chuseok falls on September 27th this year.
+297	내일모레야.	It's the day after tomorrow.
+298	오늘은 한국의 국경일이야.	Today is a national holiday in Korea.
+299	광복절은 법정 공휴일이야.	National Liberation Day is an official holiday.
+300	긴 주말이다.	It's a long weekend.
+301	파일 저장했니?	Did you save the file?
+302	실수로 파일을 지웠어.	I accidentally deleted the file.
+303	파일을 복구할 수 있어.	I can recover the file.
+304	백업 파일은 만들어 놨어?	Did you back up this file?
+305	메모리 용량이 얼마나 돼?	How much memory capacity does it have?
+306	파일을 끌어서 여기다 놔.	Drag and drop the file here.
+307	이것 좀 프린트해 줄래?	Can you print this out for me?
+308	컬러로 프린트해 줄래?	Can you print this in color?
+309	프린터에 연결해 봐.	Connect it to the printer.
+310	USB를 꽂아 봐.	Plug in the USB drive.
+311	복사기가 고장 났어.	The copier is out of order.
+312	종이가 꼈어.	The paper is jammed.
+313	컴퓨터가 멈췄어.	My computer froze.
+314	내 컴퓨터 렉 걸렸어.	My computer is lagging.
+315	내 컴퓨터 바이러스 걸렸어.	My computer has a virus.
+316	바이러스를 치료해야겠어.	I need to run an antivirus scan.
+317	나 해킹당했어.	I've been hacked.
+318	주기적으로 비밀번호를 변경해.	Change your password regularly.
+319	인터넷으로 검색해 봤어.	I googled it.
+320	인터넷 서핑했어.	I surfed the internet.
+321	인터넷 속도가 느려.	The internet connection is slow.
+322	조회수가 높아.	It's getting a lot of views.
+323	댓글이 많이 달렸어.	It's getting a lot of comments.
+324	악플은 그냥 무시해.	Just ignore the malicious comments.
+325	나도 한번 해보자.	Let me give it a try.
+326	소리 좀 키워 봐.	Turn up the volume.
+327	그거 유료 아이템이야.	That's a paid item.
+328	화면이 고화질이야.	The screen has a high resolution.
+329	비밀번호를 입력해.	Type in your password.
+330	이 레벨 깼어!	I cleared this level!
+331	수업 땡땡이쳤어.	I skipped class.
+332	시험 때문에 벼락치기 중이야.	I'm cramming for the exam.
+333	나 시험에서 부정행위 했어.	I cheated on the test.
+334	속성 강좌를 듣고 있어.	I'm taking a crash course.
+335	걔 입학시험에 합격했어.	She passed the entrance exam.
+336	걔 밤늦게까지 공부하고 있어.	He's burning the midnight oil.
+337	난 독서광이야.	I'm a bookworm.
+338	이 책은 정말 흥미진진해.	This book is a page-turner.
+339	책장이 구겨졌네.	The pages are creased.
+340	그냥 대충 훑어볼게.	I will just flip through it.
+341	반납일이 언제예요?	When is it due?
+342	연체료는 얼마예요?	How much is the late fee?
+343	영화 한 편 어때?	How about a movie?
+344	난 액션 영화 광팬이야.	I'm a die-hard fan of action movies.
+345	저 영화는 3시간짜리야.	That movie is three hours long.
+346	이 영화는 '원스'의 속편이야.	This movie is a sequel to "Once."
+347	아이언 독' 표 2장 예매했어.	I booked two tickets for "Iron Dog."
+348	그저 그랬어.	It was so-so.
+349	난 음치야.	I'm tone-deaf.
+350	이게 내 애창곡이야.	This is my favorite song.
+351	저 노래 귀에 익은데.	That song sounds familiar.
+352	마이크 울림이 너무 심해.	The microphone has too much echo.
+353	목이 쉬었어.	I have a hoarse voice.
+354	나 고음이 안 올라가.	I can't hit the high notes.
+355	저거 타고 싶어!	I want to ride that one!
+356	저 놀이기구 엄청 짜릿했어!	That ride was so thrilling!
+357	나 자유이용권 있어.	I have a day pass.
+358	발 아파 죽겠다!	My feet are killing me!
+359	이봐요, 줄 서세요!	Hey, get in line!
+360	이봐요, 새치기하지 마세요!	Hey, don't cut in line!
+361	아침이다, 일어나!	Rise and shine!
+362	늦잠 잤어!	I overslept!
+363	알람을 안 맞춰놨어.	I didn't set my alarm.
+364	아직 잠이 덜 깼어.	I'm still half-asleep.
+365	잘 잤니?	Did you sleep well?
+366	너 눈곱 꼈어.	You have sleep in your eyes.
+367	잘 자.	Sleep tight.
+368	잠을 푹 잤어.	I slept like a log.
+369	한숨도 못 잤어.	I didn't sleep a wink.
+370	잠을 설쳤어.	I had trouble sleeping.
+371	그는 가끔 코를 골아.	He snores from time to time.
+372	넌 잠꼬대를 해.	You talk in your sleep.
+373	다 씻었니?	Are you all washed up?
+374	얼굴에 비눗기 좀 씻어내.	Rinse the soap off your face.
+375	식후에 바로 양치해야지.	You should brush your teeth right after eating.
+376	치실 사용했니?	Did you floss?
+377	잇몸에서 피가 나.	My gums are bleeding.
+378	귀지가 엄청 많군!	I have so much earwax!
+379	목욕물 준비됐어.	The bath is ready.
+380	목욕물이 미지근해.	The bath water is lukewarm.
+381	나 때 밀 거야.	I'm going to scrub off my dead skin.
+382	머리를 제대로 헹궈.	Rinse your hair thoroughly.
+383	머리를 드라이어로 말려.	Blow-dry your hair.
+384	개운하다.	I feel refreshed.
+385	화장실 좀 다녀올게.	Nature calls.
+386	사람 있어요!	Occupied!
+387	변기 물이 안 내려가.	The toilet won't flush.
+388	변기가 넘쳤어.	The toilet is overflowing.
+389	하수구를 고쳐야겠어.	We need to fix the drain.
+390	수도꼭지 좀 잠가.	Turn off the faucet.
+391	집이 완전 난장판이네.	The house is a total mess.
+392	청소기 돌렸어?	Did you vacuum?
+393	걸레로 닦을게.	I will wipe it with a wet rag.
+394	쓰레기 좀 버려줘.	Take out the trash.
+395	쓰레기를 분리수거 해.	Separate the trash.
+396	이거 재활용되나?	Is this recyclable?
+397	빨래하자.	Let's do the laundry.
+398	줄어들어 버렸네!	It shrank!
+399	이 얼룩 어떻게 빼지?	How do I get this stain out?
+400	빨래를 걷자.	Let's take in the laundry.
+401	빨래 좀 개어줘.	Fold the laundry, please.
+402	다림질은 내가 할게.	I will do the ironing.
+403	간이 잘 맞아.	It's perfectly seasoned.
+404	이건 차게 먹는 게 좋아.	This is best served chilled.
+405	가스레인지 좀 켜줘.	Turn on the gas stove.
+406	전자레인지에 데워.	Microwave it.
+407	태워 버렸어.	I burned it.
+408	집밥 먹고 싶어.	I want a home-cooked meal.
+409	내가 상 차릴게.	I will set the table.
+410	행주로 식탁 좀 닦아줘.	Wipe the table with a dishcloth.
+411	먹으면서 말하지 마.	Don't talk with your mouth full.
+412	음식을 다 먹어야지.	Finish your food.
+413	저는 다 먹었어요.	I'm finished eating.
+414	야채도 먹어야지.	Eat your veggies.
+415	쟤 방귀 뀌었어.	He just farted.
+416	딸꾹질이 나.	I have the hiccups.
+417	재채기가 멈추질 않아.	I can't stop sneezing.
+418	트림 좀 그만해.	Stop burping.
+419	쟤 비듬 있어.	He has dandruff.
+420	목에 가래가 끓어.	I have phlegm in my throat.
+421	전부 네 명이야.	There are four of us.
+422	나 혼자 살아.	I live by myself.
+423	난 가족을 부양하고 있어.	I support my family.
+424	할머니가 돌아가셨어.	My grandmother passed away.
+425	반려견이 있어.	I have a dog.
+426	가정을 꾸리고 싶어.	I want to start a family.
+427	난 외동딸이야.	I'm an only child.
+428	난 맏아들이야.	I'm the eldest son.
+429	난 둘 중 막내야.	I'm the youngest of two.
+430	우린 두 살 터울이야.	We're two years apart.
+431	우린 일란성 쌍둥이야.	We're identical twins.
+432	난 형제들과 잘 지내.	I get along well with my siblings.
+433	아내가 임신했어.	My wife is expecting.
+434	입덧이 심해.	I have terrible morning sickness.
+435	배가 점점 나오고 있어.	My baby bump is showing.
+436	아기가 발로 차는 게 느껴져.	I can feel the baby kicking.
+437	다음 달이 출산 예정일이야.	The baby is due next month.
+438	자연분만 했어.	I had a natural birth.
+439	결혼했고 아이가 둘이에요.	I'm married with two kids.
+440	쟤는 아빠랑 똑 닮았어.	He looks just like his dad.
+441	우리 아들은 눈에 넣어도 안 아파.	My son is the apple of my eye.
+442	그건 우리 집안 내력이야.	It runs in the family.
+443	나는 아이들에게 엄격해.	I'm strict with my kids.
+444	입양한 아들이 있어.	I have an adopted son.
+445	난 아파트에 살아.	I live in an apartment.
+446	난 전원주택에 살아.	I live in a country house.
+447	난 서울 근교에 살아.	I live in the suburbs of Seoul.
+448	10층에 살아.	I live on the 10th floor.
+449	월세가 적당해.	The monthly rent is reasonable.
+450	막 이사 왔어요.	I just moved in.
+451	오전 8시에 출근해.	I leave for work at 8 a.m.
+452	난 칼퇴근해.	I leave work exactly on time.
+453	버스보다 지하철이 더 좋아.	I prefer the subway to the bus.
+454	통근하는 데 50분 걸려.	It takes 50 minutes to commute.
+455	걸어서 30분이야.	It's a 30-minute walk.
+456	나 카풀해서 출근해.	I carpool to work.
+457	내비를 따라가.	Follow the GPS.
+458	교통체증이 심하네.	Traffic is bumper-to-bumper.
+459	우회로로 가자.	Let's take a detour.
+460	고속도로 진입하고 있어.	We're getting onto the highway.
+461	안전벨트를 매.	Fasten your seatbelt.
+462	좌석을 조절해 봐.	Adjust your seat.
+463	트렁크 좀 열어줘.	Pop the trunk.
+464	주차 딱지 끊겼어.	I got a parking ticket.
+465	시동 끄지 말고 있어 봐.	Keep the engine running.
+466	백미러가 깨졌어.	The rearview mirror is broken.
+467	발레파킹 해주세요.	I'd like to use valet parking.
+468	내 차 견인됐어.	My car got towed.
+469	가득 채워 주세요.	Fill it up, please.
+470	기름 50달러어치만요.	50 dollars worth of gas, please.
+471	내 차는 연비가 좋아.	My car gets great gas mileage.
+472	타이어 펑크 났어.	I have a flat tire.
+473	엔진오일이 새고 있어.	The engine oil is leaking.
+474	블랙박스 설치했어.	I had a dashcam installed.
+475	접촉사고였어.	It was a fender-bender.
+476	정면충돌 사고였어.	It was a head-on collision.
+477	실랑이가 있었어.	I got into a scuffle.
+478	사각지대에 있었어요.	It was in my blind spot.
+479	음주운전 안 했어.	I didn't drink and drive.
+480	제한속도 안 넘었어.	I was under the speed limit.
+481	우린 맞벌이 부부야.	We're a dual-income couple.
+482	쟤는 돈을 많이 벌어.	He makes a lot of money.
+483	걔 돈방석에 앉았어.	She's rolling in cash.
+484	걔 대박 터뜨렸어.	He hit the jackpot.
+485	난 빈털터리야.	I'm flat broke.
+486	요즘 주머니 사정이 안 좋아.	I'm tight on money lately.
+487	걔는 알뜰해.	She's thrifty.
+488	걔는 씀씀이가 헤퍼.	She spends money like water.
+489	걔는 너무 구두쇠야.	He's a penny-pincher.
+490	우리 허리띠를 졸라매야겠다.	We need to tighten our belts.
+491	용돈이 떨어졌어.	I'm out of pocket money.
+492	돼지저금통을 깼어.	I broke open my piggy bank.
+493	통장을 만들었어.	I opened a bank account.
+494	돈을 출금했어.	I made a withdrawal.
+495	예금을 했어.	I made a deposit.
+496	적금을 들었어.	I opened a savings account.
+497	계좌이체 했어.	I transferred the money.
+498	대출을 받았어.	I took out a loan.
+499	이거 5달러짜리로 바꿔줘.	Can you break this into 5-dollar bills?
+500	이 100달러짜리 지폐 좀 바꿔줄래?	Can you break this hundred-dollar bill?
+501	현금인출기 좀 써야겠어.	I need to use the ATM.
+502	돈을 좀 인출하고 싶어요.	I'd like to withdraw some money.
+503	잔액이 부족해.	My account is overdrawn.
+504	현금으로 바꾸자.	Let's cash it in.
+505	내 카드 한도 초과야.	My credit card is maxed out.
+506	내 신용카드 만료됐어.	My credit card has expired.
+507	위안화로 환전해야 해.	I need to exchange my money into yuan.
+508	은행 이자율이 낮아.	The bank interest rate is low.
+509	펀드로 돈을 날렸어.	I lost my money on funds.
+510	환율이 널뛰기야.	The exchange rates are volatile.
+511	난 매일 운동해.	I work out every day.
+512	요가를 시작했어.	I've taken up yoga.
+513	운동 부족이야.	I don't get enough exercise.
+514	매일 파워워킹을 해.	I go power walking every day.
+515	칼로리를 소모해야 해.	I need to burn calories.
+516	명상을 자주 해.	I meditate a lot.
+517	나 살쪘어.	I've gained weight.
+518	5킬로 뺐어.	I've lost 5 kilograms.
+519	그 사람 고도비만이야.	He's severely obese.
+520	다이어트 중이야.	I'm on a diet.
+521	저녁을 계속 굶고 있어.	I've been skipping dinner.
+522	요요현상이야.	It's the yo-yo effect.
+523	난 항상 피곤해.	I feel tired all the time.
+524	난 컨디션이 아주 좋아.	I'm in great shape.
+525	난 건강이 안 좋아.	I'm in poor health.
+526	난 건강을 챙기는 스타일이야.	I'm health-conscious.
+527	요즘 우울해.	I feel down lately.
+528	머리가 멍해.	My head feels fuzzy.
+529	콧물이 나와.	I have a runny nose.
+530	코가 막혔어.	I have a stuffy nose.
+531	목이 아파.	I have a sore throat.
+532	기침이 멈추질 않네.	I can't stop coughing.
+533	자꾸 재채기가 나네.	I keep sneezing.
+534	몸이 막 떨려.	I'm shivering like crazy.
+535	감기 기운이 있어.	I have a slight cold.
+536	독감에 걸렸어.	I have the flu.
+537	온몸이 쑤셔.	My whole body aches.
+538	몸이 으슬으슬 추워.	I have the chills.
+539	감기에 걸리려나 봐.	I think I'm coming down with a cold.
+540	몸져누웠어.	I'm laid up in bed.
+541	어지러워.	I feel dizzy.
+542	열이 나.	I'm running a fever.
+543	편두통이 있어.	I have a migraine.
+544	머리가 띵해.	I have a dull headache.
+545	머리가 욱신거리게 아파.	I have a throbbing headache.
+546	머리가 깨질 듯이 아파.	I have a splitting headache.
+547	속이 더부룩해.	I feel bloated.
+548	속이 메스꺼워.	I feel nauseous.
+549	배가 아파.	My stomach hurts.
+550	토할 것 같아.	I feel like throwing up.
+551	밤새 설사했어.	I had diarrhea all night.
+552	난 변비가 있어.	I'm constipated.
+553	입술이 텄어.	I have chapped lips.
+554	코피가 나.	I have a nosebleed.
+555	귀가 먹먹해.	My ears feel muffled.
+556	귀가 울려.	My ears are ringing.
+557	귀가 아파.	I have an earache.
+558	난 알레르기 체질이야.	I'm prone to allergies.
+559	팔이 저려.	My arm fell asleep.
+560	등이 아파.	My back is sore.
+561	목이 결려.	I have a crick in my neck.
+562	다리에 쥐가 났어.	I have a cramp in my leg.
+563	얼굴에 멍이 들었어.	I have a bruise on my face.
+564	허리에 파스 붙였어.	I put a pain relief patch on my back.
+565	종이에 베였어.	I got a paper cut.
+566	손가락에 가시가 박혔어.	I got a splinter in my finger.
+567	데였어.	I got burned.
+568	숨차다.	I'm out of breath.
+569	걔 무좀 있어.	He has athlete's foot.
+570	쟤 기절했어.	She passed out.
+571	발목을 삐었어.	I sprained my ankle.
+572	인대가 늘어났어.	I pulled a ligament.
+573	다리가 골절됐어.	I fractured my leg.
+574	팔에 깁스를 했어.	I got a cast on my arm.
+575	꼬리뼈에 실금이 갔어.	I have a hairline fracture in my tailbone.
+576	흉터가 안 남아야 할 텐데.	I hope it doesn't leave a scar.
+577	충치인 것 같아.	I think I have a cavity.
+578	스케일링 받아야겠어.	I need to get my teeth scaled.
+579	잇몸이 아파.	My gums hurt.
+580	이를 뽑았어.	I had a tooth pulled.
+581	신경 치료를 받았어.	I got a root canal.
+582	사랑니가 나고 있어.	My wisdom teeth are coming in.
+583	시력이 나빠지고 있어.	My eyesight is getting worse.
+584	시력이 양쪽 다 1.0이야.	I have 20/20 vision.
+585	네 눈이 충혈됐어.	Your eyes are bloodshot.
+586	눈이 침침해.	My vision is blurry.
+587	네 눈이 부었어.	Your eyes are puffy.
+588	오른쪽 눈에 다래끼가 났어.	I have a sty in my right eye.
+589	소화제를 먹었어.	I took some medicine for indigestion.
+590	진통제가 필요해.	I need some painkillers.
+591	독감 주사 맞았어.	I got a flu shot.
+592	이 약 좀 지어 주실래요?	Could you fill this prescription?
+593	난 수면제를 복용해.	I take sleeping pills.
+594	부작용이 걱정돼.	I'm worried about the side effects.
+595	하루 동안 금식해야 돼.	I need to fast for a day.
+596	건강검진을 받았어.	I had a medical checkup.
+597	엑스레이 촬영을 했어.	I had an X-ray done.
+598	특별히 이상한 건 없대.	They said nothing is wrong.
+599	혈압이 좀 높아.	My blood pressure is a bit high.
+600	스트레스는 만병의 원인이야.	Stress is the root of all illness.
+601	오, 정말?	Wow, seriously?
+602	안 믿겨.	That's unbelievable.
+603	레전드급이네!	That's epic!
+604	대박 웃기다.	That's hilarious.
+605	뭘 봐?	What are you staring at?
+606	불만 있어?	You got a problem?
+607	나한테 말한 거냐?	Are you talking to me?
+608	네가 뭔데?	Who do you think you are?
+609	날 치려고?	Are you gonna make a move?
+610	절대 못할걸.	I double-dare you.
+611	꺼져줄래?	You better back off.
+612	옥상으로 따라와.	Let's take this outside.
+613	버거 하나 주세요.	I'd like a burger, please.
+614	잠깐만 시간 좀 줄래?	Could you give me a minute, please?
+615	리포트 보내줄 수 있니?	Could you send me the report?
+616	네가 틀렸을 수도 있을 것 같아.	I think you might be mistaken.
+617	다시 말해줄래?	Come again?
+618	다시 말씀해 주시겠어요?	Pardon me?
+619	죄송한데 잘못 들었어요.	I'm sorry, I didn't catch that.
+620	조금 천천히 말씀해 주세요.	Could you speak more slowly, please?
+621	미안한데 관심 없어.	Sorry, I'm not interested.
+622	나 이미 임자 있어.	Actually, I'm already taken.
+623	백만 년 동안은 안 돼.	Not in a million years.
+624	내 몸에서 손 떼!	Get your hands off me!
+625	사실 남자친구가 지금 여기 오는 중이야.	Actually, my boyfriend is about to be here.
+626	만나보고 싶어?	You wanna meet him?
+627	따라오지 마, 변태야!	Get out of my face, creep!
+628	경찰에 신고해 버리기 전에.	Before I call the cops.
+629	오늘 완전 달리자!	Let's get wasted.
+630	나 술 센 편이야.	I'm a heavy drinker.
+631	나 술 약해.	I'm a lightweight.
+632	건배!	Bottoms up!
+633	2차는 내가 낼게.	I got the next round.
+634	알딸딸하네.	I have a nice buzz.
+635	나 취한다.	I'm getting drunk.
+636	나 어제 필름 끊기도록 마셨어.	I was blackout drunk last night.
+637	나 술 다 깼어.	I'm completely sober.
+638	나 꽐라 됐어.	I'm smashed!
+639	주문 도와드릴까요?	Can I take your order?
+640	네, 천천히 고르세요.	Take your time.
+641	이건 1+1이에요.	This is buy one, get one free.
+642	50% 세일 중이에요.	This is 50 percent off.
+643	여기서 드세요, 아니면 포장하세요?	Is that for here or to go?
+644	어떤 걸로 계산하시겠어요?	Would you like to pay in cash or by card?
+645	영수증 드릴까요?	Would you like your receipt?
+646	50번 손님! 주문하신 것 나왔습니다.	Order number 50! Your order is ready.
+647	감사합니다. 맛있게 드세요.	Thank you. Enjoy!
+648	한국어로 해주세요.	Speak in Korean, please.
+649	저기요, 이거 얼마예요?	Excuse me, how much is this?
+650	좀 비싸네요.	That's a bit too expensive.
+651	여러 개 사면 깎아 주실 수 있나요?	If I buy several of these, can I get a discount?
+652	10달러로 깎아 주시면 살게요.	I will give you 10 dollars for it and we have a deal.
+653	같은 가격에 큰 거 주시면 안 돼요?	Can I get a bigger size for the same price?
+654	그럼 서비스 주세요.	Could you throw in something extra with this?
+655	오케이! 살게요!	Okay! Deal!
+656	네 프사 맘에 든다.	I like your profile picture.
+657	알로에 크림이 피부에 좋아.	Aloe cream is really good for your skin.
+658	네 지우개 좀 빌려줘.	Can I borrow your eraser?
+659	어떤 장르 영화 좋아해?	What's your favorite movie genre?
+660	방문 목적이 무엇입니까?	What's the purpose of your trip?
+661	얼마나 머무를 계획입니까?	How long do you intend to stay?
+662	어디서 머무를 계획입니까?	Where will you be staying?
+663	하는 일이 뭡니까?	What is your occupation?
+664	의약품이나 약물 있습니까?	Do you have any drugs or medicine?
+665	너한테 신세졌네.	I owe you one.
+666	백만 번 고마워.	Thanks a million.
+667	엄청 고마워.	Thanks a bunch.
+668	정말 감사드립니다.	I really appreciate it.
+669	감사하다는 말이 모자라네요.	I can't thank you enough.
+670	이 감사함을 어떻게 표현할지 모르겠어요.	I don't know how to thank you.
+671	아무것도 아니야.	It was nothing.
+672	별것도 아닌데 뭘.	Don't mention it.
+673	언제든지!	Anytime!
+674	당연한 거지 뭘!	Sure thing!
+675	도움이 돼서 기뻐요.	It's my pleasure.
+676	도와드려서 기쁜걸요.	The pleasure was mine.
+677	아직도 일하세요?	Are you still working?
+678	네, 아직 처리할 게 많아서요.	Yes, I still have a lot of work to do.
+679	진짜 일이 많나 보네요.	Sounds like you have a lot on your plate.
+680	무리하지 마세요.	Take it easy.
+681	좋은 하루 보내요. 내일 봐요.	Have a good one. See you tomorrow.
+682	여러분의 수고에 감사드립니다.	Thank you for all your hard work.
+683	잘하고 있어, 힘내자!	Keep up the good work.
+684	근처에 콘센트 있나요? 휴대폰이 꺼져서요.	Is there a power outlet around here? My phone died.
+685	실례지만, 화장실 써도 될까요?	Excuse me, can I use your bathroom?
+686	소매치기당했어요.	I just got pickpocketed.
+687	차비 좀 도와줄 수 있나요?	Can you spare some cash for the bus?
+688	여기서 여권 잃어버렸는데 혹시 보셨어요?	I lost my passport here. Have you seen it?
+689	여기 와이파이 비번 뭐예요?	What's the Wi-Fi password here?
+690	어디서 널 만난 것 같은데?	Do I know you from somewhere?
+691	여기서 우리 본 적 있지?	Haven't I seen you here before?
+692	너 여기 자주 와?	Do you come here often?
+693	담배 하나 줄래요?	Do you have a smoke?
+694	라이터 있어요?	Do you have a light?
+695	빡치네!!	I'm pissed off!!
+696	짜증 나!	I'm ticked off!!
+697	뚜껑 열릴 것 같아!	I'm gonna blow my top!
+698	너 때문에 열받아.	You're making my blood boil.
+699	내 신경 건드리지 마.	You're really getting on my nerves.
+700	너에게 뿅갔어.	I'm crazy about you.
+701	넌 내 반쪽이야.	You're my other half.
+702	널 위해서라면 뭐든지 할 수 있어.	I would give up everything to be with you.
+703	너에게 푹 빠져 버렸어.	I'm head over heels for you.
+704	너 때문에 심쿵이야.	You make my heart skip a beat.
+705	사양할게요.	No, thank you.
+706	다음에 살게요.	Maybe next time.
+707	똑같은 거 있어요.	I already have one.
+708	관심 없어요.	Sorry, I'm not interested.
+709	지갑 잃어버려서 현금이 없어요.	I lost my wallet, so I don't have any cash.
+710	거의 모든 한국인이 김치를 좋아해.	Almost all Koreans like kimchi.
+711	대부분의 미국인이 피자를 좋아해.	Most Americans like pizza.
+712	오늘 예뻐 보인다.	You look great today.
+713	그 드레스 입으니까 예쁘다.	That dress looks good on you.
+714	눈부시게 아름다워!	You look stunning!
+715	이렇게 예쁠 수가 있다니!	You look incredible.
+716	나도 그러고 싶은데 다른 약속이 있어.	I'd love to, but I already have plans.
+717	가능하면 좋겠지만 나 오늘 야근해.	I wish I could, but I have to work overtime today.
+718	너무 좋은데 불행하게도 오늘 회식이야.	I'd love to, but unfortunately, we have a staff dinner tonight.
+719	혹시 다음으로 미룰 수 있을까?	Can I take a rain check?
+720	절대 안 돼.	No way.
+721	안 된다고 했다.	No means no.
+722	해가 서쪽에서 뜨면 그때 할게.	When pigs fly.
+723	죽어도 못 해.	Over my dead body.
+724	돈 줘도 안 해.	You couldn't pay me to do it.
+725	우리 못 본 지 너무 오래된 것 같아.	I haven't seen you in ages.
+726	이러다가 얼굴 까먹겠다.	Stop being a stranger.
+727	저번에 같이 놀았던 거 그립다.	I miss hanging out with you.
+728	우리 조만간 만나자.	Let's meet up soon.
+729	또 같이 노는 게 기대된다.	I can't wait to hang out again.
+730	하나도 모르겠어.	I have no clue.
+731	전혀 모르겠네.	I'm clueless.
+732	하늘은 알겠지.	Lord knows.
+733	모르겠어.	Beats me.
+734	그걸 내가 어떻게 알아?	How should I know?
