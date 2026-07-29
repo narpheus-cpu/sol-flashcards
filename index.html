@@ -247,8 +247,10 @@
             <!-- ✅ 자료백업 및 불러오기 버튼 추가 영역 -->
             <div class="control-group" style="margin-top: 8px;">
                 <button class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px;" onclick="exportAllData()">자료백업</button>
-                <button class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px;" onclick="document.getElementById('importDataInput').click()">불러오기</button>
-                <input type="file" id="importDataInput" style="display:none;" onchange="importAllData(event)" accept=".json">
+                <label class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0;">
+    불러오기
+    <input type="file" id="importDataInput" style="width: 0; height: 0; position: absolute; opacity: 0;" onchange="importAllData(event)" accept=".json">
+</label>
             </div>
         </div>
 
