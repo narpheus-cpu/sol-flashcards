@@ -1141,11 +1141,22 @@
             }
         }
 
-        // 수직 스크롤(Y축 스와이프) 중이고 카드 내부에 스크롤 영역이 남아있다면 네이티브 스크롤을 허용
-        const contentArea = card.querySelector('.swipe-card-content');
-        if (isSwipeLocked && swipeAxis === 'Y' && contentArea && contentArea.scrollHeight > contentArea.clientHeight) {
+// 수직 스크롤(Y축 스와이프) 처리 로직 개선
+const contentArea = card.querySelector('.swipe-card-content');
+if (isSwipeLocked && swipeAxis === 'Y' && contentArea) {
+    const isScrollable = contentArea.scrollHeight > contentArea.clientHeight;
+    // 오차 방지를 위해 Math.ceil 적용
+    const isAtTop = contentArea.scrollTop <= 0;
+    const isAtBottom = Math.ceil(contentArea.scrollTop + contentArea.clientHeight) >= contentArea.scrollHeight;
+
+    if (isScrollable) {
+        // 아래로 스와이프(dy > 0)하는데 스크롤이 맨 위가 아니거나, 
+        // 위로 스와이프(dy < 0)하는데 스크롤이 맨 아래가 아니면 네이티브 스크롤 허용 (스와이프 중단)
+        if ((dy > 0 && !isAtTop) || (dy < 0 && !isAtBottom)) {
             return;
         }
+    }
+}
         
         e.preventDefault(); 
 
