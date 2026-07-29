@@ -226,15 +226,22 @@
             <div class="list-card">
                 <h3 style="margin-top:0; font-size:15px;">데이터 추가</h3>
                 
-                <!-- URL 불러오기 영역 추가 -->
+                <!-- 기본 등록 파일 5개 선택 영역 -->
                 <div class="control-group" style="margin-bottom: 8px;">
-                    <input type="text" id="githubUrlInput" placeholder="깃허브 Raw URL 입력" style="flex: 2;">
-                    <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="loadFromUrl()">URL 등록</button>
+                    <select id="presetUrlSelect" style="flex: 2;">
+                        <option value="">기본 파일 선택...</option>
+                        <!-- value 안에 본인의 깃허브 Raw URL을 넣어주세요 -->
+                        <option value="URL_1_HERE">기본 단어장 1</option>
+                        <option value="URL_2_HERE">기본 단어장 2</option>
+                        <option value="URL_3_HERE">기본 단어장 3</option>
+                        <option value="URL_4_HERE">기본 단어장 4</option>
+                        <option value="URL_5_HERE">기본 단어장 5</option>
+                    </select>
+                    <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="loadFromPresetUrl()">내려받기</button>
                 </div>
 
                 <div class="control-group">
-                    <button class="btn-outline" onclick="document.getElementById('fileInput').click()">파일 불러오기 (엑셀, 텍스트 등)</button>
-                    <!-- accept 속성을 제거하여 모든 텍스트 기반 파일을 자유롭게 선택 가능 -->
+                    <button class="btn-outline" onclick="document.getElementById('fileInput').click()">파일 직접 불러오기 (PC/폰)</button>
                     <input type="file" id="fileInput" style="display:none;" onchange="importExcel(event)">
                 </div>
                 <textarea id="pasteArea" rows="2" placeholder="탭 또는 콤마로 구분된 텍스트 붙여넣기"></textarea>
@@ -381,7 +388,7 @@
 
 <script>
     /* ==========================================
-       1. IndexedDB 설정 및 데이터베이스 접근 (유지)
+       1. IndexedDB 설정 및 데이터베이스 접근
        ========================================== */
     const DB_NAME = 'AllInOneMobileDB_Final2'; 
     const STORE_NAME = 'words';
@@ -793,12 +800,16 @@
         document.getElementById('pasteArea').value = '';
     }
 
-    // ★ 깃허브 URL 등 웹 상의 파일을 직접 불러오는 함수 ★
-    async function loadFromUrl() {
-        const urlInput = document.getElementById('githubUrlInput').value.trim();
-        if (!urlInput) return alert('URL을 입력해주세요.');
+    // ★ 5개의 미리 지정된 깃허브 URL을 불러오는 함수 ★
+    async function loadFromPresetUrl() {
+        const selectElement = document.getElementById('presetUrlSelect');
+        const urlInput = selectElement.value;
+        const presetName = selectElement.options[selectElement.selectedIndex].text;
         
-        let fileName = urlInput.split('/').pop() || 'url_data.txt';
+        if (!urlInput || urlInput === "") return alert('기본 등록 파일을 선택해주세요.');
+        
+        // URL에서 파일명 추출 (확장자 유추)
+        let fileName = urlInput.split('/').pop() || presetName;
         if (!fileName.includes('.')) fileName += '.txt';
 
         try {
@@ -828,8 +839,9 @@
                 rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             }
 
-            await handleParsedRows(rows, fileName.replace(/\.[^/.]+$/, ""));
-            document.getElementById('githubUrlInput').value = '';
+            // 슬롯 이름을 선택한 드롭다운의 텍스트로 지정
+            await handleParsedRows(rows, presetName);
+            selectElement.selectedIndex = 0; // 선택 초기화
         } catch (error) {
             alert("데이터 로드 오류: " + error.message);
         }
