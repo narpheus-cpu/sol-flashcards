@@ -225,6 +225,13 @@
         <div id="viewWordManage" class="view-content">
             <div class="list-card">
                 <h3 style="margin-top:0; font-size:15px;">데이터 추가</h3>
+                
+                <!-- URL 불러오기 영역 추가 -->
+                <div class="control-group" style="margin-bottom: 8px;">
+                    <input type="text" id="githubUrlInput" placeholder="깃허브 Raw URL 입력" style="flex: 2;">
+                    <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="loadFromUrl()">URL 등록</button>
+                </div>
+
                 <div class="control-group">
                     <button class="btn-outline" onclick="document.getElementById('fileInput').click()">파일 불러오기 (엑셀, 텍스트 등)</button>
                     <!-- accept 속성을 제거하여 모든 텍스트 기반 파일을 자유롭게 선택 가능 -->
@@ -376,7 +383,7 @@
     /* ==========================================
        1. IndexedDB 설정 및 데이터베이스 접근 (유지)
        ========================================== */
-    const DB_NAME = 'AllInOneMobileDB_Final2'; // 기존 DB 식별자 유지
+    const DB_NAME = 'AllInOneMobileDB_Final2'; 
     const STORE_NAME = 'words';
     let db;
     let currentSlotId = 1;
@@ -653,14 +660,12 @@
         renderWordList();
     }
 
-    // 1열 영어, 2열 한국어 구조 자동 감지 및 스마트 파싱 핵심 로직
     async function handleParsedRows(rows, titleString) {
         let parseMode = "STANDARD"; 
         
         let validSamples = 0;
         let engKorCount = 0;
         
-        // 상위 5개 행을 분석하여 형식 유추
         for(let r of rows) {
             if(!r || r.length < 2) continue;
             if(validSamples >= 5) break;
@@ -672,7 +677,6 @@
             let col0HasKor = /[가-힣]/.test(col0);
             let col1HasKor = /[가-힣]/.test(col1);
             
-            // 1열이 순수 영문(한국어 없음)이고 2열이 한국어인 경우
             if (col0HasEng && !col0HasKor && col1HasKor) {
                 engKorCount++;
             }
@@ -720,7 +724,7 @@
         }
     }
 
-async function importExcel(e) {
+    async function importExcel(e) {
         const file = e.target.files[0];
         if(!file) return;
         
@@ -736,14 +740,11 @@ async function importExcel(e) {
             const buffer = evt.target.result;
             let rows = [];
 
-            // 확장자가 텍스트 형식일 경우 인코딩(UTF-8 -> EUC-KR) 자동 감지 적용
             if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
                 let rawText = '';
                 try {
-                    // 먼저 표준 UTF-8로 엄격하게 읽기 시도
                     rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
                 } catch (err) {
-                    // 실패할 경우 윈도우 기본 한글 인코딩(EUC-KR)으로 디코딩
                     rawText = new TextDecoder('euc-kr').decode(buffer);
                 }
                 
@@ -754,7 +755,6 @@ async function importExcel(e) {
                     return [line];
                 });
             } else {
-                // 엑셀 파일(.xlsx, .xls)인 경우 기존 XLSX 라이브러리 사용
                 const data = new Uint8Array(buffer);
                 const workbook = XLSX.read(data, { type: 'array' });
                 rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
@@ -791,6 +791,48 @@ async function importExcel(e) {
 
         await handleParsedRows(rows, titleString);
         document.getElementById('pasteArea').value = '';
+    }
+
+    // ★ 깃허브 URL 등 웹 상의 파일을 직접 불러오는 함수 ★
+    async function loadFromUrl() {
+        const urlInput = document.getElementById('githubUrlInput').value.trim();
+        if (!urlInput) return alert('URL을 입력해주세요.');
+        
+        let fileName = urlInput.split('/').pop() || 'url_data.txt';
+        if (!fileName.includes('.')) fileName += '.txt';
+
+        try {
+            const response = await fetch(urlInput);
+            if (!response.ok) throw new Error("파일을 불러오는데 실패했습니다.");
+            
+            const buffer = await response.arrayBuffer();
+            const ext = fileName.split('.').pop().toLowerCase();
+            let rows = [];
+
+            if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
+                let rawText = '';
+                try {
+                    rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+                } catch (err) {
+                    rawText = new TextDecoder('euc-kr').decode(buffer);
+                }
+                const lines = rawText.split('\n');
+                rows = lines.map(line => {
+                    if (line.includes('\t')) return line.split('\t');
+                    if (line.includes(',')) return line.split(',');
+                    return [line];
+                });
+            } else {
+                const data = new Uint8Array(buffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+            }
+
+            await handleParsedRows(rows, fileName.replace(/\.[^/.]+$/, ""));
+            document.getElementById('githubUrlInput').value = '';
+        } catch (error) {
+            alert("데이터 로드 오류: " + error.message);
+        }
     }
 
     /* ==========================================
@@ -1009,7 +1051,7 @@ async function importExcel(e) {
             tx = -window.innerWidth;
             rot = -20;
         } else if (directionAxis === 'Y' || !isCorrect) {
-            ty = window.innerHeight; // 아래로 떨어짐
+            ty = window.innerHeight; 
             rot = 10;
         }
         
@@ -1070,7 +1112,6 @@ async function importExcel(e) {
 
             } else if (swipeAxis === 'Y') {
                 currentY = dy;
-                // 위->아래 (양수 Y)
                 card.style.transform = `translate(0px, ${currentY}px) rotate(${currentY * 0.02}deg)`;
                 
                 if (currentY > 40) {
@@ -1133,10 +1174,9 @@ async function importExcel(e) {
         }
     }
 
-function copyStudyFurther() {
+    function copyStudyFurther() {
         const q = quizQueue[currentQIdx];
         if(!q) return;
-        // 복사되는 프롬프트 문구에 요청하신 조건을 추가했습니다.
         const promptText = `'${q.korean}(${q.english})'의 [영어 문장 패턴 분석], [유의어별 뉘앙스 차이], [비슷한 패턴 예문] 순으로 알려줘. [만약 영어표현이 오타나 문법실수 등으로 인해 어색한 경우 교정해서 설명할 것]`;
         
         const tempElem = document.createElement('textarea');
