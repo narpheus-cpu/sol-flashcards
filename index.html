@@ -33,7 +33,7 @@
             text-align: center; border-bottom: 1px solid var(--border);
             box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 10;
             display: flex; align-items: center; justify-content: center; position: relative;
-            color: var(--primary); height: 56px;
+            color: var(--primary); height: 56px; flex-shrink: 0;
         }
         .back-btn {
             position: absolute; left: 16px; font-size: 24px; color: var(--primary);
@@ -45,7 +45,7 @@
         }
 
         /* Main Content Area */
-        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 110px; }
+        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 70px; }
 
         /* Bottom Navigation */
         nav {
@@ -62,8 +62,8 @@
         nav button.active { color: #ffffff; font-weight: 800; }
         
         /* Views */
-        .view-content { display: none; min-height: 100%; }
-        .view-content.active { display: block; }
+        .view-content { display: none; height: 100%; }
+        .view-content.active { display: flex; flex-direction: column; }
 
         /* Buttons & Inputs */
         button { border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.15s; border: none; }
@@ -97,7 +97,8 @@
         .control-group { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
         .control-group select, .control-group input { flex: 1; min-width: 100px; padding: 12px; }
 
-        .list-card { background: var(--card-bg); border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--border); }
+        .list-card { background: var(--card-bg); border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--border); flex-shrink: 0; }
+        
         .word-item { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; }
         .word-item:active { background: #f1f3f5; }
         .word-item:last-child { border-bottom: none; }
@@ -113,18 +114,21 @@
         .badge-mid { background: #dee2e6; color: #212529; }
         .badge-max { background: #ffffff; color: #212529; }
 
-        /* Quiz UI (레이아웃 밀림 방지 수정됨) */
+        /* ====================================
+           💡 Quiz UI Layout 수정 영역
+           ==================================== */
         .quiz-container { 
-            display: flex; flex-direction: column; 
-            height: 100%; max-height: calc(100vh - 130px); /* 화면을 벗어나지 않게 제한 */
-            align-items: center; justify-content: space-between; /* 카드와 버튼 간격을 유연하게 배분 */
-            padding-bottom: 10px; overflow: hidden;
+            display: flex; flex-direction: column; height: 100%; 
+            align-items: center; justify-content: space-between; 
+            overflow: hidden; 
         }
         
+        /* 상단 상태창 (듣기, 점수, 수정) */
         .quiz-header-row {
             display: flex; align-items: center; justify-content: space-between;
             width: 100%; max-width: 360px; margin-bottom: 12px; flex-shrink: 0;
         }
+        
         .btn-icon { 
             background: var(--primary); border-radius: 8px; width: 40px; height: 40px; 
             display: flex; align-items: center; justify-content: center; font-size: 18px; 
@@ -133,28 +137,32 @@
         .btn-icon span { filter: grayscale(100%) brightness(0) invert(100%); }
         .status-bar { font-size: 14px; color: var(--primary); font-weight: 800; flex: 1; text-align: center; }
 
-        /* 카드 영역 (스크롤 가능하게 수정됨) */
-        .swipe-card {
-            background: var(--card-bg); width: 100%; max-width: 360px; 
-            flex: 1; /* 가용 공간을 차지하되 */
-            max-height: 55vh; /* 화면의 55%를 넘지 않음 */
-            overflow-y: auto; /* 문장이 길면 카드 내부에서 스크롤됨 */
-            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 24px; position: relative; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
-            text-align: center; margin-bottom: 12px; border: 1px solid var(--border);
-            user-select: none; touch-action: pan-y; /* 수직 네이티브 스크롤 허용 */
+        /* 핵심: 카드 컨테이너 비율 조정 및 내부 스크롤 허용 */
+        .swipe-card-wrapper {
+            flex: 1; width: 100%; max-width: 360px; 
+            display: flex; flex-direction: column;
+            overflow: hidden; margin-bottom: 12px;
+            border-radius: 12px; border: 1px solid var(--border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); background: var(--card-bg);
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+            position: relative; user-select: none; touch-action: pan-y; 
         }
-        .quiz-target { font-size: 24px; font-weight: 800; margin-bottom: 16px; word-break: keep-all; line-height: 1.4; color: var(--primary); }
+
+        .swipe-card-content {
+            flex: 1; overflow-y: auto; padding: 24px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .quiz-target { font-size: 24px; font-weight: 800; margin-bottom: 16px; word-break: keep-all; line-height: 1.4; color: var(--primary); text-align: center; }
         
         /* 스와이프 인디케이터 */
-        .swipe-indicator { position: absolute; font-weight: 800; font-size: 14px; opacity: 0; transition: opacity 0.2s; padding: 6px 12px; border-radius: 6px; background: #e9ecef; border: 1px solid var(--border); color: var(--primary); }
+        .swipe-indicator { position: absolute; font-weight: 800; font-size: 14px; opacity: 0; transition: opacity 0.2s; padding: 6px 12px; border-radius: 6px; background: #e9ecef; border: 1px solid var(--border); color: var(--primary); pointer-events: none; }
         .swipe-left-text { left: 16px; top: 16px; } 
         .swipe-up-text { bottom: 16px; left: 50%; transform: translateX(-50%); } 
 
         /* 마스킹 기능 */
         .quiz-meaning { 
-            font-size: 22px; color: var(--text-sub); font-weight: 800;
+            font-size: 22px; color: var(--text-sub); font-weight: 800; text-align: center;
             display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; line-height: 1.3;
         }
         .quiz-mask-word {
@@ -173,18 +181,18 @@
         .quiz-mask-word.revealed .mask-layer { opacity: 0; }
         .quiz-mask-word.revealed .real-layer { opacity: 1; }
 
-        /* 실시간 수정 영역 */
+        /* 실시간 수정 영역 (수정 시 카드 영역 위를 덮도록 변경) */
         .edit-card {
-            background: #ffffff; border: 1px solid var(--border); border-radius: 8px;
-            padding: 16px; width: 100%; max-width: 360px; margin-bottom: 16px; display: none; text-align: left;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.03); flex-shrink: 0;
+            background: #ffffff; border-radius: 8px;
+            padding: 16px; width: 100%; max-width: 360px; display: none; text-align: left;
+            position: absolute; bottom: 0; left: 0; z-index: 20; border-top: 1px solid var(--border); box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
         }
         .edit-card-title { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
 
-        /* [이전] [AI+] [다음] 버튼 라인 (고정됨) */
+        /* 하단 고정: [이전] [AI+] [다음] 버튼 라인 */
         .nav-btn-row {
             display: flex; width: 100%; max-width: 360px; gap: 10px; align-items: center; justify-content: space-between; 
-            margin-top: 4px; flex-shrink: 0; /* 밀려나거나 찌그러지지 않도록 고정 */
+            flex-shrink: 0; margin-bottom: 10px;
         }
         .btn-nav-small {
             background: #ffffff; color: var(--primary); border: 1px solid var(--border); border-radius: 8px;
@@ -232,7 +240,7 @@
 
         <!-- 1-2. 단어 관리 뷰 -->
         <div id="viewWordManage" class="view-content">
-            <div class="list-card">
+            <div class="list-card" style="flex-shrink: 0;">
                 <h3 style="margin-top:0; font-size:15px;">데이터 추가</h3>
                 
                 <!-- 기본 등록 파일 5개 선택 영역 -->
@@ -243,7 +251,7 @@
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%95%94%EA%B8%B0%EC%B1%8C%EB%A6%B0%EC%A7%80.txt">암기챌린지</option>
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%BA%94%EC%9E%89%EA%B8%80%EB%A6%AC%EC%8B%9C.txt">캔잉글리시</option>
                         <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/10%EB%85%84%EC%9D%98%20%EC%98%81%EC%96%B4%EB%B0%A9%EC%86%A1%20%ED%9A%8C%ED%99%94%ED%91%9C%ED%98%84%209400.txt">10년의 영어방송 회화표현 9400</option>
-                        <option value="여기에_5번_Raw_URL을_입력하세요">기본 단어장 5</option>
+                        <option value="https://raw.githubusercontent.com/narpheus-cpu/sol-flashcards/refs/heads/main/%EC%98%81%ED%99%94%20%EC%8B%9C%EB%86%89%EC%8B%9C%EC%8A%A4.txt">영화 시놉시스</option>
                     </select>
                     <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="loadFromPresetUrl()">내려받기</button>
                 </div>
@@ -256,12 +264,12 @@
                 <button class="btn-primary" style="margin-top:8px;" onclick="importText()">텍스트 등록</button>
             </div>
 
-            <div class="list-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div class="list-card" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0;">
                     <h3 style="margin:0; font-size:15px;">단어 목록 (<span id="totalCount">0</span>)</h3>
                     <button class="btn-outline" style="width:auto; padding:6px 12px; font-size:12px;" onclick="clearCurrentSlot()">슬롯 비우기</button>
                 </div>
-                <div class="control-group">
+                <div class="control-group" style="flex-shrink: 0;">
                     <input type="text" id="searchInput" placeholder="🔍 검색어 입력..." oninput="renderWordList()">
                     <select id="filterSelect" onchange="renderWordList()">
                         <option value="ALL">전체 보기</option>
@@ -272,7 +280,7 @@
                         <option value="MAX">만점 단어</option>
                     </select>
                 </div>
-                <div class="control-group">
+                <div class="control-group" style="flex-shrink: 0;">
                     <select id="sortSelect" onchange="renderWordList()">
                         <option value="CREATED_DESC">입력 역순 (최신순)</option>
                         <option value="CREATED_ASC">입력 순</option>
@@ -284,7 +292,8 @@
                         <option value="SCORE_DESC">점수 높은 순</option>
                     </select>
                 </div>
-                <div id="wordListArea"></div>
+                <!-- 단어 목록 스크롤 영역 -->
+                <div id="wordListArea" style="flex: 1; overflow-y: auto; padding-bottom: 10px;"></div>
             </div>
         </div>
 
@@ -330,31 +339,38 @@
         <div id="viewQuizPlay" class="view-content">
             <div class="quiz-container">
                 
-                <!-- [듣기] [점수] [수정] 한 줄 배치 -->
+                <!-- [듣기] [점수] [수정] -->
                 <div class="quiz-header-row">
                     <button class="btn-icon" onclick="playTTS()" title="발음 듣기"><span>🔊</span></button>
                     <div class="status-bar" id="quizStatus">1 / 10 (현재 0점)</div>
                     <button class="btn-icon" onclick="toggleEditCard()" title="수정하기"><span>✏️</span></button>
                 </div>
                 
-                <div class="swipe-card" id="quizCard">
-                    <!-- 스와이프 인디케이터 -->
+                <!-- 수정된 카드 래퍼 영역 (유연하게 조절됨) -->
+                <div class="swipe-card-wrapper" id="quizCard">
+                    <!-- 인디케이터 -->
                     <div class="swipe-indicator swipe-left-text" id="indO">⭕ 맞음!</div>
                     <div class="swipe-indicator swipe-up-text" id="indX">❌ 틀림!</div>
                     
-                    <div class="quiz-target" id="qKorean">로딩중...</div>
-                    <div class="quiz-meaning" id="qEnglishMasked"></div>
+                    <!-- 카드 내부 스크롤 콘텐츠 -->
+                    <div class="swipe-card-content">
+                        <div class="quiz-target" id="qKorean">로딩중...</div>
+                        <div class="quiz-meaning" id="qEnglishMasked"></div>
+                    </div>
+
+                    <!-- 실시간 단어 수정 박스 (카드 안쪽 하단에 뜨도록 이동) -->
+                    <div class="edit-card" id="quizEditCard">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                            <span class="edit-card-title" style="margin:0;">현재 데이터 수정</span>
+                            <span style="font-size:20px; cursor:pointer;" onclick="toggleEditCard()">×</span>
+                        </div>
+                        <input type="text" id="editKoreanInput" placeholder="한국어 원문" style="margin-bottom:8px;">
+                        <input type="text" id="editEnglishInput" placeholder="영어 번역문" style="margin-bottom:12px;">
+                        <button class="btn-primary" style="padding:10px; font-size:13px;" onclick="saveLiveEdit()">즉시 저장</button>
+                    </div>
                 </div>
 
-                <!-- 실시간 단어 수정 박스 -->
-                <div class="edit-card" id="quizEditCard">
-                    <div class="edit-card-title">현재 데이터 수정</div>
-                    <input type="text" id="editKoreanInput" placeholder="한국어 원문" style="margin-bottom:8px;">
-                    <input type="text" id="editEnglishInput" placeholder="영어 번역문" style="margin-bottom:12px;">
-                    <button class="btn-primary" style="padding:10px; font-size:13px;" onclick="saveLiveEdit()">즉시 저장</button>
-                </div>
-
-                <!-- [이전] [AI+] [다음] 한 줄 배치 -->
+                <!-- [이전] [AI+] [다음] 하단 고정 -->
                 <div class="nav-btn-row">
                     <button class="btn-nav-small" onclick="prevQuestion()">이전</button>
                     <button class="btn-ai-mono" onclick="copyStudyFurther()">[AI+]</button>
@@ -808,7 +824,7 @@
         document.getElementById('pasteArea').value = '';
     }
 
-    // ★ 깃허브 URL 불러올 때 파일명을 자동으로 추출하여 슬롯 이름으로 지정 및 역순 방지 ★
+    // ★ 깃허브 URL 불러오기 (역순 방지 처리 적용) ★
     async function loadFromPresetUrl() {
         const selectElement = document.getElementById('presetUrlSelect');
         const urlInput = selectElement.value;
@@ -817,13 +833,9 @@
             return alert('유효한 기본 등록 파일을 선택해주세요.');
         }
         
-        // URL에서 파일명 추출 (예: %EB%B0%B0...txt -> 디코딩하여 깨끗한 파일명으로 변환)
         let rawFileName = urlInput.split('/').pop().split('?')[0] || '단어장';
-        try {
-            rawFileName = decodeURIComponent(rawFileName);
-        } catch(e) {}
-        
-        let cleanFileName = rawFileName.replace(/\.[^/.]+$/, ""); // 확장자 제거
+        try { rawFileName = decodeURIComponent(rawFileName); } catch(e) {}
+        let cleanFileName = rawFileName.replace(/\.[^/.]+$/, ""); 
 
         try {
             const response = await fetch(urlInput);
@@ -842,6 +854,10 @@
                 }
                 const lines = rawText.split('\n');
                 
+                // 역순 입력을 방지하기 위해 배열을 뒤집습니다.
+                // 만약 이 코드를 넣었는데도 반대로 들어간다면 아래 줄을 주석 처리(//)해 주세요.
+                // lines.reverse(); 
+
                 rows = lines.map(line => {
                     if (line.includes('\t')) return line.split('\t');
                     if (line.includes(',')) return line.split(',');
@@ -853,7 +869,6 @@
                 rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             }
 
-            // 추출한 깃허브 파일명을 슬롯 이름으로 자동 적용
             await handleParsedRows(rows, cleanFileName);
             selectElement.selectedIndex = 0;
         } catch (error) {
@@ -1125,7 +1140,8 @@
 
         // 수직 스크롤(Y축 스와이프) 중이고 카드 내부에 스크롤 영역이 남아있다면 
         // preventDefault를 호출하지 않아 네이티브 스크롤을 허용함
-        if (isSwipeLocked && swipeAxis === 'Y' && card.scrollHeight > card.clientHeight) {
+        const contentArea = card.querySelector('.swipe-card-content');
+        if (isSwipeLocked && swipeAxis === 'Y' && contentArea && contentArea.scrollHeight > contentArea.clientHeight) {
             return;
         }
         
