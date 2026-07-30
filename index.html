@@ -667,7 +667,7 @@
     }
 
     /* ==========================================
-       통계 팝업 관리 (일별/월별/연도별)
+       통계 팝업 관리 (일별/월별/연도별) + 요일 표시 추가
        ========================================== */
     async function openStatsModal() {
         document.getElementById('statsPeriod').value = 'DAILY';
@@ -685,12 +685,16 @@
         
         // 날짜별 그룹핑
         const grouped = {};
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토']; // 요일 배열 추가
+
         history.forEach(h => {
             const d = new Date(h.timestamp);
             let key = '';
+            
             if (period === 'DAILY') {
-                // MM/DD 형식
-                key = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+                // MM/DD(요일) 형식
+                const dayStr = dayNames[d.getDay()];
+                key = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}(${dayStr})`;
             } else if (period === 'MONTHLY') {
                 // YYYY/MM 형식
                 key = `${d.getFullYear().toString().slice(2)}년 ${d.getMonth()+1}월`;
