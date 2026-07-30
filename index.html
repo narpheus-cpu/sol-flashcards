@@ -225,6 +225,10 @@
         }
         .modal-card { background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .modal-card h3 { margin-top: 0; font-size: 16px; color: var(--primary); margin-bottom: 16px; font-weight: 800; }
+        
+        /* 통계 차트 스크롤바 숨기기 */
+        .stats-chart-area::-webkit-scrollbar { height: 6px; }
+        .stats-chart-area::-webkit-scrollbar-thumb { background-color: #adb5bd; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -243,6 +247,7 @@
             <div id="slotCardsContainer" class="slot-list-container"></div>
             
             <div class="control-group" style="margin-top: 8px;">
+                <button class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px;" onclick="openStatsModal()">통계</button>
                 <button class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px;" onclick="exportAllData()">자료백업</button>
                 <label class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0;">
                     불러오기
@@ -427,13 +432,34 @@
             </div>
         </div>
     </div>
+    
+    <!-- 통계 팝업 모달 -->
+    <div id="statsModal" class="modal-overlay">
+        <div class="modal-card" style="width: 95%; max-width: 400px; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                <h3 style="margin:0; font-size: 18px;">학습 통계</h3>
+                <select id="statsPeriod" style="width: auto; padding: 6px 10px; font-size: 13px; font-weight: 700; border-radius: 6px; border: 1px solid var(--border);" onchange="renderStats()">
+                    <option value="DAILY">일별</option>
+                    <option value="MONTHLY">월별</option>
+                    <option value="YEARLY">연도별</option>
+                </select>
+            </div>
+            <!-- 통계 차트 (가로 스크롤 가능) -->
+            <div id="statsChart" class="stats-chart-area" style="display:flex; align-items:flex-end; gap:12px; height:200px; overflow-x:auto; padding-bottom:10px; border-bottom: 1px solid var(--border);">
+                <!-- 자바스크립트로 막대그래프가 주입됨 -->
+            </div>
+            <button class="btn-primary" style="margin-top: 16px;" onclick="closeStatsModal()">닫기</button>
+        </div>
+    </div>
 
 <script>
     /* ==========================================
        1. IndexedDB 설정 및 데이터베이스 접근
        ========================================== */
     const DB_NAME = 'AllInOneMobileDB_Final2'; 
+    const DB_VERSION = 2; // 통계 이력 관리를 위해 버전 2로 상승
     const STORE_NAME = 'words';
+    const HISTORY_STORE_NAME = 'studyHistory';
     let db;
     let currentSlotId = 1;
     let currentMode = 'List';
@@ -443,12 +469,17 @@
 
     function initDB() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, 1);
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
             request.onupgradeneeded = (e) => {
                 let tempDb = e.target.result;
                 if (!tempDb.objectStoreNames.contains(STORE_NAME)) {
                     const store = tempDb.createObjectStore(STORE_NAME, { keyPath: 'id' });
                     store.createIndex('slotId', 'slotId', { unique: false });
+                }
+                // 학습 이력 관리를 위한 신규 스토어 추가
+                if (!tempDb.objectStoreNames.contains(HISTORY_STORE_NAME)) {
+                    const historyStore = tempDb.createObjectStore(HISTORY_STORE_NAME, { keyPath: 'id' });
+                    historyStore.createIndex('timestamp', 'timestamp', { unique: false });
                 }
             };
             request.onsuccess = (e) => { db = e.target.result; resolve(); };
@@ -532,15 +563,45 @@
         });
     }
 
-    function exportAllData() {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-        const request = store.getAll();
+    // 학습 이력 기록 함수
+    async function recordStudyHistory(wordId, isCorrect) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(HISTORY_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(HISTORY_STORE_NAME);
+            const now = Date.now();
+            store.put({ id: now + '_' + wordId, timestamp: now, wordId: wordId, isCorrect: isCorrect });
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    }
 
-        request.onsuccess = () => {
+    // 학습 이력 불러오기 함수
+    async function getStudyHistory() {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(HISTORY_STORE_NAME, 'readonly');
+            const request = tx.objectStore(HISTORY_STORE_NAME).getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function exportAllData() {
+        try {
+            const words = await new Promise((res, rej) => {
+                const req = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).getAll();
+                req.onsuccess = () => res(req.result);
+                req.onerror = () => rej(req.error);
+            });
+            const history = await new Promise((res, rej) => {
+                const req = db.transaction(HISTORY_STORE_NAME, 'readonly').objectStore(HISTORY_STORE_NAME).getAll();
+                req.onsuccess = () => res(req.result);
+                req.onerror = () => rej(req.error);
+            });
+
             const dataToExport = {
                 slotNames: slotNames,
-                words: request.result
+                words: words,
+                history: history
             };
             
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport));
@@ -550,10 +611,9 @@
             document.body.appendChild(downloadAnchorNode); 
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
-        };
-        request.onerror = (e) => {
-            alert('데이터 백업에 실패했습니다: ' + e.target.error);
-        };
+        } catch (e) {
+            alert('데이터 백업에 실패했습니다: ' + e);
+        }
     }
 
     async function importAllData(e) {
@@ -571,7 +631,7 @@
                     return;
                 }
 
-                if (!confirm('기존 모든 슬롯 데이터와 단어장이 삭제되고 복원 파일의 데이터로 덮어씌워집니다. 진행하시겠습니까?')) {
+                if (!confirm('기존 모든 슬롯 데이터 및 통계가 삭제되고 복원 파일의 데이터로 덮어씌워집니다. 진행하시겠습니까?')) {
                     e.target.value = '';
                     return;
                 }
@@ -579,13 +639,16 @@
                 slotNames = importedData.slotNames;
                 saveSlotNames();
 
-                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const tx = db.transaction([STORE_NAME, HISTORY_STORE_NAME], 'readwrite');
                 const store = tx.objectStore(STORE_NAME);
+                const historyStore = tx.objectStore(HISTORY_STORE_NAME);
                 store.clear(); 
+                historyStore.clear();
                 
-                importedData.words.forEach(w => {
-                    store.put(w); 
-                });
+                importedData.words.forEach(w => store.put(w));
+                if (importedData.history) {
+                    importedData.history.forEach(h => historyStore.put(h));
+                }
 
                 tx.oncomplete = () => {
                     alert('성공적으로 모든 데이터를 복원했습니다.');
@@ -601,6 +664,79 @@
             }
         };
         reader.readAsText(file);
+    }
+
+    /* ==========================================
+       통계 팝업 관리 (일별/월별/연도별)
+       ========================================== */
+    async function openStatsModal() {
+        document.getElementById('statsPeriod').value = 'DAILY';
+        document.getElementById('statsModal').style.display = 'flex';
+        await renderStats();
+    }
+
+    function closeStatsModal() {
+        document.getElementById('statsModal').style.display = 'none';
+    }
+
+    async function renderStats() {
+        const history = await getStudyHistory();
+        const period = document.getElementById('statsPeriod').value;
+        
+        // 날짜별 그룹핑
+        const grouped = {};
+        history.forEach(h => {
+            const d = new Date(h.timestamp);
+            let key = '';
+            if (period === 'DAILY') {
+                // MM/DD 형식
+                key = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+            } else if (period === 'MONTHLY') {
+                // YYYY/MM 형식
+                key = `${d.getFullYear().toString().slice(2)}년 ${d.getMonth()+1}월`;
+            } else {
+                // YYYY 형식
+                key = `${d.getFullYear()}년`;
+            }
+            
+            // 키 기준(정렬을 위해 원시 YYYYMMDD 조합 값 생성)
+            const sortKey = period === 'DAILY' ? `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}` : 
+                            period === 'MONTHLY' ? `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}` : `${d.getFullYear()}`;
+            
+            if (!grouped[sortKey]) grouped[sortKey] = { label: key, count: 0 };
+            grouped[sortKey].count++;
+        });
+        
+        const keys = Object.keys(grouped).sort(); // 과거순부터 정렬
+        const container = document.getElementById('statsChart');
+        container.innerHTML = '';
+        
+        if (keys.length === 0) {
+            container.innerHTML = `<div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; color:var(--text-sub); font-size:14px; font-weight:700;">학습 기록이 없습니다.</div>`;
+            return;
+        }
+        
+        // 최대치 계산 (막대 그래프 상대 높이 계산용)
+        const maxVal = Math.max(...keys.map(k => grouped[k].count));
+        
+        keys.forEach(k => {
+            const item = grouped[k];
+            const heightPct = (item.count / maxVal) * 100;
+            const pxHeight = Math.max((heightPct / 100) * 150, 4); // 최대 150px, 최소 4px
+            
+            container.innerHTML += `
+                <div style="display:flex; flex-direction:column; align-items:center; min-width: 44px; margin-top: auto;">
+                    <span style="font-size:12px; font-weight:800; color:var(--primary); margin-bottom:6px;">${item.count}</span>
+                    <div style="width:28px; height:${pxHeight}px; background:var(--primary); border-radius:6px 6px 0 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: height 0.4s ease-out;"></div>
+                    <span style="font-size:11px; font-weight:700; color:var(--text-sub); margin-top:8px; white-space:nowrap;">${item.label}</span>
+                </div>
+            `;
+        });
+        
+        // 그래프 렌더링 후 오른쪽 끝(최신)으로 스크롤 이동
+        setTimeout(() => {
+            container.scrollLeft = container.scrollWidth;
+        }, 10);
     }
 
     /* ==========================================
@@ -1204,6 +1340,9 @@
             q.score = (q.score || 0) - 1;
         }
         await updateWord(q);
+        
+        // ⭐ 문제 결과 처리 시 학습 이력 기록
+        await recordStudyHistory(q.id, isCorrect);
 
         const card = document.getElementById('quizCard');
         
