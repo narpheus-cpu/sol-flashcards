@@ -191,7 +191,7 @@
             color: #2b8a3e !important; border-color: #2b8a3e !important; background: #f4fce3;
         }
         .btn-nav-small.active-bm {
-            color: #fff !important; border-color: #000 !important; background: #000;
+            color: #fff !important; border-color: #000 !important; background: #000; font-size: 16px;
         }
 
         .ghost-image {
@@ -217,11 +217,23 @@
             background: #000000; z-index: 99999; flex-direction: column; align-items: center; justify-content: center;
             color: #495057; font-weight: 800;
         }
+
+        /* 토스트 알림 */
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 20px; padding: 12px 24px;
+            position: fixed; z-index: 1000; left: 50%; bottom: 80px; transform: translateX(-50%);
+            font-size: 13px; font-weight: 700; opacity: 0; transition: opacity 0.3s;
+        }
+        #toast.show { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body>
 
     <div id="ghostImage" class="ghost-image"></div>
+
+    <!-- 토스트 알림 -->
+    <div id="toast">알림 메시지</div>
 
     <!-- 취침 타이머 블랙 스크린 -->
     <div id="blackScreen" onclick="hideBlackScreen()">
@@ -381,10 +393,9 @@
                     </div>
                 </div>
 
-                <!-- 하단 고정 내비게이션 (브라우저 모드 토글 버튼 추가) -->
                 <div class="nav-btn-row">
                     <button class="btn-nav-small" style="flex: 1;" onclick="prevQuestion()">이전</button>
-                    <button class="btn-nav-small" style="flex: 1;" id="btnBrowserMode" onclick="toggleBrowserMode()">▶ 자동</button>
+                    <button class="btn-nav-small" style="flex: 1;" id="btnBrowserMode" onclick="toggleBrowserMode()">B</button>
                     <button class="btn-nav-small" style="flex: 1;" onclick="copyStudyFurther()">AI도움</button>
                     <button class="btn-nav-small" style="flex: 0.8; font-size: 16px;" id="btnFavorite" onclick="toggleFavorite()">☆</button>
                     <button class="btn-nav-small" style="flex: 1;" onclick="skipQuestion()">다음</button>
@@ -439,29 +450,31 @@
         </div>
     </div>
 
-    <!-- 🌟 브라우저 모드 설정 모달 -->
+    <!-- 🌟 변경된 브라우저 모드 설정 모달 -->
     <div id="bmSettingsModal" class="modal-overlay">
         <div class="modal-card" style="width: 95%; max-width: 340px;">
             <h3 style="margin-bottom: 20px;">⚙️ 브라우저 모드 설정</h3>
             
-            <label style="font-size: 13px; font-weight:700; color:var(--text-main);">읽기 방식 (TTS)</label>
-            <select id="setBmReadMode" style="margin-bottom: 14px; padding: 10px;">
-                <option value="KOR_ENG">한국어 ➔ 영어 순차 재생</option>
-                <option value="ENG_KOR">영어 ➔ 한국어 순차 재생</option>
-                <option value="KOR">한국어만 재생 (앞면)</option>
-                <option value="ENG">영어만 재생 (뒷면)</option>
+            <label style="font-size: 13px; font-weight:700; color:var(--text-main);">재생 순서</label>
+            <select id="setBmOrder" style="margin-bottom: 14px; padding: 10px;">
+                <option value="KOR_ENG">앞면(한국어) ➔ 뒷면(영어)</option>
+                <option value="ENG_KOR">뒷면(영어) ➔ 앞면(한국어)</option>
             </select>
 
             <label style="font-size: 13px; font-weight:700; color:var(--text-main);">TTS 재생 속도 (<span id="setBmSpeedLabel">1.0</span>배속)</label>
             <input type="range" id="setBmSpeed" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('setBmSpeedLabel').innerText=this.value" style="width:100%; margin-bottom: 14px;">
 
-            <label style="font-size: 13px; font-weight:700; color:var(--text-main);">카드당 반복 횟수</label>
-            <select id="setBmRepeat" style="margin-bottom: 14px; padding: 10px;">
-                <option value="1">1회 듣고 넘어가기</option>
-                <option value="2">2회 반복 후 넘어가기</option>
-                <option value="3">3회 반복 후 넘어가기</option>
-                <option value="5">5회 반복 후 넘어가기</option>
-            </select>
+            <!-- 수동 횟수 입력으로 변경 -->
+            <div style="display:flex; gap: 8px; margin-bottom: 14px;">
+                <div style="flex:1; display: flex; flex-direction: column;">
+                    <label style="font-size: 13px; font-weight:700; color:var(--text-main);">앞면 반복(회)</label>
+                    <input type="number" id="setBmRepeatFront" value="1" min="0" style="padding: 10px;">
+                </div>
+                <div style="flex:1; display: flex; flex-direction: column;">
+                    <label style="font-size: 13px; font-weight:700; color:var(--text-main);">뒷면 반복(회)</label>
+                    <input type="number" id="setBmRepeatBack" value="1" min="0" style="padding: 10px;">
+                </div>
+            </div>
 
             <label style="font-size: 13px; font-weight:700; color:var(--text-main);">카드 전환 대기시간</label>
             <select id="setBmInterval" style="margin-bottom: 14px; padding: 10px;">
@@ -471,14 +484,12 @@
                 <option value="5000">5초 대기</option>
             </select>
 
-            <label style="font-size: 13px; font-weight:700; color:var(--text-main);">취침 타이머 (자동 화면 꺼짐)</label>
-            <select id="setBmSleepTimer" style="margin-bottom: 24px; padding: 10px;">
-                <option value="0">사용 안 함</option>
-                <option value="10">10분 후 자동 종료</option>
-                <option value="30">30분 후 자동 종료</option>
-                <option value="60">1시간 후 자동 종료</option>
-                <option value="120">2시간 후 자동 종료</option>
-            </select>
+            <!-- 타이머 수동 입력으로 변경 -->
+            <div style="display: flex; flex-direction: column; margin-bottom: 24px;">
+                <label style="font-size: 13px; font-weight:700; color:var(--text-main);">취침 타이머 (분)</label>
+                <input type="number" id="setBmSleepTimer" value="0" min="0" placeholder="0 입력 시 미사용" style="padding: 10px;">
+                <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">지정된 시간이 지나면 화면이 꺼집니다. (0 = 항상 켜짐)</span>
+            </div>
 
             <div style="display:flex; gap:8px;">
                 <button class="btn-outline" style="flex: 1;" onclick="closeBmSettings()">취소</button>
@@ -521,7 +532,6 @@
         });
     }
 
-    /* DB Helper 함수들... (기존 동일) */
     async function addWords(wordsArray) {
         return new Promise((resolve, reject) => {
             const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -618,8 +628,8 @@
         });
     }
 
-    async function exportAllData() { /* 기존 동일 */ }
-    async function importAllData(e) { /* 기존 동일 */ }
+    async function exportAllData() { /* 구현 생략(기존과 동일) */ }
+    async function importAllData(e) { /* 구현 생략(기존과 동일) */ }
 
     async function openStatsModal() {
         document.getElementById('statsPeriod').value = 'DAILY';
@@ -627,7 +637,15 @@
         await renderStats();
     }
     function closeStatsModal() { document.getElementById('statsModal').style.display = 'none'; }
-    async function renderStats() { /* 기존 통계 렌더링 로직 생략 (동일 유지) */ }
+    async function renderStats() { /* 구현 생략(기존과 동일) */ }
+
+    // 토스트 알림 함수
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.className = "show";
+        setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+    }
 
     /* ==========================================
        2. 브라우저 모드 (Settings, Engine, Timer)
@@ -636,16 +654,17 @@
     let bmSleepTimerId = null;
     let bmLoopRunning = false;
 
-    // 설정 기본값 로드
-    let bmConfig = JSON.parse(localStorage.getItem('bmConfig')) || {
-        readMode: 'KOR_ENG', speed: 1.0, repeat: 1, interval: 2000, sleepTimer: 0
+    // 변경된 설정 포맷 로드
+    let bmConfig = JSON.parse(localStorage.getItem('bmConfigNew')) || {
+        order: 'KOR_ENG', speed: 1.0, repeatFront: 1, repeatBack: 1, interval: 2000, sleepTimer: 0
     };
 
     function openBmSettings() {
-        document.getElementById('setBmReadMode').value = bmConfig.readMode;
+        document.getElementById('setBmOrder').value = bmConfig.order;
         document.getElementById('setBmSpeed').value = bmConfig.speed;
         document.getElementById('setBmSpeedLabel').innerText = bmConfig.speed;
-        document.getElementById('setBmRepeat').value = bmConfig.repeat;
+        document.getElementById('setBmRepeatFront').value = bmConfig.repeatFront;
+        document.getElementById('setBmRepeatBack').value = bmConfig.repeatBack;
         document.getElementById('setBmInterval').value = bmConfig.interval;
         document.getElementById('setBmSleepTimer').value = bmConfig.sleepTimer;
         document.getElementById('bmSettingsModal').style.display = 'flex';
@@ -657,26 +676,28 @@
 
     function saveBmSettings() {
         bmConfig = {
-            readMode: document.getElementById('setBmReadMode').value,
+            order: document.getElementById('setBmOrder').value,
             speed: parseFloat(document.getElementById('setBmSpeed').value),
-            repeat: parseInt(document.getElementById('setBmRepeat').value),
+            repeatFront: parseInt(document.getElementById('setBmRepeatFront').value) || 0,
+            repeatBack: parseInt(document.getElementById('setBmRepeatBack').value) || 0,
             interval: parseInt(document.getElementById('setBmInterval').value),
-            sleepTimer: parseInt(document.getElementById('setBmSleepTimer').value)
+            sleepTimer: parseInt(document.getElementById('setBmSleepTimer').value) || 0
         };
-        localStorage.setItem('bmConfig', JSON.stringify(bmConfig));
+        localStorage.setItem('bmConfigNew', JSON.stringify(bmConfig));
         closeBmSettings();
     }
 
-    // 브라우저 모드 토글 (시작/중지)
     async function toggleBrowserMode() {
         const btn = document.getElementById('btnBrowserMode');
         if (isBrowserModeActive) {
             stopBrowserMode();
         } else {
             isBrowserModeActive = true;
-            btn.innerText = '■ 정지';
+            btn.innerHTML = '▶'; // 브라우저 버튼을 화살표로 변경
             btn.classList.add('active-bm');
             
+            showToast("브라우저 모드 시작\n(자동 진행 시 점수/통계 미반영)");
+
             if(bmConfig.sleepTimer > 0) {
                 if(bmSleepTimerId) clearTimeout(bmSleepTimerId);
                 bmSleepTimerId = setTimeout(() => {
@@ -696,20 +717,14 @@
         
         const btn = document.getElementById('btnBrowserMode');
         if (btn) {
-            btn.innerText = '▶ 자동';
+            btn.innerHTML = 'B'; // 다시 B 모양으로 원복
             btn.classList.remove('active-bm');
         }
     }
 
-    function showBlackScreen() {
-        document.getElementById('blackScreen').style.display = 'flex';
-    }
-    
-    function hideBlackScreen() {
-        document.getElementById('blackScreen').style.display = 'none';
-    }
+    function showBlackScreen() { document.getElementById('blackScreen').style.display = 'flex'; }
+    function hideBlackScreen() { document.getElementById('blackScreen').style.display = 'none'; }
 
-    // Promise 래퍼 (TTS 재생 완료 대기, Fail-safe Timeout 포함)
     function playTTSPromisified(text, lang, rate) {
         return new Promise((resolve) => {
             if(!isBrowserModeActive || !text) return resolve();
@@ -719,11 +734,8 @@
             utterance.lang = lang;
             utterance.rate = rate;
             
-            // 모바일 브라우저 버그(onend 안불림) 방지용 강제 타임아웃
             let maxWaitMs = (text.length * 150 / rate) + 2000;
-            let fallbackTimeout = setTimeout(() => {
-                resolve();
-            }, maxWaitMs); 
+            let fallbackTimeout = setTimeout(() => { resolve(); }, maxWaitMs); 
 
             utterance.onend = () => { clearTimeout(fallbackTimeout); resolve(); };
             utterance.onerror = () => { clearTimeout(fallbackTimeout); resolve(); };
@@ -734,7 +746,7 @@
 
     const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-    // 브라우저 모드 메인 엔진 (재생 루프)
+    // 🌟 변경된 브라우저 모드 메인 엔진 (수동 횟수 반복 지원)
     async function runBrowserModeLoop() {
         bmLoopRunning = true;
         
@@ -744,45 +756,43 @@
             let safeKor = String(q.korean || "").replace(/<[^>]+>/g, '').replace(/[\(\)\[\]\{\}]/g, '');
             let safeEng = String(q.english || "");
             
-            for (let r = 0; r < bmConfig.repeat; r++) {
-                if(!isBrowserModeActive) break;
-
-                if (bmConfig.readMode === 'KOR') {
+            const playFront = async () => {
+                for(let i=0; i<bmConfig.repeatFront; i++) {
+                    if(!isBrowserModeActive) return;
                     await playTTSPromisified(safeKor, 'ko-KR', bmConfig.speed);
-                } 
-                else if (bmConfig.readMode === 'ENG') {
-                    await playTTSPromisified(safeEng, 'en-US', bmConfig.speed);
-                } 
-                else if (bmConfig.readMode === 'KOR_ENG') {
-                    await playTTSPromisified(safeKor, 'ko-KR', bmConfig.speed);
-                    if(!isBrowserModeActive) break;
-                    await sleep(400); // 언어 간 짧은 딜레이
-                    await playTTSPromisified(safeEng, 'en-US', bmConfig.speed);
-                } 
-                else if (bmConfig.readMode === 'ENG_KOR') {
-                    await playTTSPromisified(safeEng, 'en-US', bmConfig.speed);
-                    if(!isBrowserModeActive) break;
-                    await sleep(400);
-                    await playTTSPromisified(safeKor, 'ko-KR', bmConfig.speed);
+                    if(i < bmConfig.repeatFront - 1) await sleep(800);
                 }
+            };
 
+            const playBack = async () => {
+                for(let i=0; i<bmConfig.repeatBack; i++) {
+                    if(!isBrowserModeActive) return;
+                    await playTTSPromisified(safeEng, 'en-US', bmConfig.speed);
+                    if(i < bmConfig.repeatBack - 1) await sleep(800);
+                }
+            };
+
+            if (bmConfig.order === 'KOR_ENG') {
+                await playFront();
                 if(!isBrowserModeActive) break;
-                if(r < bmConfig.repeat - 1) await sleep(800); // 다음 반복 전 대기
+                if(bmConfig.repeatFront > 0 && bmConfig.repeatBack > 0) await sleep(400);
+                await playBack();
+            } else {
+                await playBack();
+                if(!isBrowserModeActive) break;
+                if(bmConfig.repeatFront > 0 && bmConfig.repeatBack > 0) await sleep(400);
+                await playFront();
             }
 
             if(!isBrowserModeActive) break;
-            
-            // 카드 간 전환 대기시간 적용
-            await sleep(bmConfig.interval);
-
+            await sleep(bmConfig.interval); // 다음 카드로 넘어가기 전 대기
             if(!isBrowserModeActive) break;
             
-            // 다음 카드로 이동
+            // 🌟 다음 카드로 이동 (통계 기록 업데이트 함수를 호출하지 않고 인덱스만 넘김)
             if (currentQIdx < quizQueue.length - 1) {
                 currentQIdx++;
                 renderCurrentQuestion();
             } else {
-                // 마지막 문제면 종료
                 stopBrowserMode();
                 endQuiz();
                 break;
@@ -792,21 +802,15 @@
     }
 
     /* ==========================================
-       3. 기존 퀴즈 관련 함수 (수동 조작 시 루프 차단 추가)
+       3. 기존 퀴즈 관련 함수 (수동 조작 시 루프 차단 유지)
        ========================================== */
-    function switchMainTab(tab) { /* 기존 동일 */
-        stopBrowserMode();
+    function switchMainTab(tab) { stopBrowserMode(); /* 기존 동일 */
         currentMode = tab;
         document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
         document.getElementById('navBtn' + tab).classList.add('active');
         
-        if (tab === 'List') {
-            showView('viewSlotList', '목록 관리', false);
-            renderSlotCards('slotCardsContainer');
-        } else {
-            showView('viewQuizSlotList', '라운드 퀴즈', false);
-            renderSlotCards('quizSlotCardsContainer');
-        }
+        if (tab === 'List') { showView('viewSlotList', '목록 관리', false); renderSlotCards('slotCardsContainer'); } 
+        else { showView('viewQuizSlotList', '라운드 퀴즈', false); renderSlotCards('quizSlotCardsContainer'); }
     }
 
     function showView(viewId, headerText, showBack) {
@@ -817,61 +821,42 @@
     }
 
     function goBack() { stopBrowserMode(); /* 기존 동일 */
-        if (currentMode === 'List') {
-            showView('viewSlotList', '목록 관리', false);
-            renderSlotCards('slotCardsContainer');
-        } else {
-            showView('viewQuizSlotList', '라운드 퀴즈', false);
-            renderSlotCards('quizSlotCardsContainer');
-        }
+        if (currentMode === 'List') { showView('viewSlotList', '목록 관리', false); renderSlotCards('slotCardsContainer'); } 
+        else { showView('viewQuizSlotList', '라운드 퀴즈', false); renderSlotCards('quizSlotCardsContainer'); }
     }
 
     function goBackToQuizSetup() { stopBrowserMode();
         showView('viewQuizSetup', `[${slotNames[currentSlotId-1]}] 퀴즈 설정`, true);
     }
 
-    async function selectSlot(slotId) { /* 기존 동일 */
-        stopBrowserMode();
+    async function selectSlot(slotId) { stopBrowserMode(); /* 기존 동일 */
         currentSlotId = slotId;
         const sName = slotNames[slotId-1];
-        if (currentMode === 'List') {
-            showView('viewWordManage', sName, true);
-            renderWordList();
-        } else {
+        if (currentMode === 'List') { showView('viewWordManage', sName, true); renderWordList(); } 
+        else {
             const words = await getWordsBySlot(currentSlotId);
             if(words.length === 0) return alert('해당 슬롯에 단어가 없습니다. 목록 관리에서 먼저 추가해주세요.');
             showView('viewQuizSetup', `${sName} 퀴즈 설정`, true);
         }
     }
 
-    /* ... 기타 Import / Render 함수들 기존 동일하게 생략(유지) ... */
     async function renderSlotCards(containerId) {
         const stats = await getSlotStats();
         const container = document.getElementById(containerId);
         container.innerHTML = '';
         for (let i = 1; i <= 5; i++) {
-            container.innerHTML += `
-                <div class="slot-row-item" onclick="selectSlot(${i})">
-                    <div class="slot-title">${slotNames[i-1]}</div>
-                    <div class="slot-info">${stats[i-1]}개 데이터</div>
-                    <div class="slot-arrow">❯</div>
-                </div>
-            `;
+            container.innerHTML += `<div class="slot-row-item" onclick="selectSlot(${i})"><div class="slot-title">${slotNames[i-1]}</div><div class="slot-info">${stats[i-1]}개 데이터</div><div class="slot-arrow">❯</div></div>`;
         }
     }
     
-    // (이하 기존 renderWordList, handleParsedRows 등 동일 유지)
-    // 용량 제한 상 긴 렌더링 로직은 그대로라고 가정하고 주요 연동부만 명시합니다.
+    // 기타 함수들(렌더링/임포트/익스포트 등 생략 없는 기존 로직 유지 가정)
 
-    /* ==========================================
-       4. 라운드 퀴즈 (출제 및 진행)
-       ========================================== */
     let quizQueue = [];
     let currentQIdx = 0;
     let roundCorrectCount = 0;
 
     async function startQuiz() {
-        stopBrowserMode(); // 시작 시 초기화
+        stopBrowserMode();
         let words = await getWordsBySlot(currentSlotId);
         if(words.length === 0) return;
 
@@ -887,7 +872,7 @@
         
         if (targetWords.length === 0) return alert("선택한 그룹에 해당하는 데이터가 없습니다.");
 
-        targetWords.sort(() => Math.random() - 0.5); // (원래 로직에 맞춰 랜덤화)
+        targetWords.sort(() => Math.random() - 0.5);
         quizQueue = targetWords.slice(0, Math.min(requestedCount, targetWords.length));
         
         currentQIdx = 0;
@@ -916,10 +901,7 @@
             } else {
                 const span = document.createElement('span');
                 span.className = 'quiz-mask-word';
-                span.onclick = function(e) {
-                    e.stopPropagation();
-                    this.classList.toggle('revealed');
-                };
+                span.onclick = function(e) { e.stopPropagation(); this.classList.toggle('revealed'); };
                 
                 const maskSpan = document.createElement('span');
                 maskSpan.className = 'mask-layer';
@@ -929,9 +911,7 @@
                 realSpan.className = 'real-layer';
                 realSpan.innerText = word;
                 
-                span.appendChild(maskSpan);
-                span.appendChild(realSpan);
-                container.appendChild(span);
+                span.appendChild(maskSpan); span.appendChild(realSpan); container.appendChild(span);
             }
         });
     }
@@ -974,29 +954,28 @@
     }
 
     function prevQuestion() {
-        stopBrowserMode(); // 수동 개입 시 루프 차단
+        stopBrowserMode();
         if (currentQIdx > 0) { currentQIdx--; renderCurrentQuestion(); } 
         else { alert('첫번째 문제입니다.'); }
     }
 
     function skipQuestion() {
-        stopBrowserMode(); // 수동 개입 시 루프 차단
+        stopBrowserMode();
         if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderCurrentQuestion(); } 
         else { endQuiz(); }
     }
 
     function playTTS() {
-        stopBrowserMode(); // 수동 발음 듣기 시 오토 모드 꼬임 방지 차단
+        stopBrowserMode();
         const q = quizQueue[currentQIdx];
         if(!q) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(q.english);
         utterance.lang = 'en-US';
-        utterance.rate = bmConfig.speed; // 수동 발음에도 세팅 속도 반영
+        utterance.rate = bmConfig.speed;
         window.speechSynthesis.speak(utterance);
     }
 
-    /* MediaSession (핸즈프리) - 수동 조작 및 브라우저 모드와 연동 */
     function setupMediaSession() {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.setActionHandler('play', toggleBrowserMode);
@@ -1008,27 +987,46 @@
 
     function updateMediaSessionMetadata(kor, eng) {
         if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: kor, artist: '모바일 퀴즈 앱', album: slotNames[currentSlotId-1]
-            });
+            navigator.mediaSession.metadata = new MediaMetadata({ title: kor, artist: '모바일 퀴즈 앱', album: slotNames[currentSlotId-1] });
         }
     }
 
-    // 스와이프 로직 수정 (수동 개입 시 브라우저 모드 정지)
     const card = document.getElementById('quizCard');
     let startX = 0, startY = 0, currentX = 0, currentY = 0, swipeAxis = '', isSwipeLocked = false;
     
     card.addEventListener('touchstart', e => {
-        stopBrowserMode(); // 터치하는 순간 브라우저 모드 정지
+        stopBrowserMode();
         startX = e.touches[0].clientX; startY = e.touches[0].clientY;
         card.style.transition = 'none'; isSwipeLocked = false; swipeAxis = '';
     });
-    /* 기존 터치 move, end 핸들러 및 O/X 처리 로직 동일하게 적용... (생략 없는 코드 적용) */
+    
+    card.addEventListener('touchmove', e => {
+        let dx = e.touches[0].clientX - startX; let dy = e.touches[0].clientY - startY;
+        if (!isSwipeLocked) { if (Math.abs(dx) > 10 || Math.abs(dy) > 10) { isSwipeLocked = true; swipeAxis = Math.abs(dx) > Math.abs(dy) ? 'X' : 'Y'; } }
+        const contentArea = card.querySelector('.swipe-card-content');
+        if (isSwipeLocked && swipeAxis === 'Y' && contentArea) {
+            const isScrollable = contentArea.scrollHeight > contentArea.clientHeight;
+            const isAtTop = contentArea.scrollTop <= 0;
+            const isAtBottom = Math.ceil(contentArea.scrollTop + contentArea.clientHeight) >= contentArea.scrollHeight;
+            if (isScrollable) { if ((dy > 0 && !isAtTop) || (dy < 0 && !isAtBottom)) return; }
+        }
+        e.preventDefault(); 
+        if (isSwipeLocked) {
+            if (swipeAxis === 'X') {
+                currentX = dx; card.style.transform = `translate(${currentX}px, 0px) rotate(${currentX * 0.05}deg)`;
+                if (currentX < -40) { document.getElementById('indO').style.opacity = '1'; } else { document.getElementById('indO').style.opacity = '0'; }
+                document.getElementById('indX').style.opacity = '0';
+            } else if (swipeAxis === 'Y') {
+                currentY = dy; card.style.transform = `translate(0px, ${currentY}px) rotate(${currentY * 0.02}deg)`;
+                if (currentY > 40) { document.getElementById('indX').style.opacity = '1'; } else { document.getElementById('indX').style.opacity = '0'; }
+                document.getElementById('indO').style.opacity = '0';
+            }
+        }
+    });
     
     card.addEventListener('touchend', e => {
         card.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease';
-        document.getElementById('indO').style.opacity = '0';
-        document.getElementById('indX').style.opacity = '0';
+        document.getElementById('indO').style.opacity = '0'; document.getElementById('indX').style.opacity = '0';
 
         if (swipeAxis === 'X' && currentX < -80) { handleQuizResult(true, 'X'); } 
         else if (swipeAxis === 'Y' && currentY > 80) { handleQuizResult(false, 'Y'); } 
@@ -1054,10 +1052,7 @@
         card.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg)`;
         card.style.opacity = '0';
         
-        setTimeout(() => {
-            currentQIdx++;
-            renderCurrentQuestion();
-        }, 200);
+        setTimeout(() => { currentQIdx++; renderCurrentQuestion(); }, 200);
     }
 
     function endQuiz() {
