@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 모바일 백그라운드 완화를 위한 Standalone 모드 메타 태그 -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -65,11 +64,10 @@
         }
         nav button.active { color: #ffffff; font-weight: 800; }
         
-        /* 뷰 컨트롤 */
         .view-content { display: none; flex: 1; height: 100%; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .view-content.active { display: flex; flex-direction: column; }
 
-        /* 독립된 브라우저 모드 뷰 특화 스타일 */
+        /* 독립 브라우저 모드 전용 OLED 블랙 스크린 */
         #viewBrowserMode {
             background-color: #000000;
             color: #ffffff;
@@ -81,8 +79,8 @@
         .bm-status { font-size: 14px; color: #868e96; font-weight: 800; margin-bottom: 30px; letter-spacing: 1px; }
         .bm-kor { font-size: 32px; font-weight: 900; margin-bottom: 20px; line-height: 1.3; word-break: keep-all; }
         .bm-eng { font-size: 24px; font-weight: 700; color: #adb5bd; line-height: 1.4; word-break: keep-all; margin-bottom: 40px; }
-        .bm-controls { display: flex; gap: 16px; width: 100%; max-width: 300px; }
-        .bm-btn { flex: 1; padding: 16px 0; border-radius: 12px; font-size: 16px; font-weight: 800; border: none; background: #212529; color: #ffffff; cursor: pointer; }
+        .bm-controls { display: flex; gap: 16px; width: 100%; max-width: 320px; flex-wrap: wrap; }
+        .bm-btn { flex: 1; min-width: 90px; padding: 16px 0; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; background: #212529; color: #ffffff; cursor: pointer; }
         .bm-btn-stop { background: #c92a2a; color: #ffffff; }
 
         button { border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.15s; border: none; }
@@ -111,8 +109,25 @@
         .slot-info { font-size: 13px; color: var(--text-sub); font-weight: 600; text-align: right; min-width: 80px; }
         .slot-arrow { font-size: 14px; color: #adb5bd; margin-left: 12px; }
         
-        .control-group { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .control-group { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
         .control-group select, .control-group input { flex: 1; min-width: 100px; padding: 12px; }
+
+        .version-badge-container {
+            text-align: center;
+            margin-top: 4px;
+            margin-bottom: 14px;
+        }
+        .version-badge {
+            font-size: 11px;
+            font-weight: 800;
+            color: #495057;
+            background: #e9ecef;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
 
         .list-card { background: var(--card-bg); border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--border); flex-shrink: 0; }
         
@@ -248,11 +263,6 @@
 </head>
 <body>
 
-    <!-- 백그라운드 무음 오디오 -->
-    <audio id="keepAliveAudio" loop playsinline style="display:none;"></audio>
-    <!-- 실제 구글 스트리밍 오디오 -->
-    <audio id="ttsAudio" playsinline style="display:none;"></audio>
-
     <div id="ghostImage" class="ghost-image"></div>
     <div id="toast">알림 메시지</div>
 
@@ -272,13 +282,18 @@
         <div id="viewSlotList" class="view-content active">
             <div id="slotCardsContainer" class="slot-list-container"></div>
             
-            <div class="control-group" style="margin-top: 8px;">
+            <div class="control-group">
                 <button class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px;" onclick="openStatsModal()">통계</button>
                 <button class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px;" onclick="exportAllData()">자료백업</button>
                 <label class="btn-primary" style="flex: 1; padding: 12px; background: #000; color: #fff; font-size: 14px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0;">
                     불러오기
                     <input type="file" id="importDataInput" style="width: 0; height: 0; position: absolute; opacity: 0;" onchange="importAllData(event)">
                 </label>
+            </div>
+
+            <!-- 🌟 요청하신 [통계] 아이콘 밑 버전 표기 -->
+            <div class="version-badge-container">
+                <span class="version-badge">버전: v20260801_025407</span>
             </div>
         </div>
 
@@ -425,7 +440,7 @@
             </div>
         </div>
 
-        <!-- 🌟 독립된 브라우저 모드 뷰 -->
+        <!-- 🌟 독립 브라우저 모드 뷰 (중국 폰 OLED 절전 스크린) -->
         <div id="viewBrowserMode" class="view-content">
             <div class="bm-status" id="bmStatus">1 / 10</div>
             <div class="bm-kor" id="bmKor">로딩중...</div>
@@ -433,6 +448,7 @@
             
             <div class="bm-controls">
                 <button class="bm-btn" onclick="prevQuestionBM()">❮ 이전</button>
+                <button class="bm-btn" onclick="toggleFakeScreenOff()">🌙 화면 꺼기</button>
                 <button class="bm-btn bm-btn-stop" onclick="exitBrowserModeView()">■ 종료</button>
                 <button class="bm-btn" onclick="nextQuestionBM()">다음 ❯</button>
             </div>
@@ -454,7 +470,7 @@
         <button id="navBtnQuiz" onclick="switchMainTab('Quiz')">라운드 퀴즈</button>
     </nav>
 
-    <!-- 팝업들 -->
+    <!-- 모달 팝업들 -->
     <div id="wordEditModal" class="modal-overlay">
         <div class="modal-card">
             <h3>단어 수정</h3>
@@ -702,35 +718,51 @@
     }
 
     /* ==========================================
-       🌟 2. 웹 워커 타이머를 이용한 브라우저 모드
+       🌟 2. 중국 스마트폰 맞춤 음성엔진 및 브라우저 모드
        ========================================== */
     let isBrowserModeActive = false;
     let bmSleepTimerId = null;
     let bmLoopRunning = false;
+    let wakeLockSentinel = null;
 
-    // 브라우저 백그라운드 앱 킬(Kill) 방지용 무음 오디오
-    const keepAliveAudio = document.getElementById('keepAliveAudio');
-    const ttsAudio = document.getElementById('ttsAudio');
-
-    // 🌟 웹 워커를 이용한 절대 멈추지 않는 타이머
-    const timerWorkerCode = `
-        let timeoutId;
-        self.onmessage = function(e) {
-            if(e.data.cmd === 'start') { timeoutId = setTimeout(() => self.postMessage('tick'), e.data.ms); } 
-            else if(e.data.cmd === 'stop') { clearTimeout(timeoutId); }
-        };
-    `;
-    const timerBlob = new Blob([timerWorkerCode], {type: 'application/javascript'});
-    const timerWorker = new Worker(URL.createObjectURL(timerBlob));
-
-    // setTimeout 대신 사용할 웹 워커 기반 sleep 함수
-    function workerSleep(ms) {
-        return new Promise(resolve => {
-            timerWorker.onmessage = () => resolve();
-            timerWorker.postMessage({cmd: 'start', ms: ms});
-        });
+    let availableVoices = [];
+    function initVoices() {
+        if ('speechSynthesis' in window) {
+            availableVoices = window.speechSynthesis.getVoices();
+        }
     }
-    function stopWorkerSleep() { timerWorker.postMessage({cmd: 'stop'}); }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = initVoices;
+        initVoices();
+    }
+
+    // 🌟 중국 폰 핵심: 사용자 터치 제스처 시 음성 및 오디오 강제 언락(Unlock)
+    function unlockAudioAndTTS() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const silentUtterance = new SpeechSynthesisUtterance(' ');
+            silentUtterance.volume = 0;
+            window.speechSynthesis.speak(silentUtterance);
+        }
+    }
+
+    // 🌟 Wake Lock API (화면 꺼짐 강제 방지)
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLockSentinel = await navigator.wakeLock.request('screen');
+            }
+        } catch (err) {
+            console.log('WakeLock error:', err);
+        }
+    }
+
+    function releaseWakeLock() {
+        if (wakeLockSentinel) {
+            wakeLockSentinel.release().catch(e => {});
+            wakeLockSentinel = null;
+        }
+    }
 
     let bmConfig = JSON.parse(localStorage.getItem('bmConfigNew')) || {
         order: 'KOR_ENG', speed: 1.0, repeatFront: 1, repeatBack: 1, interval: 2000, sleepTimer: 0
@@ -752,8 +784,11 @@
         localStorage.setItem('bmConfigNew', JSON.stringify(bmConfig)); closeBmSettings();
     }
 
-    // 🌟 독립 브라우저 뷰 진입
+    // 브라우저 뷰 진입
     async function enterBrowserModeView() {
+        unlockAudioAndTTS(); // 터치 즉시 음성 언락 실행
+        await requestWakeLock(); // 화면 켜짐 유지
+
         document.getElementById('mainHeader').style.display = 'none'; document.getElementById('mainNav').style.display = 'none';
         document.body.style.backgroundColor = '#000000'; 
         document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
@@ -761,12 +796,6 @@
 
         isBrowserModeActive = true;
         showToast("백그라운드로 재생됩니다"); 
-        
-        keepAliveAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-        keepAliveAudio.play().catch(e => console.log("keepAlive error:", e));
-        
-        ttsAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-        await ttsAudio.play().catch(e => console.log("tts priming error:", e));
 
         if(bmConfig.sleepTimer > 0) {
             if(bmSleepTimerId) clearTimeout(bmSleepTimerId);
@@ -778,8 +807,8 @@
 
     function exitBrowserModeView() {
         isBrowserModeActive = false;
-        stopWorkerSleep(); // 워커 타이머 강제 해제
-        ttsAudio.pause(); keepAliveAudio.pause();
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        releaseWakeLock();
         if (bmSleepTimerId) clearTimeout(bmSleepTimerId);
 
         document.getElementById('mainHeader').style.display = 'flex'; document.getElementById('mainNav').style.display = 'flex';
@@ -787,8 +816,12 @@
         showView('viewQuizPlay', `[${slotNames[currentSlotId-1]}] 진행 중`, true); renderCurrentQuestion(); 
     }
 
-    function prevQuestionBM() { stopWorkerSleep(); ttsAudio.pause(); if (currentQIdx > 0) { currentQIdx--; renderBrowserModeContent(); } else { showToast('첫번째 문제입니다.'); } }
-    function nextQuestionBM() { stopWorkerSleep(); ttsAudio.pause(); if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderBrowserModeContent(); } else { exitBrowserModeView(); endQuiz(); } }
+    function toggleFakeScreenOff() {
+        showBlackScreen();
+    }
+
+    function prevQuestionBM() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); if (currentQIdx > 0) { currentQIdx--; renderBrowserModeContent(); } else { showToast('첫번째 문제입니다.'); } }
+    function nextQuestionBM() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderBrowserModeContent(); } else { exitBrowserModeView(); endQuiz(); } }
 
     function renderBrowserModeContent() {
         const q = quizQueue[currentQIdx]; if(!q) return;
@@ -799,29 +832,58 @@
     function showBlackScreen() { document.getElementById('blackScreen').style.display = 'flex'; }
     function hideBlackScreen() { document.getElementById('blackScreen').style.display = 'none'; }
 
-    // 구글 외부 TTS 오디오 활용 (내장 speechSynthesis가 백그라운드에서 죽는 현상 회피)
+    // 🌟 중국 폰 안심 음성 재생 프로미스 (스킵 없이 무조건 재생 보장)
     function playTTSPromisified(text, lang, rate) {
         return new Promise((resolve) => {
             if(!isBrowserModeActive || !text) return resolve();
             
-            const tl = lang.startsWith('ko') ? 'ko' : 'en';
-            const safeText = text.substring(0, 200); 
-            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${encodeURIComponent(safeText)}`;
-            
-            ttsAudio.src = url;
-            ttsAudio.playbackRate = rate;
-            
-            let maxWaitMs = (safeText.length * 150 / rate) + 4000;
-            let fallbackTimeout = setTimeout(() => { ttsAudio.onended = null; ttsAudio.onerror = null; resolve(); }, maxWaitMs);
+            if (!('speechSynthesis' in window)) {
+                setTimeout(resolve, 1000);
+                return;
+            }
 
-            ttsAudio.onended = () => { clearTimeout(fallbackTimeout); resolve(); };
-            ttsAudio.onerror = (e) => { clearTimeout(fallbackTimeout); resolve(); };
-            
-            ttsAudio.play().catch(e => { clearTimeout(fallbackTimeout); resolve(); });
+            window.speechSynthesis.cancel(); 
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang; utterance.rate = rate;
+
+            if (availableVoices.length > 0) {
+                const targetLang = lang.startsWith('ko') ? 'ko' : 'en';
+                const matchedVoice = availableVoices.find(v => v.lang.toLowerCase().includes(targetLang));
+                if (matchedVoice) utterance.voice = matchedVoice;
+            }
+
+            let done = false;
+            function finish() {
+                if(!done) {
+                    done = true;
+                    utterance.onend = null;
+                    utterance.onerror = null;
+                    resolve();
+                }
+            }
+
+            utterance.onend = () => finish();
+            utterance.onerror = (e) => {
+                // 중국 폰에서 에러 발생 시 즉각 스킵되지 않도록 1.2초 안전 대기 후 넘김
+                setTimeout(finish, 1200);
+            };
+
+            window.speechSynthesis.speak(utterance);
+
+            // 타임아웃 안전망
+            const maxWaitMs = (text.length * 200 / rate) + 2500;
+            setTimeout(() => {
+                if(!done) {
+                    window.speechSynthesis.cancel();
+                    finish();
+                }
+            }, maxWaitMs);
         });
     }
 
-    // 워커 슬립(Worker Sleep)을 이용한 무중단 재생 루프
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
     async function runBrowserModeLoop() {
         bmLoopRunning = true;
         while (isBrowserModeActive && currentQIdx < quizQueue.length) {
@@ -833,28 +895,28 @@
             const playFront = async () => {
                 for(let i=0; i<bmConfig.repeatFront; i++) {
                     if(!isBrowserModeActive) return; await playTTSPromisified(safeKor, 'ko-KR', bmConfig.speed);
-                    if(i < bmConfig.repeatFront - 1) await workerSleep(800);
+                    if(i < bmConfig.repeatFront - 1) await sleep(800);
                 }
             };
             const playBack = async () => {
                 for(let i=0; i<bmConfig.repeatBack; i++) {
                     if(!isBrowserModeActive) return; await playTTSPromisified(safeEng, 'en-US', bmConfig.speed);
-                    if(i < bmConfig.repeatBack - 1) await workerSleep(800);
+                    if(i < bmConfig.repeatBack - 1) await sleep(800);
                 }
             };
 
             if (bmConfig.order === 'KOR_ENG') {
                 await playFront(); if(!isBrowserModeActive) break;
-                if(bmConfig.repeatFront > 0 && bmConfig.repeatBack > 0) await workerSleep(400);
+                if(bmConfig.repeatFront > 0 && bmConfig.repeatBack > 0) await sleep(400);
                 await playBack();
             } else {
                 await playBack(); if(!isBrowserModeActive) break;
-                if(bmConfig.repeatFront > 0 && bmConfig.repeatBack > 0) await workerSleep(400);
+                if(bmConfig.repeatFront > 0 && bmConfig.repeatBack > 0) await sleep(400);
                 await playFront();
             }
 
             if(!isBrowserModeActive) break; 
-            await workerSleep(bmConfig.interval); // 워커를 이용한 휴식 타임
+            await sleep(bmConfig.interval); 
             if(!isBrowserModeActive) break;
             
             if (currentQIdx < quizQueue.length - 1) { currentQIdx++; } 
@@ -1031,6 +1093,7 @@
     let quizQueue = []; let currentQIdx = 0; let roundCorrectCount = 0;
 
     async function startQuiz() {
+        unlockAudioAndTTS(); // 수동 시작 터치 시에도 음성 엔진 언락
         if (isBrowserModeActive) exitBrowserModeView(); 
         let words = await getWordsBySlot(currentSlotId); if(words.length === 0) return;
         const groupFilter = document.getElementById('quizGroupFilter').value; const subCondition = document.getElementById('quizSubCondition').value;
@@ -1128,13 +1191,15 @@
         q.korean = newKor; q.english = newEng; await updateWord(q); document.getElementById('quizEditCard').style.display = 'none'; renderCurrentQuestion();
     }
 
-    // 수동 발음 듣기 (내장 TTS)
     function playManualTTS() {
+        unlockAudioAndTTS();
         const q = quizQueue[currentQIdx]; if(!q) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(q.english);
-        utterance.lang = 'en-US'; utterance.rate = bmConfig.speed;
-        window.speechSynthesis.speak(utterance);
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(q.english);
+            utterance.lang = 'en-US'; utterance.rate = bmConfig.speed;
+            window.speechSynthesis.speak(utterance);
+        }
     }
 
     function setupMediaSession() {
