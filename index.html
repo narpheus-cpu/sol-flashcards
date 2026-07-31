@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>모바일 슬롯 퀴즈 앱</title>
-    <!-- 엑셀/텍스트 파싱 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -211,12 +210,14 @@
         .stats-chart-area::-webkit-scrollbar { height: 6px; }
         .stats-chart-area::-webkit-scrollbar-thumb { background-color: #adb5bd; border-radius: 4px; }
 
+        /* 브라우저 모드 자동 종료 스크린 (취침 타이머) */
         #blackScreen {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000000; z-index: 99999; flex-direction: column; align-items: center; justify-content: center;
             color: #495057; font-weight: 800;
         }
 
+        /* 토스트 알림 */
         #toast {
             visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
             text-align: center; border-radius: 20px; padding: 12px 24px;
@@ -227,6 +228,12 @@
     </style>
 </head>
 <body>
+
+    <!-- 🌟 물리적으로 분리된 백그라운드 오디오 엔진 -->
+    <!-- 1. OS 백그라운드 생명 연장용 무음 오디오 -->
+    <audio id="keepAliveAudio" loop playsinline style="display:none;"></audio>
+    <!-- 2. 실제 구글 TTS 스트리밍용 오디오 -->
+    <audio id="ttsAudio" playsinline style="display:none;"></audio>
 
     <div id="ghostImage" class="ghost-image"></div>
     <div id="toast">알림 메시지</div>
@@ -261,6 +268,7 @@
         <div id="viewWordManage" class="view-content">
             <div class="list-card" style="flex-shrink: 0;">
                 <h3 style="margin-top:0; font-size:15px;">데이터 추가</h3>
+                
                 <div class="control-group" style="margin-bottom: 8px;">
                     <select id="presetUrlSelect" style="flex: 2;">
                         <option value="">기본 파일 선택...</option>
@@ -391,6 +399,7 @@
 
                 <div class="nav-btn-row">
                     <button class="btn-nav-small" style="flex: 1;" onclick="prevQuestion()">이전</button>
+                    <!-- 버튼 이름 다시 ▶ 자동으로 원복 -->
                     <button class="btn-nav-small" style="flex: 1;" id="btnBrowserMode" onclick="toggleBrowserMode()">▶ 자동</button>
                     <button class="btn-nav-small" style="flex: 1;" onclick="copyStudyFurther()">AI도움</button>
                     <button class="btn-nav-small" style="flex: 0.8; font-size: 16px;" id="btnFavorite" onclick="toggleFavorite()">☆</button>
@@ -415,6 +424,7 @@
         <button id="navBtnQuiz" onclick="switchMainTab('Quiz')">라운드 퀴즈</button>
     </nav>
 
+    <!-- 모달 등 팝업 UI들 -->
     <div id="wordEditModal" class="modal-overlay">
         <div class="modal-card">
             <h3>단어 수정</h3>
@@ -447,16 +457,13 @@
     <div id="bmSettingsModal" class="modal-overlay">
         <div class="modal-card" style="width: 95%; max-width: 340px;">
             <h3 style="margin-bottom: 20px;">⚙️ 브라우저 모드 설정</h3>
-            
             <label style="font-size: 13px; font-weight:700; color:var(--text-main);">재생 순서</label>
             <select id="setBmOrder" style="margin-bottom: 14px; padding: 10px;">
                 <option value="KOR_ENG">앞면(한국어) ➔ 뒷면(영어)</option>
                 <option value="ENG_KOR">뒷면(영어) ➔ 앞면(한국어)</option>
             </select>
-
             <label style="font-size: 13px; font-weight:700; color:var(--text-main);">TTS 재생 속도 (<span id="setBmSpeedLabel">1.0</span>배속)</label>
             <input type="range" id="setBmSpeed" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('setBmSpeedLabel').innerText=this.value" style="width:100%; margin-bottom: 14px;">
-
             <div style="display:flex; gap: 8px; margin-bottom: 14px;">
                 <div style="flex:1; display: flex; flex-direction: column;">
                     <label style="font-size: 13px; font-weight:700; color:var(--text-main);">앞면 반복(회)</label>
@@ -467,7 +474,6 @@
                     <input type="number" id="setBmRepeatBack" value="1" min="0" style="padding: 10px;">
                 </div>
             </div>
-
             <label style="font-size: 13px; font-weight:700; color:var(--text-main);">카드 전환 대기시간</label>
             <select id="setBmInterval" style="margin-bottom: 14px; padding: 10px;">
                 <option value="1000">1초 대기</option>
@@ -475,13 +481,11 @@
                 <option value="3000">3초 대기</option>
                 <option value="5000">5초 대기</option>
             </select>
-
             <div style="display: flex; flex-direction: column; margin-bottom: 24px;">
                 <label style="font-size: 13px; font-weight:700; color:var(--text-main);">취침 타이머 (분)</label>
                 <input type="number" id="setBmSleepTimer" value="0" min="0" placeholder="0 입력 시 미사용" style="padding: 10px;">
                 <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">지정된 시간이 지나면 화면이 꺼집니다. (0 = 항상 켜짐)</span>
             </div>
-
             <div style="display:flex; gap:8px;">
                 <button class="btn-outline" style="flex: 1;" onclick="closeBmSettings()">취소</button>
                 <button class="btn-primary" style="flex: 1.5;" onclick="saveBmSettings()">저장</button>
@@ -490,6 +494,9 @@
     </div>
 
 <script>
+    /* ==========================================
+       1. IndexedDB 설정 및 공통 변수
+       ========================================== */
     const DB_NAME = 'AllInOneMobileDB_Final2'; 
     const DB_VERSION = 2; 
     const STORE_NAME = 'words';
@@ -653,7 +660,6 @@
                 const req = db.transaction(HISTORY_STORE_NAME, 'readonly').objectStore(HISTORY_STORE_NAME).getAll();
                 req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
             });
-
             const dataToExport = { slotNames: slotNames, words: words, history: history };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport));
             const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr);
@@ -670,13 +676,11 @@
                 if (!importedData.slotNames || !importedData.words) { alert('유효하지 않은 백업 파일입니다.'); e.target.value = ''; return; }
                 if (!confirm('기존 모든 슬롯 데이터 및 통계가 삭제되고 복원 파일의 데이터로 덮어씌워집니다. 진행하시겠습니까?')) { e.target.value = ''; return; }
                 slotNames = importedData.slotNames; saveSlotNames();
-
                 const tx = db.transaction([STORE_NAME, HISTORY_STORE_NAME], 'readwrite');
                 const store = tx.objectStore(STORE_NAME); const historyStore = tx.objectStore(HISTORY_STORE_NAME);
                 store.clear(); historyStore.clear();
                 importedData.words.forEach(w => store.put(w));
                 if (importedData.history) importedData.history.forEach(h => historyStore.put(h));
-
                 tx.oncomplete = () => { alert('성공적으로 모든 데이터를 복원했습니다.'); e.target.value = ''; renderSlotCards('slotCardsContainer'); };
                 tx.onerror = (err) => { alert('데이터 복원 중 오류가 발생했습니다: ' + err.target.error); };
             } catch (err) { alert('파일을 읽는 중 오류가 발생했습니다. 올바른 백업 파일인지 확인해주세요.'); e.target.value = ''; }
@@ -698,15 +702,15 @@
     }
 
     /* ==========================================
-       2. 백그라운드 지원 브라우저 모드 (HTML Audio 방식)
+       2. 백그라운드 지원 브라우저 모드 (물리적 오디오 분리형)
        ========================================== */
     let isBrowserModeActive = false;
     let bmSleepTimerId = null;
     let bmLoopRunning = false;
 
-    // 🌟 전역 단일 오디오 플레이어 (백그라운드 미디어 세션 유지용)
-    const masterAudio = new Audio();
-    masterAudio.playsInline = true;
+    // 🌟 오디오 채널 분리: 백그라운드 생명 연장용(keepAlive) vs 실제 음성용(tts)
+    const keepAliveAudio = document.getElementById('keepAliveAudio');
+    const ttsAudio = document.getElementById('ttsAudio');
 
     let bmConfig = JSON.parse(localStorage.getItem('bmConfigNew')) || {
         order: 'KOR_ENG', speed: 1.0, repeatFront: 1, repeatBack: 1, interval: 2000, sleepTimer: 0
@@ -741,12 +745,14 @@
         } else {
             isBrowserModeActive = true;
             btn.innerHTML = '■ 정지'; btn.classList.add('active-bm');
-            
             showToast("백그라운드로 재생됩니다"); 
             
-            // 미디어 컨텍스트 활성화를 위한 초기 무음 재생
-            masterAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-            await masterAudio.play().catch(e => console.log("Init audio failed:", e));
+            // 🌟 권한 획득(Priming): 사용자가 버튼을 누른 이 순간 두 오디오를 모두 깨움
+            keepAliveAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            keepAliveAudio.play().catch(e => console.log("keepAlive error:", e));
+            
+            ttsAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            await ttsAudio.play().catch(e => console.log("tts priming error:", e));
 
             if(bmConfig.sleepTimer > 0) {
                 if(bmSleepTimerId) clearTimeout(bmSleepTimerId);
@@ -758,8 +764,8 @@
 
     function stopBrowserMode() {
         isBrowserModeActive = false;
-        masterAudio.pause();
-        window.speechSynthesis.cancel();
+        keepAliveAudio.pause();
+        ttsAudio.pause();
         if (bmSleepTimerId) clearTimeout(bmSleepTimerId);
         const btn = document.getElementById('btnBrowserMode');
         if (btn) { btn.innerHTML = '▶ 자동'; btn.classList.remove('active-bm'); }
@@ -768,44 +774,33 @@
     function showBlackScreen() { document.getElementById('blackScreen').style.display = 'flex'; }
     function hideBlackScreen() { document.getElementById('blackScreen').style.display = 'none'; }
 
-    // 🌟 구글 비공식 스트리밍 TTS 호출 (HTML Audio 이용)
+    // 🌟 구글 공식 번역기 스트리밍 우회 로직 (client=tw-ob 적용)
     function playTTSPromisified(text, lang, rate) {
         return new Promise((resolve) => {
             if(!isBrowserModeActive || !text) return resolve();
-            window.speechSynthesis.cancel(); 
             
             const tl = lang.startsWith('ko') ? 'ko' : 'en';
-            const safeText = text.substring(0, 200); // API 제한 안전장치
-            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=${tl}&q=${encodeURIComponent(safeText)}`;
+            const safeText = text.substring(0, 200); 
+            // 🌟 tw-ob 클라이언트를 사용하여 모바일에서의 권한 블록 원천 차단
+            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${encodeURIComponent(safeText)}`;
             
-            masterAudio.src = url;
-            masterAudio.playbackRate = rate;
+            ttsAudio.src = url;
+            ttsAudio.playbackRate = rate;
             
-            let maxWaitMs = (safeText.length * 150 / rate) + 3000;
+            let maxWaitMs = (safeText.length * 150 / rate) + 4000;
             let fallbackTimeout = setTimeout(() => {
-                masterAudio.onended = null; masterAudio.onerror = null; resolve();
+                ttsAudio.onended = null; ttsAudio.onerror = null; resolve();
             }, maxWaitMs);
 
-            masterAudio.onended = () => { clearTimeout(fallbackTimeout); resolve(); };
-            masterAudio.onerror = () => {
-                clearTimeout(fallbackTimeout); fallbackSpeechSynthesis(safeText, lang, rate).then(resolve);
+            ttsAudio.onended = () => { clearTimeout(fallbackTimeout); resolve(); };
+            ttsAudio.onerror = (e) => {
+                // 에러 발생 시 삼성 TTS(window.speechSynthesis)로 넘어가지 않고 즉각 스킵
+                clearTimeout(fallbackTimeout); resolve();
             };
-            masterAudio.play().catch(e => {
-                clearTimeout(fallbackTimeout); fallbackSpeechSynthesis(safeText, lang, rate).then(resolve);
+            
+            ttsAudio.play().catch(e => {
+                clearTimeout(fallbackTimeout); resolve();
             });
-        });
-    }
-
-    // 통신 오류 시 기존 시스템 폴백 
-    function fallbackSpeechSynthesis(text, lang, rate) {
-        return new Promise((resolve) => {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang; utterance.rate = rate;
-            let maxWaitMs = (text.length * 150 / rate) + 2000;
-            let fallbackTimeout = setTimeout(() => { resolve(); }, maxWaitMs); 
-            utterance.onend = () => { clearTimeout(fallbackTimeout); resolve(); };
-            utterance.onerror = () => { clearTimeout(fallbackTimeout); resolve(); };
-            window.speechSynthesis.speak(utterance);
         });
     }
 
@@ -1121,18 +1116,15 @@
         q.korean = newKor; q.english = newEng; await updateWord(q); document.getElementById('quizEditCard').style.display = 'none'; renderCurrentQuestion();
     }
 
-    // 수동 발음 듣기 시에도 통일된 마스터 오디오 엔진(구글 TTS API) 이용
+    // 🌟 수동 발음 듣기 시에도 새로운 TTS 오디오 객체 사용 (삼성 TTS 방지)
     function playTTS() {
         stopBrowserMode();
         const q = quizQueue[currentQIdx]; if(!q) return;
-        const safeEng = String(q.english || "");
-        const safeText = safeEng.substring(0, 200); 
-        const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=en&q=${encodeURIComponent(safeText)}`;
-        masterAudio.src = url; masterAudio.playbackRate = bmConfig.speed;
-        masterAudio.play().catch(e => {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(safeEng); utterance.lang = 'en-US'; utterance.rate = bmConfig.speed; window.speechSynthesis.speak(utterance);
-        });
+        const safeEng = String(q.english || "").substring(0, 200); 
+        const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(safeEng)}`;
+        ttsAudio.src = url;
+        ttsAudio.playbackRate = bmConfig.speed;
+        ttsAudio.play().catch(e => console.log("Manual TTS failed", e));
     }
 
     function setupMediaSession() {
