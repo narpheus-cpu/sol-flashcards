@@ -211,14 +211,12 @@
         .stats-chart-area::-webkit-scrollbar { height: 6px; }
         .stats-chart-area::-webkit-scrollbar-thumb { background-color: #adb5bd; border-radius: 4px; }
 
-        /* 브라우저 모드 자동 종료 스크린 (취침 타이머) */
         #blackScreen {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000000; z-index: 99999; flex-direction: column; align-items: center; justify-content: center;
             color: #495057; font-weight: 800;
         }
 
-        /* 토스트 알림 */
         #toast {
             visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
             text-align: center; border-radius: 20px; padding: 12px 24px;
@@ -230,16 +228,9 @@
 </head>
 <body>
 
-    <!-- 🌟 백그라운드 유지를 위한 무음 오디오 파일 (Base64) -->
-    <!-- 이 오디오가 재생되는 동안에는 스마트폰이 브라우저를 미디어 플레이어로 인식하여 백그라운드 멈춤을 방지합니다. -->
-    <audio id="keepAliveAudio" loop playsinline src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" style="display:none;"></audio>
-
     <div id="ghostImage" class="ghost-image"></div>
-
-    <!-- 토스트 알림 -->
     <div id="toast">알림 메시지</div>
 
-    <!-- 취침 타이머 블랙 스크린 -->
     <div id="blackScreen" onclick="hideBlackScreen()">
         <div style="font-size: 32px; margin-bottom: 20px;">🌙</div>
         <div>취침 타이머 종료됨</div>
@@ -270,7 +261,6 @@
         <div id="viewWordManage" class="view-content">
             <div class="list-card" style="flex-shrink: 0;">
                 <h3 style="margin-top:0; font-size:15px;">데이터 추가</h3>
-                
                 <div class="control-group" style="margin-bottom: 8px;">
                     <select id="presetUrlSelect" style="flex: 2;">
                         <option value="">기본 파일 선택...</option>
@@ -373,7 +363,6 @@
         <!-- 2-3. 퀴즈 플레이 뷰 -->
         <div id="viewQuizPlay" class="view-content">
             <div class="quiz-container">
-                
                 <div class="quiz-header-row">
                     <button class="btn-icon" onclick="playTTS()" title="발음 듣기"><span>🔊</span></button>
                     <div class="status-bar" id="quizStatus">1 / 10 (현재 0점)</div>
@@ -383,14 +372,12 @@
                 <div class="swipe-card-wrapper" id="quizCard">
                     <div class="swipe-indicator swipe-left-text" id="indO">⭕ 맞음!</div>
                     <div class="swipe-indicator swipe-up-text" id="indX">❌ 틀림!</div>
-                    
                     <div class="swipe-card-content">
                         <div class="swipe-card-inner">
                             <div class="quiz-target" id="qKorean">로딩중...</div>
                             <div class="quiz-meaning" id="qEnglishMasked"></div>
                         </div>
                     </div>
-
                     <div class="edit-card" id="quizEditCard">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
                             <span class="edit-card-title" style="margin:0;">현재 데이터 수정</span>
@@ -428,7 +415,6 @@
         <button id="navBtnQuiz" onclick="switchMainTab('Quiz')">라운드 퀴즈</button>
     </nav>
 
-    <!-- 단어 수정/삭제 모달 -->
     <div id="wordEditModal" class="modal-overlay">
         <div class="modal-card">
             <h3>단어 수정</h3>
@@ -443,7 +429,6 @@
         </div>
     </div>
     
-    <!-- 통계 팝업 모달 -->
     <div id="statsModal" class="modal-overlay">
         <div class="modal-card" style="width: 95%; max-width: 400px; padding: 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
@@ -459,7 +444,6 @@
         </div>
     </div>
 
-    <!-- 브라우저 모드 설정 모달 -->
     <div id="bmSettingsModal" class="modal-overlay">
         <div class="modal-card" style="width: 95%; max-width: 340px;">
             <h3 style="margin-bottom: 20px;">⚙️ 브라우저 모드 설정</h3>
@@ -506,9 +490,6 @@
     </div>
 
 <script>
-    /* ==========================================
-       1. IndexedDB 설정 및 공통 변수
-       ========================================== */
     const DB_NAME = 'AllInOneMobileDB_Final2'; 
     const DB_VERSION = 2; 
     const STORE_NAME = 'words';
@@ -544,8 +525,7 @@
             const tx = db.transaction(STORE_NAME, 'readwrite');
             const store = tx.objectStore(STORE_NAME);
             wordsArray.forEach(w => store.put(w));
-            tx.oncomplete = () => resolve();
-            tx.onerror = (e) => reject(e.target.error);
+            tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(e.target.error);
         });
     }
 
@@ -553,8 +533,7 @@
         return new Promise((resolve, reject) => {
             const tx = db.transaction(STORE_NAME, 'readwrite');
             tx.objectStore(STORE_NAME).put(wordObj);
-            tx.oncomplete = () => resolve();
-            tx.onerror = (e) => reject(e.target.error);
+            tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(e.target.error);
         });
     }
 
@@ -562,8 +541,7 @@
         return new Promise((resolve, reject) => {
             const tx = db.transaction(STORE_NAME, 'readonly');
             const request = tx.objectStore(STORE_NAME).get(id);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = (e) => reject(e.target.error);
+            request.onsuccess = () => resolve(request.result); request.onerror = (e) => reject(e.target.error);
         });
     }
 
@@ -571,8 +549,7 @@
         return new Promise((resolve, reject) => {
             const tx = db.transaction(STORE_NAME, 'readwrite');
             tx.objectStore(STORE_NAME).delete(id);
-            tx.oncomplete = () => resolve();
-            tx.onerror = (e) => reject(e.target.error);
+            tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(e.target.error);
         });
     }
 
@@ -581,8 +558,7 @@
             const tx = db.transaction(STORE_NAME, 'readonly');
             const index = tx.objectStore(STORE_NAME).index('slotId');
             const request = index.getAll(IDBKeyRange.only(slotId));
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = (e) => reject(e.target.error);
+            request.onsuccess = () => resolve(request.result); request.onerror = (e) => reject(e.target.error);
         });
     }
 
@@ -606,11 +582,8 @@
             const store = tx.objectStore(STORE_NAME);
             words.forEach(w => store.delete(w.id));
             tx.oncomplete = () => { 
-                slotNames[currentSlotId-1] = `슬롯 ${currentSlotId}`; 
-                saveSlotNames();
-                document.getElementById('appHeader').innerText = slotNames[currentSlotId-1];
-                renderWordList(); 
-                resolve(); 
+                slotNames[currentSlotId-1] = `슬롯 ${currentSlotId}`; saveSlotNames();
+                document.getElementById('appHeader').innerText = slotNames[currentSlotId-1]; renderWordList(); resolve(); 
             };
         });
     }
@@ -618,11 +591,9 @@
     async function recordStudyHistory(wordId, isCorrect) {
         return new Promise((resolve, reject) => {
             const tx = db.transaction(HISTORY_STORE_NAME, 'readwrite');
-            const store = tx.objectStore(HISTORY_STORE_NAME);
-            const now = Date.now();
+            const store = tx.objectStore(HISTORY_STORE_NAME); const now = Date.now();
             store.put({ id: now + '_' + wordId, timestamp: now, wordId: wordId, isCorrect: isCorrect });
-            tx.oncomplete = () => resolve();
-            tx.onerror = (e) => reject(e.target.error);
+            tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(e.target.error);
         });
     }
 
@@ -630,29 +601,21 @@
         return new Promise((resolve, reject) => {
             const tx = db.transaction(HISTORY_STORE_NAME, 'readonly');
             const request = tx.objectStore(HISTORY_STORE_NAME).getAll();
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = (e) => reject(e.target.error);
+            request.onsuccess = () => resolve(request.result); request.onerror = (e) => reject(e.target.error);
         });
     }
 
-    /* 통계 렌더링 정상 복구 */
     async function renderStats() {
-        const history = await getStudyHistory();
-        const period = document.getElementById('statsPeriod').value;
-        const grouped = {};
-        const dayNames = ['일', '월', '화', '수', '목', '금', '토']; 
+        const history = await getStudyHistory(); const period = document.getElementById('statsPeriod').value;
+        const grouped = {}; const dayNames = ['일', '월', '화', '수', '목', '금', '토']; 
 
         history.forEach(h => {
-            const d = new Date(h.timestamp);
-            let key = '';
+            const d = new Date(h.timestamp); let key = '';
             if (period === 'DAILY') {
-                const dayStr = dayNames[d.getDay()];
-                key = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}(${dayStr})`;
+                key = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}(${dayNames[d.getDay()]})`;
             } else if (period === 'MONTHLY') {
                 key = `${d.getFullYear().toString().slice(2)}년 ${d.getMonth()+1}월`;
-            } else {
-                key = `${d.getFullYear()}년`;
-            }
+            } else { key = `${d.getFullYear()}년`; }
             
             const sortKey = period === 'DAILY' ? `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}` : 
                             period === 'MONTHLY' ? `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}` : `${d.getFullYear()}`;
@@ -661,42 +624,25 @@
             grouped[sortKey].count++;
         });
         
-        const keys = Object.keys(grouped).sort(); 
-        const container = document.getElementById('statsChart');
-        container.innerHTML = '';
-        
-        if (keys.length === 0) {
-            container.innerHTML = `<div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; color:var(--text-sub); font-size:14px; font-weight:700;">학습 기록이 없습니다.</div>`;
-            return;
-        }
+        const keys = Object.keys(grouped).sort(); const container = document.getElementById('statsChart'); container.innerHTML = '';
+        if (keys.length === 0) { container.innerHTML = `<div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; color:var(--text-sub); font-size:14px; font-weight:700;">학습 기록이 없습니다.</div>`; return; }
         
         const maxVal = Math.max(...keys.map(k => grouped[k].count));
-        
         keys.forEach(k => {
-            const item = grouped[k];
-            const heightPct = (item.count / maxVal) * 100;
-            const pxHeight = Math.max((heightPct / 100) * 150, 4); 
-            
+            const item = grouped[k]; const heightPct = (item.count / maxVal) * 100; const pxHeight = Math.max((heightPct / 100) * 150, 4); 
             container.innerHTML += `
                 <div style="display:flex; flex-direction:column; align-items:center; min-width: 44px; margin-top: auto;">
                     <span style="font-size:12px; font-weight:800; color:var(--primary); margin-bottom:6px;">${item.count}</span>
                     <div style="width:28px; height:${pxHeight}px; background:var(--primary); border-radius:6px 6px 0 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: height 0.4s ease-out;"></div>
                     <span style="font-size:11px; font-weight:700; color:var(--text-sub); margin-top:8px; white-space:nowrap;">${item.label}</span>
-                </div>
-            `;
+                </div>`;
         });
-        
         setTimeout(() => { container.scrollLeft = container.scrollWidth; }, 10);
     }
 
-    async function openStatsModal() {
-        document.getElementById('statsPeriod').value = 'DAILY';
-        document.getElementById('statsModal').style.display = 'flex';
-        await renderStats();
-    }
+    async function openStatsModal() { document.getElementById('statsPeriod').value = 'DAILY'; document.getElementById('statsModal').style.display = 'flex'; await renderStats(); }
     function closeStatsModal() { document.getElementById('statsModal').style.display = 'none'; }
 
-    /* 백업 및 복원 기능 정상 복구 */
     async function exportAllData() {
         try {
             const words = await new Promise((res, rej) => {
@@ -710,33 +656,24 @@
 
             const dataToExport = { slotNames: slotNames, words: words, history: history };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
+            const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr);
             downloadAnchorNode.setAttribute("download", "quiz_backup_" + new Date().toISOString().slice(0,10) + ".json");
-            document.body.appendChild(downloadAnchorNode); 
-            downloadAnchorNode.click(); downloadAnchorNode.remove();
+            document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove();
         } catch (e) { alert('데이터 백업에 실패했습니다: ' + e); }
     }
 
     async function importAllData(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
+        const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
         reader.onload = function(evt) {
             try {
                 const importedData = JSON.parse(evt.target.result);
-                if (!importedData.slotNames || !importedData.words) {
-                    alert('유효하지 않은 백업 파일입니다.'); e.target.value = ''; return;
-                }
-                if (!confirm('기존 모든 슬롯 데이터 및 통계가 삭제되고 복원 파일의 데이터로 덮어씌워집니다. 진행하시겠습니까?')) {
-                    e.target.value = ''; return;
-                }
+                if (!importedData.slotNames || !importedData.words) { alert('유효하지 않은 백업 파일입니다.'); e.target.value = ''; return; }
+                if (!confirm('기존 모든 슬롯 데이터 및 통계가 삭제되고 복원 파일의 데이터로 덮어씌워집니다. 진행하시겠습니까?')) { e.target.value = ''; return; }
                 slotNames = importedData.slotNames; saveSlotNames();
 
                 const tx = db.transaction([STORE_NAME, HISTORY_STORE_NAME], 'readwrite');
                 const store = tx.objectStore(STORE_NAME); const historyStore = tx.objectStore(HISTORY_STORE_NAME);
                 store.clear(); historyStore.clear();
-                
                 importedData.words.forEach(w => store.put(w));
                 if (importedData.history) importedData.history.forEach(h => historyStore.put(h));
 
@@ -753,28 +690,23 @@
         setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
     }
 
-    /* 스와이프 잔상 이펙트 정상 복구 */
     function showGhostImage(type) {
-        const ghost = document.getElementById('ghostImage');
-        ghost.innerText = (type === 'O') ? '⭕' : '❌';
-        
-        ghost.style.transition = 'none';
-        ghost.style.opacity = '0.7';
-        ghost.style.transform = 'translate(-50%, -50%) scale(0.6)';
-        
-        void ghost.offsetWidth; // 리플로우 강제 트리거
-
-        ghost.style.transition = 'all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
-        ghost.style.opacity = '0';
-        ghost.style.transform = 'translate(-50%, -50%) scale(1.6)';
+        const ghost = document.getElementById('ghostImage'); ghost.innerText = (type === 'O') ? '⭕' : '❌';
+        ghost.style.transition = 'none'; ghost.style.opacity = '0.7'; ghost.style.transform = 'translate(-50%, -50%) scale(0.6)';
+        void ghost.offsetWidth; 
+        ghost.style.transition = 'all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)'; ghost.style.opacity = '0'; ghost.style.transform = 'translate(-50%, -50%) scale(1.6)';
     }
 
     /* ==========================================
-       2. 브라우저 모드 (Settings, Engine, Timer)
+       2. 백그라운드 지원 브라우저 모드 (HTML Audio 방식)
        ========================================== */
     let isBrowserModeActive = false;
     let bmSleepTimerId = null;
     let bmLoopRunning = false;
+
+    // 🌟 전역 단일 오디오 플레이어 (백그라운드 미디어 세션 유지용)
+    const masterAudio = new Audio();
+    masterAudio.playsInline = true;
 
     let bmConfig = JSON.parse(localStorage.getItem('bmConfigNew')) || {
         order: 'KOR_ENG', speed: 1.0, repeatFront: 1, repeatBack: 1, interval: 2000, sleepTimer: 0
@@ -795,38 +727,30 @@
 
     function saveBmSettings() {
         bmConfig = {
-            order: document.getElementById('setBmOrder').value,
-            speed: parseFloat(document.getElementById('setBmSpeed').value),
-            repeatFront: parseInt(document.getElementById('setBmRepeatFront').value) || 0,
-            repeatBack: parseInt(document.getElementById('setBmRepeatBack').value) || 0,
-            interval: parseInt(document.getElementById('setBmInterval').value),
-            sleepTimer: parseInt(document.getElementById('setBmSleepTimer').value) || 0
+            order: document.getElementById('setBmOrder').value, speed: parseFloat(document.getElementById('setBmSpeed').value),
+            repeatFront: parseInt(document.getElementById('setBmRepeatFront').value) || 0, repeatBack: parseInt(document.getElementById('setBmRepeatBack').value) || 0,
+            interval: parseInt(document.getElementById('setBmInterval').value), sleepTimer: parseInt(document.getElementById('setBmSleepTimer').value) || 0
         };
-        localStorage.setItem('bmConfigNew', JSON.stringify(bmConfig));
-        closeBmSettings();
+        localStorage.setItem('bmConfigNew', JSON.stringify(bmConfig)); closeBmSettings();
     }
 
     async function toggleBrowserMode() {
         const btn = document.getElementById('btnBrowserMode');
-        const keepAliveAudio = document.getElementById('keepAliveAudio'); // 🌟 백그라운드 오디오 엘리먼트
-
         if (isBrowserModeActive) {
             stopBrowserMode();
         } else {
             isBrowserModeActive = true;
-            btn.innerHTML = '■ 정지'; 
-            btn.classList.add('active-bm');
-            showToast("브라우저 모드 시작\n(화면이 꺼져도 계속 재생됩니다)");
+            btn.innerHTML = '■ 정지'; btn.classList.add('active-bm');
             
-            // 🌟 백그라운드 유지를 위한 무음 오디오 재생 시작
-            keepAliveAudio.play().catch(e => console.log("Audio play failed:", e));
+            showToast("백그라운드로 재생됩니다"); 
+            
+            // 미디어 컨텍스트 활성화를 위한 초기 무음 재생
+            masterAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            await masterAudio.play().catch(e => console.log("Init audio failed:", e));
 
             if(bmConfig.sleepTimer > 0) {
                 if(bmSleepTimerId) clearTimeout(bmSleepTimerId);
-                bmSleepTimerId = setTimeout(() => {
-                    stopBrowserMode();
-                    showBlackScreen();
-                }, bmConfig.sleepTimer * 60 * 1000);
+                bmSleepTimerId = setTimeout(() => { stopBrowserMode(); showBlackScreen(); }, bmConfig.sleepTimer * 60 * 1000);
             }
             if(!bmLoopRunning) runBrowserModeLoop();
         }
@@ -834,33 +758,51 @@
 
     function stopBrowserMode() {
         isBrowserModeActive = false;
+        masterAudio.pause();
         window.speechSynthesis.cancel();
         if (bmSleepTimerId) clearTimeout(bmSleepTimerId);
-        
-        // 🌟 백그라운드 오디오 정지
-        document.getElementById('keepAliveAudio').pause();
-
         const btn = document.getElementById('btnBrowserMode');
-        if (btn) {
-            btn.innerHTML = '▶ 자동';
-            btn.classList.remove('active-bm');
-        }
+        if (btn) { btn.innerHTML = '▶ 자동'; btn.classList.remove('active-bm'); }
     }
 
     function showBlackScreen() { document.getElementById('blackScreen').style.display = 'flex'; }
     function hideBlackScreen() { document.getElementById('blackScreen').style.display = 'none'; }
 
+    // 🌟 구글 비공식 스트리밍 TTS 호출 (HTML Audio 이용)
     function playTTSPromisified(text, lang, rate) {
         return new Promise((resolve) => {
             if(!isBrowserModeActive || !text) return resolve();
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); 
             
+            const tl = lang.startsWith('ko') ? 'ko' : 'en';
+            const safeText = text.substring(0, 200); // API 제한 안전장치
+            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=${tl}&q=${encodeURIComponent(safeText)}`;
+            
+            masterAudio.src = url;
+            masterAudio.playbackRate = rate;
+            
+            let maxWaitMs = (safeText.length * 150 / rate) + 3000;
+            let fallbackTimeout = setTimeout(() => {
+                masterAudio.onended = null; masterAudio.onerror = null; resolve();
+            }, maxWaitMs);
+
+            masterAudio.onended = () => { clearTimeout(fallbackTimeout); resolve(); };
+            masterAudio.onerror = () => {
+                clearTimeout(fallbackTimeout); fallbackSpeechSynthesis(safeText, lang, rate).then(resolve);
+            };
+            masterAudio.play().catch(e => {
+                clearTimeout(fallbackTimeout); fallbackSpeechSynthesis(safeText, lang, rate).then(resolve);
+            });
+        });
+    }
+
+    // 통신 오류 시 기존 시스템 폴백 
+    function fallbackSpeechSynthesis(text, lang, rate) {
+        return new Promise((resolve) => {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = lang; utterance.rate = rate;
-            
             let maxWaitMs = (text.length * 150 / rate) + 2000;
             let fallbackTimeout = setTimeout(() => { resolve(); }, maxWaitMs); 
-
             utterance.onend = () => { clearTimeout(fallbackTimeout); resolve(); };
             utterance.onerror = () => { clearTimeout(fallbackTimeout); resolve(); };
             window.speechSynthesis.speak(utterance);
@@ -871,7 +813,6 @@
 
     async function runBrowserModeLoop() {
         bmLoopRunning = true;
-        
         while (isBrowserModeActive && currentQIdx < quizQueue.length) {
             const q = quizQueue[currentQIdx];
             let safeKor = String(q.korean || "").replace(/<[^>]+>/g, '').replace(/[\(\)\[\]\{\}]/g, '');
@@ -879,15 +820,13 @@
             
             const playFront = async () => {
                 for(let i=0; i<bmConfig.repeatFront; i++) {
-                    if(!isBrowserModeActive) return;
-                    await playTTSPromisified(safeKor, 'ko-KR', bmConfig.speed);
+                    if(!isBrowserModeActive) return; await playTTSPromisified(safeKor, 'ko-KR', bmConfig.speed);
                     if(i < bmConfig.repeatFront - 1) await sleep(800);
                 }
             };
             const playBack = async () => {
                 for(let i=0; i<bmConfig.repeatBack; i++) {
-                    if(!isBrowserModeActive) return;
-                    await playTTSPromisified(safeEng, 'en-US', bmConfig.speed);
+                    if(!isBrowserModeActive) return; await playTTSPromisified(safeEng, 'en-US', bmConfig.speed);
                     if(i < bmConfig.repeatBack - 1) await sleep(800);
                 }
             };
@@ -902,15 +841,10 @@
                 await playFront();
             }
 
-            if(!isBrowserModeActive) break;
-            await sleep(bmConfig.interval); 
-            if(!isBrowserModeActive) break;
+            if(!isBrowserModeActive) break; await sleep(bmConfig.interval); if(!isBrowserModeActive) break;
             
-            if (currentQIdx < quizQueue.length - 1) {
-                currentQIdx++; renderCurrentQuestion();
-            } else {
-                stopBrowserMode(); endQuiz(); break;
-            }
+            if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderCurrentQuestion(); } 
+            else { stopBrowserMode(); endQuiz(); break; }
         }
         bmLoopRunning = false;
     }
@@ -919,19 +853,15 @@
        3. 뷰 이동 및 화면 제어 로직 
        ========================================== */
     function switchMainTab(tab) { 
-        stopBrowserMode(); 
-        currentMode = tab;
-        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
-        document.getElementById('navBtn' + tab).classList.add('active');
-        
+        stopBrowserMode(); currentMode = tab;
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active')); document.getElementById('navBtn' + tab).classList.add('active');
         if (tab === 'List') { showView('viewSlotList', '목록 관리', false); renderSlotCards('slotCardsContainer'); } 
         else { showView('viewQuizSlotList', '라운드 퀴즈', false); renderSlotCards('quizSlotCardsContainer'); }
     }
 
     function showView(viewId, headerText, showBack) {
         document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        document.getElementById('appHeader').innerText = headerText;
+        document.getElementById(viewId).classList.add('active'); document.getElementById('appHeader').innerText = headerText;
         document.getElementById('btnBack').style.display = showBack ? 'block' : 'none';
     }
 
@@ -941,15 +871,10 @@
         else { showView('viewQuizSlotList', '라운드 퀴즈', false); renderSlotCards('quizSlotCardsContainer'); }
     }
 
-    function goBackToQuizSetup() { 
-        stopBrowserMode();
-        showView('viewQuizSetup', `[${slotNames[currentSlotId-1]}] 퀴즈 설정`, true);
-    }
+    function goBackToQuizSetup() { stopBrowserMode(); showView('viewQuizSetup', `[${slotNames[currentSlotId-1]}] 퀴즈 설정`, true); }
 
     async function selectSlot(slotId) { 
-        stopBrowserMode(); 
-        currentSlotId = slotId;
-        const sName = slotNames[slotId-1];
+        stopBrowserMode(); currentSlotId = slotId; const sName = slotNames[slotId-1];
         if (currentMode === 'List') { showView('viewWordManage', sName, true); renderWordList(); } 
         else {
             const words = await getWordsBySlot(currentSlotId);
@@ -959,27 +884,21 @@
     }
 
     async function renderSlotCards(containerId) {
-        const stats = await getSlotStats();
-        const container = document.getElementById(containerId);
-        container.innerHTML = '';
+        const stats = await getSlotStats(); const container = document.getElementById(containerId); container.innerHTML = '';
         for (let i = 1; i <= 5; i++) {
             container.innerHTML += `<div class="slot-row-item" onclick="selectSlot(${i})"><div class="slot-title">${slotNames[i-1]}</div><div class="slot-info">${stats[i-1]}개 데이터</div><div class="slot-arrow">❯</div></div>`;
         }
     }
 
-    /* 단어 파싱 및 등록 로직 정상 복구 */
     async function handleParsedRows(rows, titleString) {
         let parseMode = "STANDARD"; let validSamples = 0; let engKorCount = 0;
-        
         for(let r of rows) {
-            if(!r || r.length < 2) continue;
-            if(validSamples >= 5) break;
+            if(!r || r.length < 2) continue; if(validSamples >= 5) break;
             let col0 = String(r[0] || "").trim(); let col1 = String(r[1] || "").trim();
             let col0HasEng = /[a-zA-Z]/.test(col0); let col0HasKor = /[가-힣]/.test(col0); let col1HasKor = /[가-힣]/.test(col1);
             if (col0HasEng && !col0HasKor && col1HasKor) { engKorCount++; }
             validSamples++;
         }
-        
         if (validSamples > 0 && engKorCount >= validSamples / 2) { parseMode = "REVERSE_ENG_KOR"; }
 
         let parsed = []; let now = Date.now();
@@ -990,18 +909,14 @@
             else { kor = String(r.length >= 3 ? r[1] : r[0] || "").trim(); eng = String(r.length >= 3 ? r[2] : r[1] || "").trim(); }
             if(kor && eng) {
                 parsed.push({ 
-                    id: `${currentSlotId}_${now + idx}`, slotId: currentSlotId, 
-                    createdAt: now + idx, korean: kor, english: eng, 
-                    score: 0, lastQueriedAt: 0, lastResult: null, favorite: false
+                    id: `${currentSlotId}_${now + idx}`, slotId: currentSlotId, createdAt: now + idx, korean: kor, english: eng, score: 0, lastQueriedAt: 0, lastResult: null, favorite: false
                 });
             }
         });
 
         if(parsed.length > 0) {
-            slotNames[currentSlotId-1] = titleString; saveSlotNames();
-            document.getElementById('appHeader').innerText = slotNames[currentSlotId-1];
-            await addWords(parsed); alert(`[${slotNames[currentSlotId-1]}] 슬롯에 ${parsed.length}개의 데이터가 추가되었습니다.`);
-            renderWordList();
+            slotNames[currentSlotId-1] = titleString; saveSlotNames(); document.getElementById('appHeader').innerText = slotNames[currentSlotId-1];
+            await addWords(parsed); alert(`[${slotNames[currentSlotId-1]}] 슬롯에 ${parsed.length}개의 데이터가 추가되었습니다.`); renderWordList();
         } else { alert('유효한 데이터가 없습니다. 열이 올바르게 구분되었는지 확인하세요.'); }
     }
 
@@ -1009,22 +924,14 @@
         const file = e.target.files[0]; if(!file) return;
         const fileName = file.name; slotNames[currentSlotId-1] = fileName.replace(/\.[^/.]+$/, ""); saveSlotNames();
         document.getElementById('appHeader').innerText = slotNames[currentSlotId-1];
-
-        const ext = fileName.split('.').pop().toLowerCase();
-        const reader = new FileReader();
+        const ext = fileName.split('.').pop().toLowerCase(); const reader = new FileReader();
 
         reader.onload = async function(evt) {
             const buffer = evt.target.result; let rows = [];
             if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
-                let rawText = '';
-                try { rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer); } 
-                catch (err) { rawText = new TextDecoder('euc-kr').decode(buffer); }
+                let rawText = ''; try { rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer); } catch (err) { rawText = new TextDecoder('euc-kr').decode(buffer); }
                 const lines = rawText.split('\n');
-                rows = lines.map(line => {
-                    if (line.includes('\t')) return line.split('\t');
-                    if (line.includes(',')) return line.split(',');
-                    return [line];
-                });
+                rows = lines.map(line => { if (line.includes('\t')) return line.split('\t'); if (line.includes(',')) return line.split(','); return [line]; });
             } else {
                 const data = new Uint8Array(buffer); const workbook = XLSX.read(data, { type: 'array' });
                 rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
@@ -1035,114 +942,62 @@
     }
 
     async function importText() {
-        const text = document.getElementById('pasteArea').value.trim();
-        if(!text) return alert('텍스트를 입력해주세요.');
+        const text = document.getElementById('pasteArea').value.trim(); if(!text) return alert('텍스트를 입력해주세요.');
         const lines = text.split('\n');
-        let rows = lines.map(line => {
-            if (line.includes('\t')) return line.split('\t');
-            if (line.includes(',')) return line.split(',');
-            return [line];
-        });
-        
+        let rows = lines.map(line => { if (line.includes('\t')) return line.split('\t'); if (line.includes(',')) return line.split(','); return [line]; });
         let firstWord = "";
-        for(let r of rows) {
-            if(r.length >= 2) {
-                let maybeKor = r.find(col => /[가-힣]/.test(col));
-                if(maybeKor) { firstWord = maybeKor.trim(); break; }
-            }
-        }
+        for(let r of rows) { if(r.length >= 2) { let maybeKor = r.find(col => /[가-힣]/.test(col)); if(maybeKor) { firstWord = maybeKor.trim(); break; } } }
         if(!firstWord && rows[0] && rows[0].length > 0) firstWord = rows[0][0].trim();
-        let titleString = firstWord.length > 15 ? firstWord.substring(0, 15) + '...' : firstWord;
-        if(!titleString) titleString = `슬롯 ${currentSlotId}`;
+        let titleString = firstWord.length > 15 ? firstWord.substring(0, 15) + '...' : firstWord; if(!titleString) titleString = `슬롯 ${currentSlotId}`;
         await handleParsedRows(rows, titleString); document.getElementById('pasteArea').value = '';
     }
 
     async function loadFromPresetUrl() {
         const selectElement = document.getElementById('presetUrlSelect'); const urlInput = selectElement.value;
         if (!urlInput || urlInput === "" || urlInput.includes("여기에")) return alert('유효한 기본 등록 파일을 선택해주세요.');
-        
-        let rawFileName = urlInput.split('/').pop().split('?')[0] || '단어장';
-        try { rawFileName = decodeURIComponent(rawFileName); } catch(e) {}
+        let rawFileName = urlInput.split('/').pop().split('?')[0] || '단어장'; try { rawFileName = decodeURIComponent(rawFileName); } catch(e) {}
         let cleanFileName = rawFileName.replace(/\.[^/.]+$/, ""); 
-
         try {
-            const response = await fetch(urlInput);
-            if (!response.ok) throw new Error(`파일을 불러오지 못했습니다.`);
+            const response = await fetch(urlInput); if (!response.ok) throw new Error(`파일을 불러오지 못했습니다.`);
             const buffer = await response.arrayBuffer(); const ext = rawFileName.split('.').pop().toLowerCase(); let rows = [];
             if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
-                let rawText = '';
-                try { rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer); } 
-                catch (err) { rawText = new TextDecoder('euc-kr').decode(buffer); }
-                const lines = rawText.split('\n');
-                rows = lines.map(line => {
-                    if (line.includes('\t')) return line.split('\t');
-                    if (line.includes(',')) return line.split(',');
-                    return [line];
-                });
+                let rawText = ''; try { rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer); } catch (err) { rawText = new TextDecoder('euc-kr').decode(buffer); }
+                const lines = rawText.split('\n'); rows = lines.map(line => { if (line.includes('\t')) return line.split('\t'); if (line.includes(',')) return line.split(','); return [line]; });
             } else {
-                const data = new Uint8Array(buffer); const workbook = XLSX.read(data, { type: 'array' });
-                rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                const data = new Uint8Array(buffer); const workbook = XLSX.read(data, { type: 'array' }); rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             }
             await handleParsedRows(rows, cleanFileName); selectElement.selectedIndex = 0;
         } catch (error) { alert("데이터 로드 오류: " + error.message); }
     }
 
-    /* 단어 목록 리스트 렌더링 정상 복구 */
     function getScoreBadge(score) {
-        if(score < 0) return `<span class="badge badge-minus">${score}점</span>`;
-        if(score === 0) return `<span class="badge badge-zero">${score}점</span>`;
-        if(score <= 2) return `<span class="badge badge-low">${score}점</span>`;
-        if(score <= 4) return `<span class="badge badge-mid">${score}점</span>`;
-        return `<span class="badge badge-max">${score}점</span>`;
+        if(score < 0) return `<span class="badge badge-minus">${score}점</span>`; if(score === 0) return `<span class="badge badge-zero">${score}점</span>`;
+        if(score <= 2) return `<span class="badge badge-low">${score}점</span>`; if(score <= 4) return `<span class="badge badge-mid">${score}점</span>`; return `<span class="badge badge-max">${score}점</span>`;
     }
-    function getGroup(word) {
-        const s = word.score || 0;
-        if(s < 0) return 'MINUS'; if(s === 0) return 'ZERO'; if(s <= 2) return 'LOW'; if(s <= 4) return 'MID'; return 'MAX';
-    }
+    function getGroup(word) { const s = word.score || 0; if(s < 0) return 'MINUS'; if(s === 0) return 'ZERO'; if(s <= 2) return 'LOW'; if(s <= 4) return 'MID'; return 'MAX'; }
 
     async function renderWordList() {
-        let words = await getWordsBySlot(currentSlotId);
-        const filter = document.getElementById('filterSelect').value;
-        const sortOrder = document.getElementById('sortSelect').value;
-        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-
+        let words = await getWordsBySlot(currentSlotId); const filter = document.getElementById('filterSelect').value;
+        const sortOrder = document.getElementById('sortSelect').value; const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
         words = words.filter(w => {
-            let matchGroup = true;
-            if (filter === 'FAVORITE') matchGroup = (w.favorite === true);
-            else matchGroup = (filter === 'ALL' || getGroup(w) === filter);
-            const matchSearch = !searchQuery || String(w.korean || "").toLowerCase().includes(searchQuery) || String(w.english || "").toLowerCase().includes(searchQuery);
-            return matchGroup && matchSearch;
+            let matchGroup = true; if (filter === 'FAVORITE') matchGroup = (w.favorite === true); else matchGroup = (filter === 'ALL' || getGroup(w) === filter);
+            const matchSearch = !searchQuery || String(w.korean || "").toLowerCase().includes(searchQuery) || String(w.english || "").toLowerCase().includes(searchQuery); return matchGroup && matchSearch;
         });
-
         words.sort((a, b) => {
             switch(sortOrder) {
-                case 'CREATED_DESC': return (b.createdAt || 0) - (a.createdAt || 0);
-                case 'CREATED_ASC': return (a.createdAt || 0) - (b.createdAt || 0);
-                case 'LAST_QUERIED_DESC': return (b.lastQueriedAt || 0) - (a.lastQueriedAt || 0);
-                case 'LAST_QUERIED_ASC': return (a.lastQueriedAt || 0) - (b.lastQueriedAt || 0);
+                case 'CREATED_DESC': return (b.createdAt || 0) - (a.createdAt || 0); case 'CREATED_ASC': return (a.createdAt || 0) - (b.createdAt || 0);
+                case 'LAST_QUERIED_DESC': return (b.lastQueriedAt || 0) - (a.lastQueriedAt || 0); case 'LAST_QUERIED_ASC': return (a.lastQueriedAt || 0) - (b.lastQueriedAt || 0);
                 case 'ABC_ASC': return String(a.english || "").localeCompare(String(b.english || ""), 'en', { sensitivity: 'base' });
                 case 'ABC_DESC': return String(b.english || "").localeCompare(String(a.english || ""), 'en', { sensitivity: 'base' });
-                case 'SCORE_ASC': return (a.score || 0) - (b.score || 0);
-                case 'SCORE_DESC': return (b.score || 0) - (a.score || 0);
-                default: return 0;
+                case 'SCORE_ASC': return (a.score || 0) - (b.score || 0); case 'SCORE_DESC': return (b.score || 0) - (a.score || 0); default: return 0;
             }
         });
-
-        document.getElementById('totalCount').innerText = words.length;
-        const container = document.getElementById('wordListArea');
-        const displayWords = words.slice(0, 100); 
-        
-        let htmlStr = '';
+        document.getElementById('totalCount').innerText = words.length; const container = document.getElementById('wordListArea');
+        const displayWords = words.slice(0, 100); let htmlStr = '';
         displayWords.forEach(w => {
-            const safeKor = String(w.korean || "").replace(/</g, "&lt;");
-            const safeEng = String(w.english || "").replace(/</g, "&lt;");
+            const safeKor = String(w.korean || "").replace(/</g, "&lt;"); const safeEng = String(w.english || "").replace(/</g, "&lt;");
             const favIcon = w.favorite ? `<span style="color:#2b8a3e; font-size:12px; margin-left:6px;">★</span>` : '';
-            htmlStr += `
-                <div class="word-item" onclick="openWordModal('${w.id}')">
-                    <div class="word-row"><span class="word-main">${safeKor}${favIcon}</span>${getScoreBadge(w.score || 0)}</div>
-                    <div class="word-sub">${safeEng}</div>
-                </div>
-            `;
+            htmlStr += `<div class="word-item" onclick="openWordModal('${w.id}')"><div class="word-row"><span class="word-main">${safeKor}${favIcon}</span>${getScoreBadge(w.score || 0)}</div><div class="word-sub">${safeEng}</div></div>`;
         });
         if(words.length > 100) htmlStr += `<div style="text-align:center; padding:16px; color:var(--text-sub); font-size:12px; font-weight:600;">...외 ${words.length - 100}개 (최근 100개만 표시)</div>`;
         container.innerHTML = htmlStr;
@@ -1154,126 +1009,77 @@
         document.getElementById('wordEditModal').style.display = 'flex';
     }
     function closeWordModal() { document.getElementById('wordEditModal').style.display = 'none'; }
-
     async function saveWordFromModal() {
-        const id = document.getElementById('modalWordId').value;
-        const kor = document.getElementById('modalWordKor').value.trim(); const eng = document.getElementById('modalWordEng').value.trim();
+        const id = document.getElementById('modalWordId').value; const kor = document.getElementById('modalWordKor').value.trim(); const eng = document.getElementById('modalWordEng').value.trim();
         if(!kor || !eng) return alert('한국어와 영어를 모두 입력하세요.');
-        const w = await getWordById(id);
-        if(w) { w.korean = kor; w.english = eng; await updateWord(w); closeWordModal(); renderWordList(); }
+        const w = await getWordById(id); if(w) { w.korean = kor; w.english = eng; await updateWord(w); closeWordModal(); renderWordList(); }
     }
-
     async function deleteWordFromModal() {
         if(!confirm('정말 이 데이터를 삭제하시겠습니까?')) return;
-        const id = document.getElementById('modalWordId').value;
-        await deleteWord(id); closeWordModal(); renderWordList();
+        const id = document.getElementById('modalWordId').value; await deleteWord(id); closeWordModal(); renderWordList();
     }
 
-
     /* ==========================================
-       4. 라운드 퀴즈 (출제 및 진행) 
+       4. 라운드 퀴즈 
        ========================================== */
-    let quizQueue = [];
-    let currentQIdx = 0;
-    let roundCorrectCount = 0;
+    let quizQueue = []; let currentQIdx = 0; let roundCorrectCount = 0;
 
     async function startQuiz() {
-        stopBrowserMode();
-        let words = await getWordsBySlot(currentSlotId);
-        if(words.length === 0) return;
-
-        const groupFilter = document.getElementById('quizGroupFilter').value;
-        const subCondition = document.getElementById('quizSubCondition').value;
+        stopBrowserMode(); let words = await getWordsBySlot(currentSlotId); if(words.length === 0) return;
+        const groupFilter = document.getElementById('quizGroupFilter').value; const subCondition = document.getElementById('quizSubCondition').value;
         const requestedCount = parseInt(document.getElementById('quizCount').value) || 10;
 
         let targetWords = words.filter(w => {
             let getG = s => { if(s<0)return 'MINUS'; if(s===0)return 'ZERO'; if(s<=2)return 'LOW'; if(s<=4)return 'MID'; return 'MAX'; };
-            if (groupFilter === 'FAVORITE') return w.favorite === true;
-            return groupFilter === 'ALL' || getG(w.score||0) === groupFilter;
+            if (groupFilter === 'FAVORITE') return w.favorite === true; return groupFilter === 'ALL' || getG(w.score||0) === groupFilter;
         });
-        
         if (targetWords.length === 0) return alert("선택한 그룹에 해당하는 데이터가 없습니다.");
 
-        const now = Date.now(); const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-        let isQueueReady = false;
-
+        const now = Date.now(); const ONE_DAY_MS = 24 * 60 * 60 * 1000; let isQueueReady = false;
         switch (subCondition) {
             case 'CONTINUE':
                 targetWords.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
                 let maxQueryTime = -1; let lastQueriedIndex = -1;
-                for(let i=0; i<targetWords.length; i++) {
-                    if((targetWords[i].lastQueriedAt || 0) > maxQueryTime) {
-                        maxQueryTime = targetWords[i].lastQueriedAt || 0; lastQueriedIndex = i;
-                    }
-                }
-                let startIndex = 0;
-                if (lastQueriedIndex !== -1 && maxQueryTime > 0) startIndex = (lastQueriedIndex + 1) % targetWords.length;
-                quizQueue = [];
-                for(let i=0; i<requestedCount; i++) {
-                    if(quizQueue.length >= targetWords.length) break;
-                    quizQueue.push(targetWords[(startIndex + i) % targetWords.length]);
-                }
-                isQueueReady = true;
-                break;
-            case 'OLDEST_QUERIED':
-                targetWords.sort((a, b) => (a.lastQueriedAt || 0) - (b.lastQueriedAt || 0));
-                break;
+                for(let i=0; i<targetWords.length; i++) { if((targetWords[i].lastQueriedAt || 0) > maxQueryTime) { maxQueryTime = targetWords[i].lastQueriedAt || 0; lastQueriedIndex = i; } }
+                let startIndex = 0; if (lastQueriedIndex !== -1 && maxQueryTime > 0) startIndex = (lastQueriedIndex + 1) % targetWords.length;
+                quizQueue = []; for(let i=0; i<requestedCount; i++) { if(quizQueue.length >= targetWords.length) break; quizQueue.push(targetWords[(startIndex + i) % targetWords.length]); }
+                isQueueReady = true; break;
+            case 'OLDEST_QUERIED': targetWords.sort((a, b) => (a.lastQueriedAt || 0) - (b.lastQueriedAt || 0)); break;
             case 'RECENT_WRONG':
                 const wrongWords = targetWords.filter(w => w.lastResult === false);
                 if (wrongWords.length > 0) targetWords = wrongWords; else alert("최근에 틀린 데이터가 없어 전체 대상에서 무작위 출제합니다.");
-                targetWords.sort(() => Math.random() - 0.5);
-                break;
+                targetWords.sort(() => Math.random() - 0.5); break;
             case 'RECENT_24H':
                 const recentWords = targetWords.filter(w => w.lastQueriedAt && (now - w.lastQueriedAt <= ONE_DAY_MS));
                 if (recentWords.length > 0) targetWords = recentWords; else alert("최근 24시간 이내 학습한 데이터가 없어 전체 대상에서 무작위 출제합니다.");
-                targetWords.sort(() => Math.random() - 0.5);
-                break;
+                targetWords.sort(() => Math.random() - 0.5); break;
             case 'SERIAL': 
                 targetWords.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
                 let startIdx = parseInt(document.getElementById('quizSerialStart').value) || 1;
-                if (startIdx < 1) startIdx = 1;
-                if (startIdx > targetWords.length) startIdx = targetWords.length;
-                quizQueue = targetWords.slice(startIdx - 1, startIdx - 1 + requestedCount);
-                isQueueReady = true;
-                break;
-            case 'RANDOM':
-            default:
-                targetWords.sort(() => Math.random() - 0.5);
-                break;
+                if (startIdx < 1) startIdx = 1; if (startIdx > targetWords.length) startIdx = targetWords.length;
+                quizQueue = targetWords.slice(startIdx - 1, startIdx - 1 + requestedCount); isQueueReady = true; break;
+            case 'RANDOM': default: targetWords.sort(() => Math.random() - 0.5); break;
         }
 
         if (!isQueueReady) quizQueue = targetWords.slice(0, Math.min(requestedCount, targetWords.length));
-        
         currentQIdx = 0; roundCorrectCount = 0;
-        showView('viewQuizPlay', `[${slotNames[currentSlotId-1]}] 진행 중`, true);
-        setupMediaSession(); renderCurrentQuestion();
+        showView('viewQuizPlay', `[${slotNames[currentSlotId-1]}] 진행 중`, true); setupMediaSession(); renderCurrentQuestion();
     }
 
     function renderMaskedText(container, textToProcess) {
-        container.innerHTML = '';
-        if (!textToProcess) return;
+        container.innerHTML = ''; if (!textToProcess) return;
         const wordsArr = textToProcess.trim().split(/\s+/);
         wordsArr.forEach((word) => {
             if (!word) return;
             const pureWordCheck = word.replace(/^[()\[\]{}<>?.,!\~\/\-]+|[()\[\]{}<>?.,!\~\/\-]+$/g, '');
             const isUnmasked = (pureWordCheck === '') || (/^(?:and|or)$/i.test(pureWordCheck));
-
             if (isUnmasked) {
-                const plainSpan = document.createElement('span');
-                plainSpan.style.margin = '0 2px'; plainSpan.style.color = 'var(--text-main)';
+                const plainSpan = document.createElement('span'); plainSpan.style.margin = '0 2px'; plainSpan.style.color = 'var(--text-main)';
                 plainSpan.innerText = word; container.appendChild(plainSpan);
             } else {
-                const span = document.createElement('span');
-                span.className = 'quiz-mask-word';
-                span.onclick = function(e) { e.stopPropagation(); this.classList.toggle('revealed'); };
-                
-                const maskSpan = document.createElement('span');
-                maskSpan.className = 'mask-layer';
-                maskSpan.innerText = word.replace(/[a-zA-Z0-9\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/g, '■');
-                
-                const realSpan = document.createElement('span');
-                realSpan.className = 'real-layer'; realSpan.innerText = word;
-                
+                const span = document.createElement('span'); span.className = 'quiz-mask-word'; span.onclick = function(e) { e.stopPropagation(); this.classList.toggle('revealed'); };
+                const maskSpan = document.createElement('span'); maskSpan.className = 'mask-layer'; maskSpan.innerText = word.replace(/[a-zA-Z0-9\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/g, '■');
+                const realSpan = document.createElement('span'); realSpan.className = 'real-layer'; realSpan.innerText = word;
                 span.appendChild(maskSpan); span.appendChild(realSpan); container.appendChild(span);
             }
         });
@@ -1281,98 +1087,70 @@
 
     function updateFavoriteBtnUI(isFav) {
         const btn = document.getElementById('btnFavorite');
-        if (isFav) { btn.innerText = '★'; btn.classList.add('active-fav'); } 
-        else { btn.innerText = '☆'; btn.classList.remove('active-fav'); }
+        if (isFav) { btn.innerText = '★'; btn.classList.add('active-fav'); } else { btn.innerText = '☆'; btn.classList.remove('active-fav'); }
     }
 
     async function toggleFavorite() {
-        const q = quizQueue[currentQIdx]; if(!q) return;
-        q.favorite = !q.favorite; await updateWord(q); updateFavoriteBtnUI(q.favorite);
+        const q = quizQueue[currentQIdx]; if(!q) return; q.favorite = !q.favorite; await updateWord(q); updateFavoriteBtnUI(q.favorite);
     }
 
     function renderCurrentQuestion() {
         if(currentQIdx >= quizQueue.length) { endQuiz(); return; }
-        
         const q = quizQueue[currentQIdx];
         document.getElementById('quizStatus').innerText = `${currentQIdx + 1} / ${quizQueue.length} (현재: ${q.score || 0}점)`;
-        
         let safeKor = String(q.korean || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         safeKor = safeKor.replace(/(\([^)]*\)|\[[^\]]*\]|\{[^}]*\})/g, '<span style="font-size: 0.5em; font-weight: 500; vertical-align: middle;">$1</span>');
-        document.getElementById('qKorean').innerHTML = safeKor;
-        
-        renderMaskedText(document.getElementById('qEnglishMasked'), q.english);
-        
+        document.getElementById('qKorean').innerHTML = safeKor; renderMaskedText(document.getElementById('qEnglishMasked'), q.english);
         document.getElementById('editKoreanInput').value = q.korean; document.getElementById('editEnglishInput').value = q.english;
-        document.getElementById('quizEditCard').style.display = 'none';
-
-        document.getElementById('quizCard').style.transform = 'translate(0px, 0px) rotate(0deg)';
-        document.getElementById('quizCard').style.opacity = '1';
-        
+        document.getElementById('quizEditCard').style.display = 'none'; document.getElementById('quizCard').style.transform = 'translate(0px, 0px) rotate(0deg)'; document.getElementById('quizCard').style.opacity = '1';
         updateFavoriteBtnUI(q.favorite === true); updateMediaSessionMetadata(q.korean, q.english);
     }
 
-    function prevQuestion() {
-        stopBrowserMode();
-        if (currentQIdx > 0) { currentQIdx--; renderCurrentQuestion(); } 
-        else { alert('첫번째 문제입니다.'); }
-    }
-
-    function skipQuestion() {
-        stopBrowserMode();
-        if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderCurrentQuestion(); } 
-        else { endQuiz(); }
-    }
+    function prevQuestion() { stopBrowserMode(); if (currentQIdx > 0) { currentQIdx--; renderCurrentQuestion(); } else { alert('첫번째 문제입니다.'); } }
+    function skipQuestion() { stopBrowserMode(); if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderCurrentQuestion(); } else { endQuiz(); } }
     
     function toggleEditCard() {
         const card = document.getElementById('quizEditCard');
         if (card.style.display === 'block') { card.style.display = 'none'; } 
-        else {
-            const q = quizQueue[currentQIdx];
-            document.getElementById('editKoreanInput').value = q.korean;
-            document.getElementById('editEnglishInput').value = q.english;
-            card.style.display = 'block';
-        }
+        else { const q = quizQueue[currentQIdx]; document.getElementById('editKoreanInput').value = q.korean; document.getElementById('editEnglishInput').value = q.english; card.style.display = 'block'; }
     }
 
     async function saveLiveEdit() {
-        const q = quizQueue[currentQIdx];
-        const newKor = document.getElementById('editKoreanInput').value.trim();
-        const newEng = document.getElementById('editEnglishInput').value.trim();
+        const q = quizQueue[currentQIdx]; const newKor = document.getElementById('editKoreanInput').value.trim(); const newEng = document.getElementById('editEnglishInput').value.trim();
         if(!newKor || !newEng) return alert('한국어와 영어를 모두 입력하세요.');
-        q.korean = newKor; q.english = newEng; await updateWord(q); 
-        document.getElementById('quizEditCard').style.display = 'none'; renderCurrentQuestion();
+        q.korean = newKor; q.english = newEng; await updateWord(q); document.getElementById('quizEditCard').style.display = 'none'; renderCurrentQuestion();
     }
 
+    // 수동 발음 듣기 시에도 통일된 마스터 오디오 엔진(구글 TTS API) 이용
     function playTTS() {
         stopBrowserMode();
         const q = quizQueue[currentQIdx]; if(!q) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(q.english);
-        utterance.lang = 'en-US'; utterance.rate = bmConfig.speed;
-        window.speechSynthesis.speak(utterance);
+        const safeEng = String(q.english || "");
+        const safeText = safeEng.substring(0, 200); 
+        const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=en&q=${encodeURIComponent(safeText)}`;
+        masterAudio.src = url; masterAudio.playbackRate = bmConfig.speed;
+        masterAudio.play().catch(e => {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(safeEng); utterance.lang = 'en-US'; utterance.rate = bmConfig.speed; window.speechSynthesis.speak(utterance);
+        });
     }
 
     function setupMediaSession() {
         if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('play', toggleBrowserMode);
-            navigator.mediaSession.setActionHandler('pause', stopBrowserMode);
-            navigator.mediaSession.setActionHandler('nexttrack', skipQuestion);
-            navigator.mediaSession.setActionHandler('previoustrack', prevQuestion);
+            navigator.mediaSession.setActionHandler('play', toggleBrowserMode); navigator.mediaSession.setActionHandler('pause', stopBrowserMode);
+            navigator.mediaSession.setActionHandler('nexttrack', skipQuestion); navigator.mediaSession.setActionHandler('previoustrack', prevQuestion);
         }
     }
 
     function updateMediaSessionMetadata(kor, eng) {
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({ title: kor, artist: '모바일 퀴즈 앱', album: slotNames[currentSlotId-1] });
-        }
+        if ('mediaSession' in navigator) { navigator.mediaSession.metadata = new MediaMetadata({ title: kor, artist: '모바일 퀴즈 앱', album: slotNames[currentSlotId-1] }); }
     }
 
     function copyStudyFurther() {
         const q = quizQueue[currentQIdx]; if(!q) return;
         const promptText = `'${q.korean}(${q.english})'의 [영어 문장 패턴 분석], [유의어별 뉘앙스 차이], [비슷한 패턴 예문] 순으로 알려줘. [만약 영어표현이 오타나 문법실수 등으로 인해 어색한 경우 교정해서 설명할 무렵]`;
         const tempElem = document.createElement('textarea'); tempElem.value = promptText; document.body.appendChild(tempElem); tempElem.select();
-        document.execCommand('copy'); document.body.removeChild(tempElem);
-        alert(`📋 질문 프롬프트가 복사되었습니다!\nAI에게 붙여넣어 학습하세요.\n\n${promptText}`);
+        document.execCommand('copy'); document.body.removeChild(tempElem); alert(`📋 질문 프롬프트가 복사되었습니다!\nAI에게 붙여넣어 학습하세요.\n\n${promptText}`);
     }
 
     /* 스와이프 동작 제어 로직 */
@@ -1380,9 +1158,7 @@
     let startX = 0, startY = 0, currentX = 0, currentY = 0, swipeAxis = '', isSwipeLocked = false;
     
     card.addEventListener('touchstart', e => {
-        stopBrowserMode();
-        startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-        card.style.transition = 'none'; isSwipeLocked = false; swipeAxis = '';
+        stopBrowserMode(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; card.style.transition = 'none'; isSwipeLocked = false; swipeAxis = '';
     });
     
     card.addEventListener('touchmove', e => {
@@ -1390,9 +1166,7 @@
         if (!isSwipeLocked) { if (Math.abs(dx) > 10 || Math.abs(dy) > 10) { isSwipeLocked = true; swipeAxis = Math.abs(dx) > Math.abs(dy) ? 'X' : 'Y'; } }
         const contentArea = card.querySelector('.swipe-card-content');
         if (isSwipeLocked && swipeAxis === 'Y' && contentArea) {
-            const isScrollable = contentArea.scrollHeight > contentArea.clientHeight;
-            const isAtTop = contentArea.scrollTop <= 0;
-            const isAtBottom = Math.ceil(contentArea.scrollTop + contentArea.clientHeight) >= contentArea.scrollHeight;
+            const isScrollable = contentArea.scrollHeight > contentArea.clientHeight; const isAtTop = contentArea.scrollTop <= 0; const isAtBottom = Math.ceil(contentArea.scrollTop + contentArea.clientHeight) >= contentArea.scrollHeight;
             if (isScrollable) { if ((dy > 0 && !isAtTop) || (dy < 0 && !isAtBottom)) return; }
         }
         e.preventDefault(); 
@@ -1412,52 +1186,30 @@
     card.addEventListener('touchend', e => {
         card.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease';
         document.getElementById('indO').style.opacity = '0'; document.getElementById('indX').style.opacity = '0';
-
-        if (swipeAxis === 'X' && currentX < -80) { 
-            showGhostImage('O'); handleQuizResult(true, 'X'); 
-        } 
-        else if (swipeAxis === 'Y' && currentY > 80) { 
-            showGhostImage('X'); handleQuizResult(false, 'Y'); 
-        } 
+        if (swipeAxis === 'X' && currentX < -80) { showGhostImage('O'); handleQuizResult(true, 'X'); } 
+        else if (swipeAxis === 'Y' && currentY > 80) { showGhostImage('X'); handleQuizResult(false, 'Y'); } 
         else { card.style.transform = 'translate(0px, 0px) rotate(0deg)'; }
-        
         currentX = 0; currentY = 0; swipeAxis = ''; isSwipeLocked = false;
     });
 
     async function handleQuizResult(isCorrect, directionAxis) {
-        const q = quizQueue[currentQIdx];
-        q.lastQueriedAt = Date.now(); q.lastResult = isCorrect;
-        
-        if(isCorrect) { q.score = Math.min(5, (q.score || 0) + 1); roundCorrectCount++; } 
-        else { q.score = (q.score || 0) - 1; }
+        const q = quizQueue[currentQIdx]; q.lastQueriedAt = Date.now(); q.lastResult = isCorrect;
+        if(isCorrect) { q.score = Math.min(5, (q.score || 0) + 1); roundCorrectCount++; } else { q.score = (q.score || 0) - 1; }
         await updateWord(q); await recordStudyHistory(q.id, isCorrect);
-
         let tx = 0, ty = 0, rot = 0;
-        if (directionAxis === 'X' || isCorrect) { tx = -window.innerWidth; rot = -20; } 
-        else if (directionAxis === 'Y' || !isCorrect) { ty = window.innerHeight; rot = 10; }
-        
-        card.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg)`;
-        card.style.opacity = '0';
-        
+        if (directionAxis === 'X' || isCorrect) { tx = -window.innerWidth; rot = -20; } else if (directionAxis === 'Y' || !isCorrect) { ty = window.innerHeight; rot = 10; }
+        card.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg)`; card.style.opacity = '0';
         setTimeout(() => { currentQIdx++; renderCurrentQuestion(); }, 200);
     }
 
     function endQuiz() {
-        stopBrowserMode();
-        showView('viewQuizResult', '퀴즈 결과', true);
-        const rate = Math.round((roundCorrectCount / quizQueue.length) * 100) || 0;
-        document.getElementById('resultScore').innerText = `${rate}%`;
+        stopBrowserMode(); showView('viewQuizResult', '퀴즈 결과', true);
+        const rate = Math.round((roundCorrectCount / quizQueue.length) * 100) || 0; document.getElementById('resultScore').innerText = `${rate}%`;
         document.getElementById('resultDetails').innerText = `총 ${quizQueue.length}문제 중\n${roundCorrectCount}문제를 맞춰 점수가 반영되었습니다.`;
         if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
     }
 
-    window.onload = async () => {
-        try {
-            await initDB(); switchMainTab('List');
-        } catch (e) {
-            alert('데이터베이스 초기화 실패: ' + e);
-        }
-    };
+    window.onload = async () => { try { await initDB(); switchMainTab('List'); } catch (e) { alert('데이터베이스 초기화 실패: ' + e); } };
 </script>
 </body>
 </html>
