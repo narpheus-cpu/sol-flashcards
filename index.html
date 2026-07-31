@@ -1250,12 +1250,27 @@
         updateFavoriteBtnUI(q.favorite);
     }
 
-    function renderCurrentQuestion() {
+ function renderCurrentQuestion() {
         if(currentQIdx >= quizQueue.length) { endQuiz(); return; }
         
         const q = quizQueue[currentQIdx];
         document.getElementById('quizStatus').innerText = `${currentQIdx + 1} / ${quizQueue.length} (현재: ${q.score || 0}점)`;
-        document.getElementById('qKorean').innerText = q.korean;
+        
+        // ==========================================
+        // 🌟 수정된 부분: 한국어 괄호 텍스트 절반 크기 처리
+        // ==========================================
+        // 1. 태그 깨짐을 방지하기 위해 특수문자(<, >) 안전 처리
+        let safeKor = String(q.korean || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+            
+        // 2. 소괄호(), 중괄호{}, 대괄호[] 및 그 안의 내용을 찾아 절반 크기(0.5em)로 변경
+        safeKor = safeKor.replace(/(\([^)]*\)|\[[^\]]*\]|\{[^}]*\})/g, '<span style="font-size: 0.5em; font-weight: 500; vertical-align: middle;">$1</span>');
+        
+        // 3. innerText 대신 innerHTML로 삽입하여 태그가 적용되도록 변경
+        document.getElementById('qKorean').innerHTML = safeKor;
+        // ==========================================
         
         renderMaskedText(document.getElementById('qEnglishMasked'), q.english);
         
