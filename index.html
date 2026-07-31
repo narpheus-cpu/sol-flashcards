@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>모바일 슬롯 퀴즈 앱</title>
+    <!-- 엑셀/텍스트 파싱 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -33,6 +34,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 10;
             display: flex; align-items: center; justify-content: center; position: relative;
             color: var(--primary); height: 56px; flex-shrink: 0;
+            transition: transform 0.3s;
         }
         .back-btn {
             position: absolute; left: 16px; font-size: 24px; color: var(--primary);
@@ -50,6 +52,7 @@
             background: var(--primary);
             display: flex; justify-content: space-around; align-items: center;
             z-index: 10; padding-bottom: env(safe-area-inset-bottom);
+            transition: transform 0.3s;
         }
         nav button {
             flex: 1; height: 100%; border: none; background: transparent;
@@ -58,8 +61,25 @@
         }
         nav button.active { color: #ffffff; font-weight: 800; }
         
+        /* 뷰 컨트롤 */
         .view-content { display: none; flex: 1; height: 100%; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .view-content.active { display: flex; flex-direction: column; }
+
+        /* 독립된 브라우저 모드 뷰 특화 스타일 */
+        #viewBrowserMode {
+            background-color: #000000;
+            color: #ffffff;
+            padding: 24px;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .bm-status { font-size: 14px; color: #868e96; font-weight: 800; margin-bottom: 30px; letter-spacing: 1px; }
+        .bm-kor { font-size: 32px; font-weight: 900; margin-bottom: 20px; line-height: 1.3; word-break: keep-all; }
+        .bm-eng { font-size: 24px; font-weight: 700; color: #adb5bd; line-height: 1.4; word-break: keep-all; margin-bottom: 40px; }
+        .bm-controls { display: flex; gap: 16px; width: 100%; max-width: 300px; }
+        .bm-btn { flex: 1; padding: 16px 0; border-radius: 12px; font-size: 16px; font-weight: 800; border: none; background: #212529; color: #ffffff; cursor: pointer; }
+        .bm-btn-stop { background: #c92a2a; color: #ffffff; }
 
         button { border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.15s; border: none; }
         button:active { transform: scale(0.96); }
@@ -189,9 +209,6 @@
         .btn-nav-small.active-fav {
             color: #2b8a3e !important; border-color: #2b8a3e !important; background: #f4fce3;
         }
-        .btn-nav-small.active-bm {
-            color: #fff !important; border-color: #000 !important; background: #000;
-        }
 
         .ghost-image {
             position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
@@ -229,27 +246,26 @@
 </head>
 <body>
 
-    <!-- 🌟 물리적으로 분리된 백그라운드 오디오 엔진 -->
-    <!-- 1. OS 백그라운드 생명 연장용 무음 오디오 -->
-    <audio id="keepAliveAudio" loop playsinline style="display:none;"></audio>
-    <!-- 2. 실제 구글 TTS 스트리밍용 오디오 -->
-    <audio id="ttsAudio" playsinline style="display:none;"></audio>
+    <!-- 백그라운드 프로세스 유지를 위한 무음 오디오 파일 -->
+    <audio id="keepAliveAudio" loop playsinline src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" style="display:none;"></audio>
 
     <div id="ghostImage" class="ghost-image"></div>
+
     <div id="toast">알림 메시지</div>
 
+    <!-- 취침 타이머 블랙 스크린 -->
     <div id="blackScreen" onclick="hideBlackScreen()">
         <div style="font-size: 32px; margin-bottom: 20px;">🌙</div>
         <div>취침 타이머 종료됨</div>
         <div style="font-size: 12px; margin-top: 10px; font-weight: 600;">화면을 터치하면 돌아갑니다</div>
     </div>
 
-    <header>
+    <header id="mainHeader">
         <div id="btnBack" class="back-btn" onclick="goBack()">❮</div>
         <span id="appHeader">목록 관리</span>
     </header>
 
-    <main>
+    <main id="mainContent">
         <!-- 1-1. 슬롯 목록 뷰 -->
         <div id="viewSlotList" class="view-content active">
             <div id="slotCardsContainer" class="slot-list-container"></div>
@@ -364,15 +380,15 @@
                 </div>
                 
                 <button class="btn-outline" style="margin-top: 16px; font-size: 14px;" onclick="openBmSettings()">⚙️ 브라우저 모드 상세 설정</button>
-                <button class="btn-primary" style="margin-top: 8px; font-size: 15px;" onclick="startQuiz()">퀴즈 시작하기</button>
+                <button class="btn-primary" style="margin-top: 8px; font-size: 15px;" onclick="startQuiz()">수동 퀴즈 시작</button>
             </div>
         </div>
 
-        <!-- 2-3. 퀴즈 플레이 뷰 -->
+        <!-- 2-3. 퀴즈 플레이 뷰 (기존 수동 퀴즈용) -->
         <div id="viewQuizPlay" class="view-content">
             <div class="quiz-container">
                 <div class="quiz-header-row">
-                    <button class="btn-icon" onclick="playTTS()" title="발음 듣기"><span>🔊</span></button>
+                    <button class="btn-icon" onclick="playManualTTS()" title="발음 듣기"><span>🔊</span></button>
                     <div class="status-bar" id="quizStatus">1 / 10 (현재 0점)</div>
                     <button class="btn-icon" onclick="toggleEditCard()" title="수정하기"><span>✏️</span></button>
                 </div>
@@ -399,12 +415,25 @@
 
                 <div class="nav-btn-row">
                     <button class="btn-nav-small" style="flex: 1;" onclick="prevQuestion()">이전</button>
-                    <!-- 버튼 이름 다시 ▶ 자동으로 원복 -->
-                    <button class="btn-nav-small" style="flex: 1;" id="btnBrowserMode" onclick="toggleBrowserMode()">▶ 자동</button>
+                    <!-- 수동 퀴즈 모드에서 브라우저 뷰로 진입하는 버튼 -->
+                    <button class="btn-nav-small" style="flex: 1;" onclick="enterBrowserModeView()">▶ 자동</button>
                     <button class="btn-nav-small" style="flex: 1;" onclick="copyStudyFurther()">AI도움</button>
                     <button class="btn-nav-small" style="flex: 0.8; font-size: 16px;" id="btnFavorite" onclick="toggleFavorite()">☆</button>
                     <button class="btn-nav-small" style="flex: 1;" onclick="skipQuestion()">다음</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 🌟 2-5. 독립된 브라우저 모드 전용 뷰 (초경량 블랙 스크린 UI) -->
+        <div id="viewBrowserMode" class="view-content">
+            <div class="bm-status" id="bmStatus">1 / 10</div>
+            <div class="bm-kor" id="bmKor">로딩중...</div>
+            <div class="bm-eng" id="bmEng">Loading...</div>
+            
+            <div class="bm-controls">
+                <button class="bm-btn" onclick="prevQuestionBM()">❮ 이전</button>
+                <button class="bm-btn bm-btn-stop" onclick="exitBrowserModeView()">■ 종료</button>
+                <button class="bm-btn" onclick="nextQuestionBM()">다음 ❯</button>
             </div>
         </div>
 
@@ -419,7 +448,7 @@
         </div>
     </main>
 
-    <nav>
+    <nav id="mainNav">
         <button id="navBtnList" class="active" onclick="switchMainTab('List')">목록 관리</button>
         <button id="navBtnQuiz" onclick="switchMainTab('Quiz')">라운드 퀴즈</button>
     </nav>
@@ -454,6 +483,7 @@
         </div>
     </div>
 
+    <!-- 브라우저 모드 설정 모달 -->
     <div id="bmSettingsModal" class="modal-overlay">
         <div class="modal-card" style="width: 95%; max-width: 340px;">
             <h3 style="margin-bottom: 20px;">⚙️ 브라우저 모드 설정</h3>
@@ -702,15 +732,14 @@
     }
 
     /* ==========================================
-       2. 백그라운드 지원 브라우저 모드 (물리적 오디오 분리형)
+       🌟 2. 독립된 브라우저 모드 (전용 뷰 방식 + Samsung TTS 복구)
        ========================================== */
     let isBrowserModeActive = false;
     let bmSleepTimerId = null;
     let bmLoopRunning = false;
 
-    // 🌟 오디오 채널 분리: 백그라운드 생명 연장용(keepAlive) vs 실제 음성용(tts)
+    // 백그라운드 프로세스 생명 연장용 무음 오디오
     const keepAliveAudio = document.getElementById('keepAliveAudio');
-    const ttsAudio = document.getElementById('ttsAudio');
 
     let bmConfig = JSON.parse(localStorage.getItem('bmConfigNew')) || {
         order: 'KOR_ENG', speed: 1.0, repeatFront: 1, repeatBack: 1, interval: 2000, sleepTimer: 0
@@ -738,69 +767,91 @@
         localStorage.setItem('bmConfigNew', JSON.stringify(bmConfig)); closeBmSettings();
     }
 
-    async function toggleBrowserMode() {
-        const btn = document.getElementById('btnBrowserMode');
-        if (isBrowserModeActive) {
-            stopBrowserMode();
-        } else {
-            isBrowserModeActive = true;
-            btn.innerHTML = '■ 정지'; btn.classList.add('active-bm');
-            showToast("백그라운드로 재생됩니다"); 
-            
-            // 🌟 권한 획득(Priming): 사용자가 버튼을 누른 이 순간 두 오디오를 모두 깨움
-            keepAliveAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-            keepAliveAudio.play().catch(e => console.log("keepAlive error:", e));
-            
-            ttsAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-            await ttsAudio.play().catch(e => console.log("tts priming error:", e));
+    // 전용 브라우저 뷰 진입
+    function enterBrowserModeView() {
+        // 기존 헤더 및 네비게이션 숨김 (메모리 및 배터리 절약)
+        document.getElementById('mainHeader').style.display = 'none';
+        document.getElementById('mainNav').style.display = 'none';
+        document.body.style.backgroundColor = '#000000'; // 시스템 배경 검은색화
 
-            if(bmConfig.sleepTimer > 0) {
-                if(bmSleepTimerId) clearTimeout(bmSleepTimerId);
-                bmSleepTimerId = setTimeout(() => { stopBrowserMode(); showBlackScreen(); }, bmConfig.sleepTimer * 60 * 1000);
-            }
-            if(!bmLoopRunning) runBrowserModeLoop();
+        // 뷰 전환
+        document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('viewBrowserMode').classList.add('active');
+
+        isBrowserModeActive = true;
+        showToast("백그라운드로 재생됩니다"); 
+        
+        // 무음 루프 오디오 강제 실행 (앱 강제 종료 방지)
+        keepAliveAudio.play().catch(e => console.log("keepAlive error:", e));
+
+        if(bmConfig.sleepTimer > 0) {
+            if(bmSleepTimerId) clearTimeout(bmSleepTimerId);
+            bmSleepTimerId = setTimeout(() => { exitBrowserModeView(); showBlackScreen(); }, bmConfig.sleepTimer * 60 * 1000);
         }
+        
+        if(!bmLoopRunning) runBrowserModeLoop();
     }
 
-    function stopBrowserMode() {
+    // 전용 브라우저 뷰 종료
+    function exitBrowserModeView() {
         isBrowserModeActive = false;
+        window.speechSynthesis.cancel();
         keepAliveAudio.pause();
-        ttsAudio.pause();
         if (bmSleepTimerId) clearTimeout(bmSleepTimerId);
-        const btn = document.getElementById('btnBrowserMode');
-        if (btn) { btn.innerHTML = '▶ 자동'; btn.classList.remove('active-bm'); }
+
+        // UI 복구
+        document.getElementById('mainHeader').style.display = 'flex';
+        document.getElementById('mainNav').style.display = 'flex';
+        document.body.style.backgroundColor = 'var(--bg-color)';
+        
+        showView('viewQuizPlay', `[${slotNames[currentSlotId-1]}] 진행 중`, true);
+        renderCurrentQuestion(); // 퀴즈 화면 정보 동기화
+    }
+
+    // 브라우저 뷰 내 컨트롤 버튼용 함수
+    function prevQuestionBM() {
+        window.speechSynthesis.cancel();
+        if (currentQIdx > 0) { currentQIdx--; renderBrowserModeContent(); } 
+        else { showToast('첫번째 문제입니다.'); }
+    }
+
+    function nextQuestionBM() {
+        window.speechSynthesis.cancel();
+        if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderBrowserModeContent(); } 
+        else { exitBrowserModeView(); endQuiz(); }
+    }
+
+    // 브라우저 뷰 텍스트 렌더링
+    function renderBrowserModeContent() {
+        const q = quizQueue[currentQIdx];
+        if(!q) return;
+        document.getElementById('bmStatus').innerText = `${currentQIdx + 1} / ${quizQueue.length}`;
+        document.getElementById('bmKor').innerText = q.korean || "";
+        document.getElementById('bmEng').innerText = q.english || "";
     }
 
     function showBlackScreen() { document.getElementById('blackScreen').style.display = 'flex'; }
     function hideBlackScreen() { document.getElementById('blackScreen').style.display = 'none'; }
 
-    // 🌟 구글 공식 번역기 스트리밍 우회 로직 (client=tw-ob 적용)
+    // 🌟 내장 TTS(window.speechSynthesis) 방식으로 원상 복구된 오디오 출력
     function playTTSPromisified(text, lang, rate) {
         return new Promise((resolve) => {
             if(!isBrowserModeActive || !text) return resolve();
+            window.speechSynthesis.cancel(); 
             
-            const tl = lang.startsWith('ko') ? 'ko' : 'en';
-            const safeText = text.substring(0, 200); 
-            // 🌟 tw-ob 클라이언트를 사용하여 모바일에서의 권한 블록 원천 차단
-            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${encodeURIComponent(safeText)}`;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang; 
+            utterance.rate = rate;
             
-            ttsAudio.src = url;
-            ttsAudio.playbackRate = rate;
-            
-            let maxWaitMs = (safeText.length * 150 / rate) + 4000;
+            let maxWaitMs = (text.length * 150 / rate) + 2000;
             let fallbackTimeout = setTimeout(() => {
-                ttsAudio.onended = null; ttsAudio.onerror = null; resolve();
+                resolve();
             }, maxWaitMs);
 
-            ttsAudio.onended = () => { clearTimeout(fallbackTimeout); resolve(); };
-            ttsAudio.onerror = (e) => {
-                // 에러 발생 시 삼성 TTS(window.speechSynthesis)로 넘어가지 않고 즉각 스킵
-                clearTimeout(fallbackTimeout); resolve();
-            };
+            utterance.onend = () => { clearTimeout(fallbackTimeout); resolve(); };
+            utterance.onerror = (e) => { clearTimeout(fallbackTimeout); resolve(); };
             
-            ttsAudio.play().catch(e => {
-                clearTimeout(fallbackTimeout); resolve();
-            });
+            window.speechSynthesis.speak(utterance);
         });
     }
 
@@ -809,6 +860,8 @@
     async function runBrowserModeLoop() {
         bmLoopRunning = true;
         while (isBrowserModeActive && currentQIdx < quizQueue.length) {
+            renderBrowserModeContent(); // 뷰 업데이트
+            
             const q = quizQueue[currentQIdx];
             let safeKor = String(q.korean || "").replace(/<[^>]+>/g, '').replace(/[\(\)\[\]\{\}]/g, '');
             let safeEng = String(q.english || "");
@@ -838,8 +891,12 @@
 
             if(!isBrowserModeActive) break; await sleep(bmConfig.interval); if(!isBrowserModeActive) break;
             
-            if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderCurrentQuestion(); } 
-            else { stopBrowserMode(); endQuiz(); break; }
+            if (currentQIdx < quizQueue.length - 1) { 
+                currentQIdx++; 
+            } 
+            else { 
+                exitBrowserModeView(); endQuiz(); break; 
+            }
         }
         bmLoopRunning = false;
     }
@@ -848,7 +905,8 @@
        3. 뷰 이동 및 화면 제어 로직 
        ========================================== */
     function switchMainTab(tab) { 
-        stopBrowserMode(); currentMode = tab;
+        if (isBrowserModeActive) exitBrowserModeView(); 
+        currentMode = tab;
         document.querySelectorAll('nav button').forEach(el => el.classList.remove('active')); document.getElementById('navBtn' + tab).classList.add('active');
         if (tab === 'List') { showView('viewSlotList', '목록 관리', false); renderSlotCards('slotCardsContainer'); } 
         else { showView('viewQuizSlotList', '라운드 퀴즈', false); renderSlotCards('quizSlotCardsContainer'); }
@@ -861,15 +919,15 @@
     }
 
     function goBack() { 
-        stopBrowserMode(); 
+        if (isBrowserModeActive) exitBrowserModeView(); 
         if (currentMode === 'List') { showView('viewSlotList', '목록 관리', false); renderSlotCards('slotCardsContainer'); } 
         else { showView('viewQuizSlotList', '라운드 퀴즈', false); renderSlotCards('quizSlotCardsContainer'); }
     }
 
-    function goBackToQuizSetup() { stopBrowserMode(); showView('viewQuizSetup', `[${slotNames[currentSlotId-1]}] 퀴즈 설정`, true); }
+    function goBackToQuizSetup() { if (isBrowserModeActive) exitBrowserModeView(); showView('viewQuizSetup', `[${slotNames[currentSlotId-1]}] 퀴즈 설정`, true); }
 
     async function selectSlot(slotId) { 
-        stopBrowserMode(); currentSlotId = slotId; const sName = slotNames[slotId-1];
+        if (isBrowserModeActive) exitBrowserModeView(); currentSlotId = slotId; const sName = slotNames[slotId-1];
         if (currentMode === 'List') { showView('viewWordManage', sName, true); renderWordList(); } 
         else {
             const words = await getWordsBySlot(currentSlotId);
@@ -1015,12 +1073,13 @@
     }
 
     /* ==========================================
-       4. 라운드 퀴즈 
+       4. 라운드 퀴즈 (수동 조작부)
        ========================================== */
     let quizQueue = []; let currentQIdx = 0; let roundCorrectCount = 0;
 
     async function startQuiz() {
-        stopBrowserMode(); let words = await getWordsBySlot(currentSlotId); if(words.length === 0) return;
+        if (isBrowserModeActive) exitBrowserModeView(); 
+        let words = await getWordsBySlot(currentSlotId); if(words.length === 0) return;
         const groupFilter = document.getElementById('quizGroupFilter').value; const subCondition = document.getElementById('quizSubCondition').value;
         const requestedCount = parseInt(document.getElementById('quizCount').value) || 10;
 
@@ -1101,8 +1160,8 @@
         updateFavoriteBtnUI(q.favorite === true); updateMediaSessionMetadata(q.korean, q.english);
     }
 
-    function prevQuestion() { stopBrowserMode(); if (currentQIdx > 0) { currentQIdx--; renderCurrentQuestion(); } else { alert('첫번째 문제입니다.'); } }
-    function skipQuestion() { stopBrowserMode(); if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderCurrentQuestion(); } else { endQuiz(); } }
+    function prevQuestion() { if (currentQIdx > 0) { currentQIdx--; renderCurrentQuestion(); } else { alert('첫번째 문제입니다.'); } }
+    function skipQuestion() { if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderCurrentQuestion(); } else { endQuiz(); } }
     
     function toggleEditCard() {
         const card = document.getElementById('quizEditCard');
@@ -1116,21 +1175,20 @@
         q.korean = newKor; q.english = newEng; await updateWord(q); document.getElementById('quizEditCard').style.display = 'none'; renderCurrentQuestion();
     }
 
-    // 🌟 수동 발음 듣기 시에도 새로운 TTS 오디오 객체 사용 (삼성 TTS 방지)
-    function playTTS() {
-        stopBrowserMode();
+    // 🌟 수동 발음 듣기도 내장 TTS(window.speechSynthesis)로 통일
+    function playManualTTS() {
         const q = quizQueue[currentQIdx]; if(!q) return;
-        const safeEng = String(q.english || "").substring(0, 200); 
-        const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(safeEng)}`;
-        ttsAudio.src = url;
-        ttsAudio.playbackRate = bmConfig.speed;
-        ttsAudio.play().catch(e => console.log("Manual TTS failed", e));
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(q.english);
+        utterance.lang = 'en-US'; utterance.rate = bmConfig.speed;
+        window.speechSynthesis.speak(utterance);
     }
 
     function setupMediaSession() {
         if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('play', toggleBrowserMode); navigator.mediaSession.setActionHandler('pause', stopBrowserMode);
-            navigator.mediaSession.setActionHandler('nexttrack', skipQuestion); navigator.mediaSession.setActionHandler('previoustrack', prevQuestion);
+            navigator.mediaSession.setActionHandler('play', enterBrowserModeView); navigator.mediaSession.setActionHandler('pause', exitBrowserModeView);
+            navigator.mediaSession.setActionHandler('nexttrack', () => { isBrowserModeActive ? nextQuestionBM() : skipQuestion(); });
+            navigator.mediaSession.setActionHandler('previoustrack', () => { isBrowserModeActive ? prevQuestionBM() : prevQuestion(); });
         }
     }
 
@@ -1150,7 +1208,7 @@
     let startX = 0, startY = 0, currentX = 0, currentY = 0, swipeAxis = '', isSwipeLocked = false;
     
     card.addEventListener('touchstart', e => {
-        stopBrowserMode(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; card.style.transition = 'none'; isSwipeLocked = false; swipeAxis = '';
+        startX = e.touches[0].clientX; startY = e.touches[0].clientY; card.style.transition = 'none'; isSwipeLocked = false; swipeAxis = '';
     });
     
     card.addEventListener('touchmove', e => {
@@ -1195,7 +1253,7 @@
     }
 
     function endQuiz() {
-        stopBrowserMode(); showView('viewQuizResult', '퀴즈 결과', true);
+        if (isBrowserModeActive) exitBrowserModeView(); showView('viewQuizResult', '퀴즈 결과', true);
         const rate = Math.round((roundCorrectCount / quizQueue.length) * 100) || 0; document.getElementById('resultScore').innerText = `${rate}%`;
         document.getElementById('resultDetails').innerText = `총 ${quizQueue.length}문제 중\n${roundCorrectCount}문제를 맞춰 점수가 반영되었습니다.`;
         if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
