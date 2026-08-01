@@ -1096,6 +1096,14 @@
         unlockAudioAndTTS(); // 수동 시작 터치 시에도 음성 엔진 언락
         if (isBrowserModeActive) exitBrowserModeView(); 
         let words = await getWordsBySlot(currentSlotId); if(words.length === 0) return;
+
+        // 전체 단어 기준 일련번호 및 개수 할당
+        words.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        words.forEach((w, idx) => {
+            w.serialNum = idx + 1;
+            w.totalSlotCount = words.length;
+        });
+
         const groupFilter = document.getElementById('quizGroupFilter').value; const subCondition = document.getElementById('quizSubCondition').value;
         const requestedCount = parseInt(document.getElementById('quizCount').value) || 10;
 
@@ -1167,7 +1175,10 @@
     function renderCurrentQuestion() {
         if(currentQIdx >= quizQueue.length) { endQuiz(); return; }
         const q = quizQueue[currentQIdx];
-        document.getElementById('quizStatus').innerText = `${currentQIdx + 1} / ${quizQueue.length} (현재: ${q.score || 0}점)`;
+        
+        // 상태 표시줄 업데이트 (요청하신 포맷 적용)
+        document.getElementById('quizStatus').innerText = `${currentQIdx + 1}/${quizQueue.length}(현재: ${q.score || 0}점) [${q.serialNum}/${q.totalSlotCount}]`;
+        
         let safeKor = String(q.korean || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         safeKor = safeKor.replace(/(\([^)]*\)|\[[^\]]*\]|\{[^}]*\})/g, '<span style="font-size: 0.5em; font-weight: 500; vertical-align: middle;">$1</span>');
         document.getElementById('qKorean').innerHTML = safeKor; renderMaskedText(document.getElementById('qEnglishMasked'), q.english);
