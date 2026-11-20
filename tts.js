@@ -4,7 +4,11 @@
     const A = self.TTS_ASSETS, settingsKey = 'solTTSv1';
     let config;
     try { config = JSON.parse(localStorage.getItem(settingsKey)) || {}; } catch (_) { config = {}; }
-    config = Object.assign({engine:'system', voice:'F1', steps:2, provider:'auto'}, config);
+    config = Object.assign({engine:'supertonic', voice:'M1', steps:8, provider:'auto'}, config);
+    if (config.defaultsRevision !== 2) {
+        config.engine = 'supertonic'; config.voice = 'M1'; config.steps = 8; config.defaultsRevision = 2;
+        localStorage.setItem(settingsKey, JSON.stringify(config));
+    }
     let worker, nextId = 0, pending = new Map(), generating = new Map(), audio = new Audio();
     let playback = 0, finishAudio = null, cancelWaiting = null, prefetchVersion = 0, downloadAbort, preparing = false;
     let dbPromise, swPromise, backend = '', prepared = 0;
@@ -67,6 +71,7 @@
         return Array.from(new Uint8Array(hash), n => n.toString(16).padStart(2,'0')).join('');
     }
     async function ensureSW() {
+        if (self.SolAndroid) return;
         if (swPromise) return swPromise;
         swPromise = (async () => {
             if (!isSecureContext || !('serviceWorker' in navigator) || !self.caches) {
@@ -81,6 +86,7 @@
         return swPromise;
     }
     async function installed() {
+        if (self.SolAndroid) return (await SolAndroid.request('installed')).installed;
         if (!self.caches) return false;
         const cache = await caches.open(A.cache);
         for (const entry of A.all) if (!(await cache.match(entry.url))) return false;
@@ -124,6 +130,12 @@
             } catch (_) {}
             return cached;
         }
+        if (self.SolAndroid) {
+            const result = await SolAndroid.request('generate', {text, lang, voice:opts.voice, steps:Number(opts.steps), key});
+            const response = await fetch(result.url);
+            if (!response.ok) throw new Error('저장된 음성을 읽지 못했습니다.');
+            return response.blob();
+        }
         if (generating.has(key)) {
             const same = generating.get(key);
             if (priority === 'foreground' && worker) worker.postMessage({type:'promote', id:same.id});
@@ -148,6 +160,7 @@
         if ('speechSynthesis' in window) speechSynthesis.cancel();
         audio.pause();
         if (finishAudio) finishAudio();
+        if (self.SolAndroid) SolAndroid.request('stop').catch(() => {});
     }
     function unlock() {
         // Reuse this exact audio element after the user's gesture (mobile autoplay).
@@ -165,6 +178,10 @@
         stop(); const token = playback;
         const requestedAt = performance.now();
         if (!String(text || '').trim()) return;
+        if (self.SolAndroid) {
+            await SolAndroid.request('speak', {text:String(text),lang:lang.startsWith('ko')?'ko':'en',rate,...config});
+            return;
+        }
         if (config.engine === 'system') return systemSpeak(text,lang,rate,token);
         status('음성 준비 중…');
         try {
@@ -238,6 +255,11 @@
         })().catch(e => { if (e.message !== 'cancelled') status(e.message); });
     }
     async function download() {
+        if (self.SolAndroid) {
+            try { await SolAndroid.request('download'); status('오프라인 음성 준비 완료 · Android'); }
+            catch(e) { status(e.message); }
+            return;
+        }
         if (downloadAbort) return;
         const controller = new AbortController(); downloadAbort = controller;
         let wake;
@@ -273,6 +295,7 @@
     }
     async function warm() {
         if (config.engine !== 'supertonic' || !(await installed())) return;
+        if (self.SolAndroid) { await SolAndroid.request('warm',config); return; }
         await ensureSW();
         status('첫 재생을 위해 음성 엔진 준비 중…');
         try {
@@ -292,7 +315,7 @@
         const provider = document.getElementById('setTtsProvider').value;
         if (provider !== config.provider) resetWorker();
         config = {engine:document.getElementById('setTtsEngine').value, voice:document.getElementById('setTtsVoice').value,
-            steps:Number(document.getElementById('setTtsSteps').value), provider};
+            steps:Number(document.getElementById('setTtsSteps').value), provider, defaultsRevision:2};
         localStorage.setItem(settingsKey,JSON.stringify(config));
         warm().catch(e => status(e.message));
     }
@@ -322,8 +345,8 @@
             if (worker) worker.postMessage({type:'drop-background'});
         }
     });
-    self.SolTTS = {speak, stop, unlock, prepare, download, openSettings, saveSettings, prepareSlot,
-        cancelDownload:() => { if (downloadAbort) downloadAbort.abort(); },
+    self.SolTTS = {speak, stop, unlock, prepare, download, openSettings, saveSettings, prepareSlot, prepareAudio:generate,
+        cancelDownload:() => { if (self.SolAndroid) SolAndroid.request('cancelDownload').catch(() => {}); if (downloadAbort) downloadAbort.abort(); },
         get config() { return {...config}; }, installed, audioKey};
     ensureSW().then(async () => { if (config.engine === 'supertonic' && await installed()) await warm(); }).catch(e => status(e.message));
 })();

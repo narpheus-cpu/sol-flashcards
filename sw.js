@@ -1,8 +1,8 @@
 importScripts('./tts-assets.js');
-const SHELL = 'sol-flashcards-shell-v4';
+const SHELL = 'solmate-shell-v6';
 const ROOT = new URL('./', self.location.href);
 const XLSX = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-const FILES = ['./', './index.html', './tts-assets.js', './tts.js', './tts-worker.js', './supertonic-core.js', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
+const FILES = ['./', './index.html', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
 self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const cache = await caches.open(SHELL);
@@ -14,7 +14,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
     event.waitUntil((async () => {
         for (const key of await caches.keys()) {
-            if (key.startsWith('sol-flashcards-shell-') && key !== SHELL) await caches.delete(key);
+            if ((key.startsWith('sol-flashcards-shell-') || key.startsWith('solmate-shell-')) && key !== SHELL) await caches.delete(key);
         }
         await self.clients.claim();
     })());

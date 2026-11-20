@@ -6,7 +6,11 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>모바일 슬롯 퀴즈 앱</title>
+    <title>솔메이트</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="application-name" content="솔메이트">
+<script>if(!window.AndroidHost&&"serviceWorker"in navigator){let reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!reloaded){reloaded=true;location.reload();}});}</script>
+<meta name="apple-mobile-web-app-title" content="솔메이트">
     <!-- 엑셀/텍스트 파싱 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -297,7 +301,7 @@
 
             <!-- 🌟 요청하신 [통계] 아이콘 밑 버전 표기 -->
             <div class="version-badge-container">
-                <span class="version-badge">버전: v20261120_Supertonic3</span>
+                <span class="version-badge">솔메이트 · v1.1.0</span>
             </div>
         </div>
 
@@ -513,7 +517,7 @@
 <label for="setTtsVoice">Supertonic 목소리</label>
 <select id="setTtsVoice"><option value="F1">여성 F1</option><option value="M1">남성 M1</option></select>
 <label for="setTtsSteps">생성 속도·품질</label>
-<select id="setTtsSteps"><option value="2">빠름 · 지연 최소화 (기본)</option><option value="4">균형</option><option value="8">고음질 · 생성 시간 증가</option></select>
+<select id="setTtsSteps"><option value="2">빠름 · 지연 최소화</option><option value="4">균형</option><option value="8">고음질 · 생성 시간 증가 (기본)</option></select>
 <label for="setTtsProvider">실행 방식</label>
 <select id="setTtsProvider"><option value="auto">자동 · GPU 우선, 미지원 시 CPU</option><option value="wasm">호환 모드 · CPU</option></select>
 <p>최초 한 번 온라인에서 약 450 MB 저장. 이후 비행기 모드에서도 사용 가능합니다. 다음 카드 3개를 미리 생성하고, 만든 음성은 최대 96 MB까지 재사용합니다. 배속 변경은 재생에 바로 적용됩니다.</p>
@@ -521,7 +525,7 @@
 <button class="btn-outline" onclick="SolTTS.cancelDownload()">다운로드 중지</button>
 <button class="btn-outline" onclick="SolTTS.prepareSlot()">현재 목록 음성 미리 저장·중지</button>
 <p id="ttsStatus" role="status" aria-live="polite">오프라인 준비 상태 확인 중…</p>
-<p>엔진·목소리 변경 후 아래 저장을 누르세요. 미리 저장하면 첫 재생도 빨라집니다. 화면을 잠그면 모바일 브라우저가 생성을 멈출 수 있어요. 다운로드·미리 생성 중에는 화면을 켜두세요.</p>
+<p>기본: Supertonic 3 / 남성 M1 / 고음질. 자동 읽기는 라운드 음성을 먼저 준비해 화면이 꺼져도 이어듣도록 재생합니다. 브라우저를 완전히 닫으면 웹 재생은 종료되며, APK에서는 알림의 종료를 누를 때까지 재생을 유지합니다.</p>
 </div>
 <label>자동 읽기 순서</label>
 <select id="setBmOrder" style="margin-bottom: 14px; padding: 10px;">
@@ -560,7 +564,9 @@
     </div>
 
 <script src="./tts-assets.js"></script>
+<script src="./native.js"></script>
 <script src="./tts.js"></script>
+<script src="./round.js"></script>
 <script>
     /* ==========================================
        1. IndexedDB 설정 및 공통 변수
@@ -820,14 +826,14 @@
         document.getElementById('viewBrowserMode').classList.add('active');
 
         isBrowserModeActive = true;
-        showToast("자동 읽기를 시작합니다. 화면을 켜두세요."); 
+        showToast("자동 읽기 음성을 준비합니다."); 
 
         if(bmConfig.sleepTimer > 0) {
             if(bmSleepTimerId) clearTimeout(bmSleepTimerId);
             bmSleepTimerId = setTimeout(() => { exitBrowserModeView(); showBlackScreen(); }, bmConfig.sleepTimer * 60 * 1000);
         }
         
-        if(!bmLoopRunning) runBrowserModeLoop();
+        if(!bmLoopRunning) { if (SolTTS.canRound()) runPreparedBrowserMode(); else runBrowserModeLoop(); }
     }
 
     function exitBrowserModeView() {
@@ -847,8 +853,8 @@
     }
 
     let bmPositionVersion = 0;
-    function prevQuestionBM() { if (currentQIdx > 0) { bmPositionVersion++; SolTTS.stop(); currentQIdx--; renderBrowserModeContent(); } else { showToast('첫번째 문제입니다.'); } }
-    function nextQuestionBM() { bmPositionVersion++; SolTTS.stop(); if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderBrowserModeContent(); } else { exitBrowserModeView(); endQuiz(); } }
+    function prevQuestionBM() { if (SolTTS.roundActive()) { SolTTS.roundMove(-1); return; } if (currentQIdx > 0) { bmPositionVersion++; SolTTS.stop(); currentQIdx--; renderBrowserModeContent(); } else { showToast('첫번째 문제입니다.'); } }
+    function nextQuestionBM() { if (SolTTS.roundActive()) { SolTTS.roundMove(1); return; } bmPositionVersion++; SolTTS.stop(); if (currentQIdx < quizQueue.length - 1) { currentQIdx++; renderBrowserModeContent(); } else { exitBrowserModeView(); endQuiz(); } }
 
     function renderBrowserModeContent() {
         SolTTS.prepare(quizQueue, currentQIdx, 'both');
@@ -864,6 +870,21 @@
     async function playTTSPromisified(text, lang, rate) {
         if (isBrowserModeActive && text) await SolTTS.speak(text, lang, rate);
     }
+
+    async function runPreparedBrowserMode() {
+        bmLoopRunning = true;
+        try {
+            await SolTTS.playRound(quizQueue,currentQIdx,bmConfig);
+            if(isBrowserModeActive) { exitBrowserModeView(); endQuiz(); }
+        } catch(e) {
+            if(isBrowserModeActive) exitBrowserModeView();
+            showToast(e.message || '자동 읽기를 시작하지 못했습니다.');
+        } finally {bmLoopRunning=false;}
+    }
+    document.addEventListener('sol-round-position',event=>{
+        if(!isBrowserModeActive)return;
+        currentQIdx=event.detail.index;renderBrowserModeContent();
+    });
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     async function runBrowserModeLoop() {
         bmLoopRunning = true;
@@ -1259,7 +1280,23 @@
         if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
     }
 
-    window.onload = async () => { try { await initDB(); switchMainTab('List'); } catch (e) { alert('데이터베이스 초기화 실패: ' + e); } };
+    window.onload = async () => {
+        try {
+            await initDB();
+            if(self.SolAndroid) {
+                const state=await SolAndroid.request('state');
+                if(state.active && state.cards && state.cards.length) {
+                    quizQueue=state.cards; currentQIdx=state.index; bmConfig=state.settings; isBrowserModeActive=true;bmLoopRunning=true;
+                    document.getElementById('mainHeader').style.display='none';document.getElementById('mainNav').style.display='none';
+                    document.querySelectorAll('.view-content').forEach(el=>el.classList.remove('active'));
+                    document.getElementById('viewBrowserMode').classList.add('active');renderBrowserModeContent();
+                    SolTTS.restoreRound(state).then(()=>{bmLoopRunning=false;if(isBrowserModeActive){exitBrowserModeView();endQuiz();}});
+                    return;
+                }
+            }
+            switchMainTab('List');
+        } catch(e) {alert('데이터베이스 초기화 실패: '+e);}
+    };
 </script>
 </body>
 </html>
