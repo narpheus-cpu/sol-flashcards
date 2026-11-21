@@ -7,6 +7,11 @@ const langs='<option value="auto">자동</option>'+languageCodes.map(lang=>'<opt
 const dialog=document.createElement('dialog');
 dialog.id='mp3ExportDialog';
 dialog.innerHTML='<header><strong id="mp3ExportTitle"></strong><button type="button" id="mp3ExportClose">닫기</button></header>'+
+ '<fieldset class="mp3-column"><legend>다운로드 대상</legend>'+
+ '<label for="mp3SelectionMode">범위</label><select id="mp3SelectionMode"><option value="all">목록 전체</option><option value="serials">일련번호 선택</option></select>'+
+ '<div id="mp3SelectionGroup" hidden><label for="mp3SerialInput">일련번호 또는 구간</label>'+
+ '<input id="mp3SerialInput" type="text" placeholder="0003~0100 또는 0003, 0005, 0010" autocomplete="off" aria-describedby="mp3SerialHelp">'+
+ '<p id="mp3SerialHelp">구간과 개별 번호를 함께 입력할 수 있습니다. 예: 0003~0010, 0015, 0020</p></div></fieldset>'+
  '<p>입력순으로 항목마다 하나의 MP3를 만듭니다. 1열 다음 2열 순서로 읽으며 반복 0회는 제외합니다.</p>'+
  [1,2].map(n=>'<fieldset class="mp3-column"><legend>'+n+'열</legend><div class="mp3-options">'+
  '<label>Supertonic 목소리<select id="mp3Voice'+n+'">'+voices+'</select></label>'+
@@ -33,6 +38,24 @@ for(let col=1;col<=2;col++){
   });
  }
  el('mp3RateLabel'+col).value=Number(el('mp3Rate'+col).value).toFixed(2)+'배';
+}
+el('mp3SelectionMode').onchange=()=>{
+ el('mp3SelectionGroup').hidden=el('mp3SelectionMode').value!=='serials';
+};
+function selectedSerials(text,total){
+ const source=text.normalize('NFKC').trim().replace(/^\((.*)\)$/,'$1').trim();
+ if(!source)throw Error('다운로드할 일련번호나 구간을 입력해 주세요.');
+ const result=new Set();
+ for(const token of source.split(',')){
+  const match=token.trim().match(/^(\d+)(?:\s*[~〜\-–—]\s*(\d+))?$/);
+  if(!match)throw Error('번호 형식을 확인해 주세요. 예: 0003~0100, 0105');
+  const first=Number(match[1]),last=Number(match[2]||match[1]);
+  if(!Number.isSafeInteger(first)||!Number.isSafeInteger(last)||first<1||last>total)
+   throw Error('일련번호는 0001~'+String(total).padStart(4,'0')+' 범위로 입력해 주세요.');
+  if(first>last)throw Error('구간의 시작 번호는 끝 번호보다 작거나 같아야 합니다.');
+  for(let serial=first;serial<=last;serial++)result.add(serial);
+ }
+ return result;
 }
 function readOptions(){
  const values={};
@@ -104,15 +127,17 @@ el('mp3ExportStart').onclick=async()=>{
  try{
   el('mp3ExportDownload').hidden=true;
   const options=readOptions();
+  const selectionMode=el('mp3SelectionMode').value;
+  const selectionText=el('mp3SerialInput').value;
   if(!Object.values(options).some(o=>Number(o.Repeat)>0))throw Error('한 열 이상 반복횟수를 1회 이상으로 선택해 주세요.');
   run={serial:0,pending:new Map(),worker:null};
   running=run;busy(true);progress(0,'목록을 확인하는 중…');
-  const words=await getWordsBySlot(slotId);
+  const words=inputOrderedWords(await getWordsBySlot(slotId));
   if(running!==run)return;
-  words.sort((a,b)=>(Number(a.createdAt)||0)-(Number(b.createdAt)||0)||String(a.id).localeCompare(String(b.id),undefined,{numeric:true}));
-  const jobs=words.map((word,i)=>({name:filename(i+1,word.korean||''),segments:[1,2].map(col=>({
+  const selected=selectionMode==='serials'?selectedSerials(selectionText,words.length):null;
+  const jobs=words.map((word,i)=>({serial:i+1,name:filename(i+1,word.korean||''),segments:[1,2].map(col=>({
    text:String(word[col===1?'korean':'english']||'').trim(),...options[col]
-  })).filter(s=>s.text&&Number(s.Repeat)>0)})).filter(job=>job.segments.length);
+  })).filter(s=>s.text&&Number(s.Repeat)>0)})).filter(job=>(!selected||selected.has(job.serial))&&job.segments.length);
   if(!jobs.length)throw Error('선택한 열에 읽을 내용이 없습니다.');
   if(!await SolTTS.installed())throw Error('설정에서 오프라인 음성 파일을 먼저 다운로드해 주세요.');
   if(running!==run)return;

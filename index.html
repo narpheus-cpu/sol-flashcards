@@ -14,6 +14,7 @@
     <!-- 엑셀/텍스트 파싱 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
+        .word-serial {font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text-sub);margin-right:6px;}
         :root {
             --bg-color: #f1f3f5;
             --card-bg: #ffffff;
@@ -336,7 +337,7 @@
                     <button class="btn-outline" style="width:auto; padding:6px 12px; font-size:12px;" onclick="clearCurrentSlot()">슬롯 비우기</button>
                 </div>
                 <div class="control-group" style="flex-shrink: 0;">
-                    <input type="text" id="searchInput" placeholder="🔍 검색어 입력..." oninput="renderWordList()">
+                    <input type="text" id="searchInput" placeholder="🔍 검색어 또는 일련번호 입력..." oninput="renderWordList()">
                     <select id="filterSelect" onchange="renderWordList()">
                         <option value="ALL">전체 보기</option>
                         <option value="FAVORITE">⭐ 찜한 단어</option>
@@ -568,8 +569,8 @@
 <script src="./native.js"></script>
 <script src="./tts.js"></script>
 <script src="./round.js"></script>
-<script src="./mp3-export.js?v=1" defer></script>
-<link rel="stylesheet" href="./mp3-export.css?v=1">
+<script src="./mp3-export.js?v=2" defer></script>
+<link rel="stylesheet" href="./mp3-export.css?v=2">
 <script>
     /* ==========================================
        1. IndexedDB 설정 및 공통 변수
@@ -1042,12 +1043,18 @@
     }
     function getGroup(word) { const s = word.score || 0; if(s < 0) return 'MINUS'; if(s === 0) return 'ZERO'; if(s <= 2) return 'LOW'; if(s <= 4) return 'MID'; return 'MAX'; }
 
+    function inputOrderedWords(words) {
+        return [...words].sort((a,b) => (Number(a.createdAt)||0)-(Number(b.createdAt)||0)
+            || String(a.id).localeCompare(String(b.id),undefined,{numeric:true}));
+    }
+
     async function renderWordList() {
         let words = await getWordsBySlot(currentSlotId); const filter = document.getElementById('filterSelect').value;
+        const serials = new Map(inputOrderedWords(words).map((word,index) => [word.id,String(index+1).padStart(4,'0')]));
         const sortOrder = document.getElementById('sortSelect').value; const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
         words = words.filter(w => {
             let matchGroup = true; if (filter === 'FAVORITE') matchGroup = (w.favorite === true); else matchGroup = (filter === 'ALL' || getGroup(w) === filter);
-            const matchSearch = !searchQuery || String(w.korean || "").toLowerCase().includes(searchQuery) || String(w.english || "").toLowerCase().includes(searchQuery); return matchGroup && matchSearch;
+            const matchSearch = !searchQuery || String(w.korean || "").toLowerCase().includes(searchQuery) || String(w.english || "").toLowerCase().includes(searchQuery) || serials.get(w.id) === searchQuery.padStart(4,'0'); return matchGroup && matchSearch;
         });
         words.sort((a, b) => {
             switch(sortOrder) {
@@ -1063,7 +1070,7 @@
         displayWords.forEach(w => {
             const safeKor = String(w.korean || "").replace(/</g, "&lt;"); const safeEng = String(w.english || "").replace(/</g, "&lt;");
             const favIcon = w.favorite ? `<span style="color:#2b8a3e; font-size:12px; margin-left:6px;">★</span>` : '';
-            htmlStr += `<div class="word-item" onclick="openWordModal('${w.id}')"><div class="word-row"><span class="word-main">${safeKor}${favIcon}</span>${getScoreBadge(w.score || 0)}</div><div class="word-sub">${safeEng}</div></div>`;
+            htmlStr += `<div class="word-item" onclick="openWordModal('${w.id}')"><div class="word-row"><span class="word-main"><span class="word-serial" data-serial="${serials.get(w.id)}">${serials.get(w.id)}</span> ${safeKor}${favIcon}</span>${getScoreBadge(w.score || 0)}</div><div class="word-sub">${safeEng}</div></div>`;
         });
         if(words.length > 100) htmlStr += `<div style="text-align:center; padding:16px; color:var(--text-sub); font-size:12px; font-weight:600;">...외 ${words.length - 100}개 (최근 100개만 표시)</div>`; container.innerHTML = htmlStr;
     }
