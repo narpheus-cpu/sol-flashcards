@@ -7,7 +7,7 @@
         ['onnx/tts.json', 8253], ['onnx/unicode_indexer.json', 277676],
         ['onnx/duration_predictor.onnx', 3700147], ['onnx/text_encoder.onnx', 36416150],
         ['onnx/vector_estimator.onnx', 256534781], ['onnx/vocoder.onnx', 101424195],
-        ['voice_styles/M1.json', 0], ['voice_styles/F1.json', 0], ['LICENSE', 0]
+        ...['M','F'].flatMap(sex => [1,2,3,4,5].map(n => ['voice_styles/'+sex+n+'.json',0])), ['LICENSE', 0]
     ].map(([path, size]) => ({path, size, url: modelBase + path}));
     const runtime = ['ort.webgpu.min.js', 'ort-wasm-simd-threaded.jsep.mjs', 'ort-wasm-simd-threaded.jsep.wasm']
         .map(path => ({path: 'runtime/' + path, url: runtimeBase + path, size: 0}));

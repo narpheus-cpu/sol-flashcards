@@ -1,0 +1,11 @@
+Browser MP3 export dependencies
+lamejs 1.2.1, LGPL-3.0, https://github.com/zhuker/lamejs
+https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js
+fflate 0.8.2, MIT, https://github.com/101arrowz/fflate
+https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js
+soundtouchjs 0.1.30, LGPL-2.1, https://github.com/cutterbl/SoundTouchJS
+https://cdn.jsdelivr.net/npm/soundtouchjs@0.1.30/dist/soundtouch.js
+franc-min 6.2.0, MIT, https://github.com/wooorm/franc
+https://esm.sh/franc-min@6.2.0/es2022/franc-min.bundle.mjs
+Full license texts accompany these files. SoundTouch source is shipped unminified.
+All inference, language detection and encoding run on the user's device.

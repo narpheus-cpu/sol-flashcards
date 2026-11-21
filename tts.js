@@ -119,8 +119,8 @@
         });
         return {promise,id};
     }
-    async function generate(text, lang, priority = 'foreground') {
-        const opts = {...config};
+    async function generate(text, lang, priority = 'foreground', overrides = {}) {
+        const opts = {...config, ...overrides};
         const key = await audioKey(text, lang, opts);
         const cached = await readAudio(key);
         if (cached) {
