@@ -1,13 +1,13 @@
 importScripts('./tts-assets.js');
-const SHELL = 'solmate-shell-v7';
+const SHELL = 'solmate-shell-v8';
 const ROOT = new URL('./', self.location.href);
 const XLSX = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-const FILES = ['./', './index.html', './mp3-export.js', './mp3-export.css', './mp3-worker.js', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
+const FILES = ['./', './index.html', './mp3-export.js', './mp3-export.css', './mp3-worker.js?v=2', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
 self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const cache = await caches.open(SHELL);
         // Install atomically: an incomplete shell must never claim offline readiness.
-        await cache.addAll(FILES.map(p => new URL(p, ROOT).href));
+        await cache.addAll(FILES.map(p => new Request(new URL(p, ROOT).href, {cache:'reload'})));
         await self.skipWaiting();
     })());
 });

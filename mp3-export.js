@@ -119,7 +119,7 @@ el('mp3ExportStart').onclick=async()=>{
   SolTTS.stop();
   el('mp3ExportDownload').hidden=true;
   progress(0,'합성을 준비하는 중…');
-  run.worker=new Worker('./mp3-worker.js');
+  run.worker=new Worker('./mp3-worker.js?v=2');
   run.worker.onmessage=({data})=>{
    if(data.event==='zip'){run.blob=data.blob;return;}
    const p=run.pending.get(data.id);if(!p)return;

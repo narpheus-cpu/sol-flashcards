@@ -38,7 +38,9 @@ async function encodeSegment(buffer,speed,repeats){
   if(speed!==1){
    const sound=new SoundTouch();sound.tempo=speed;
    filter=new SimpleFilter({extract(out,count,position){
-    const n=Math.max(0,Math.min(count,samples.length+16384-position));
+    // SoundTouch needs complete look-ahead blocks, including at end of input.
+    // Supply virtual silence until the bounded output loop reaches its target.
+    const n=count;
     for(let k=0;k<n;k++){const value=samples[position+k]||0;out[k*2]=value;out[k*2+1]=value;}
     return n;
    }},sound);
