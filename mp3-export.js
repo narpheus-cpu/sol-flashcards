@@ -6,6 +6,7 @@ const voices=['M','F'].flatMap(sex=>[1,2,3,4,5].map(n=>'<option value="'+sex+n+'
 const langs='<option value="auto">자동</option>'+languageCodes.map(lang=>'<option value="'+lang+'">'+languageNames.of(lang)+'</option>').join('');
 const dialog=document.createElement('dialog');
 dialog.id='mp3ExportDialog';
+dialog.setAttribute('aria-labelledby','mp3ExportTitle');
 dialog.innerHTML='<header><strong id="mp3ExportTitle"></strong><button type="button" id="mp3ExportClose">닫기</button></header>'+
  '<fieldset class="mp3-column"><legend>다운로드 대상</legend>'+
  '<label for="mp3SelectionMode">범위</label><select id="mp3SelectionMode"><option value="all">목록 전체</option><option value="serials">일련번호 선택</option></select>'+
@@ -17,18 +18,27 @@ dialog.innerHTML='<header><strong id="mp3ExportTitle"></strong><button type="but
  '<label>Supertonic 목소리<select id="mp3Voice'+n+'">'+voices+'</select></label>'+
  '<label>언어<select id="mp3Lang'+n+'">'+langs+'</select></label>'+
  '<label>속도 <output id="mp3RateLabel'+n+'">1.00배</output><input id="mp3Rate'+n+'" type="range" min="0.6" max="1.4" step="0.05" value="1"></label>'+
+ '<label>괄호 안 내용<select id="mp3Parentheses'+n+'"><option value="include">읽기</option><option value="omit">읽지 않기</option></select></label>'+
  '<label>반복횟수<input id="mp3Repeat'+n+'" type="number" min="0" max="20" step="1" value="1"></label></div></fieldset>').join('')+
  '<progress id="mp3ExportProgress" max="100" value="0"></progress><output id="mp3ExportPercent">0%</output>'+
  '<div id="mp3ExportStatus" role="status" aria-live="polite"></div>'+
  '<div class="mp3-actions"><button id="mp3ExportStart" class="btn-primary">MP3 ZIP 만들기</button><button id="mp3ExportCancel" class="btn-outline" disabled>취소</button></div>'+
- '<a id="mp3ExportDownload" hidden download>ZIP 다운로드</a>';
+ '<button type="button" id="mp3ExportShowDownload" class="btn-primary" hidden>완성된 ZIP 다운로드</button>';
 document.body.append(dialog);
+const downloadDialog=document.createElement('dialog');
+downloadDialog.id='mp3DownloadDialog';
+downloadDialog.setAttribute('aria-labelledby','mp3DownloadTitle');
+downloadDialog.setAttribute('aria-describedby','mp3DownloadSummary');
+downloadDialog.innerHTML='<header><h2 id="mp3DownloadTitle">MP3 생성 완료</h2><button type="button" id="mp3DownloadClose">닫기</button></header>'+
+ '<p id="mp3DownloadSummary"></p><a id="mp3ExportDownload" class="btn-primary" hidden download autofocus>ZIP 다운로드</a>'+
+ '<p class="mp3-download-help">버튼을 눌러 저장하세요. 이 창을 닫아도 설정 창에서 다시 다운로드할 수 있습니다.</p>';
+document.body.append(downloadDialog);
 const el=id=>document.getElementById(id);
 let running=null,downloadUrl,slotId,title;
 let saved;
 try{saved=JSON.parse(localStorage.getItem('solMp3OptionsV1'));}catch{}
 for(let col=1;col<=2;col++){
- for(const field of ['Voice','Lang','Rate','Repeat']){
+ for(const field of ['Voice','Lang','Rate','Repeat','Parentheses']){
   const input=el('mp3'+field+col);
   if(saved?.[col]?.[field]!==undefined)input.value=String(saved[col][field]);
   input.addEventListener('input',()=>{
@@ -57,14 +67,27 @@ function selectedSerials(text,total){
  }
  return result;
 }
+function speechText(text,parentheses){
+ const source=String(text||'').trim();
+ if(parentheses!=='omit')return source;
+ // Remove balanced annotations, including nested and full-width parentheses.
+ // Unmatched parentheses stay in the sentence instead of truncating its tail.
+ let result=source,previous;
+ do{
+  previous=result;
+  result=result.replace(/\([^()]*\)|（[^（）]*）/g,' ');
+ }while(result!==previous);
+ return result.replace(/\s+/g,' ').replace(/\s+([,.;:!?。，、！？；：])/g,'$1').trim();
+}
 function readOptions(){
  const values={};
  for(let col=1;col<=2;col++){
   const option={};
-  for(const field of ['Voice','Lang','Rate','Repeat'])option[field]=el('mp3'+field+col).value;
+  for(const field of ['Voice','Lang','Rate','Repeat','Parentheses'])option[field]=el('mp3'+field+col).value;
   const repeat=Number(option.Repeat),rate=Number(option.Rate);
   if(!Number.isInteger(repeat)||repeat<0||repeat>20||!Number.isFinite(rate)||rate<.6||rate>1.4)throw Error('속도는 0.6~1.4배, 반복은 0~20회로 선택해 주세요.');
   if(!/^[MF][1-5]$/.test(option.Voice)||!(option.Lang==='auto'||languageCodes.includes(option.Lang)))throw Error('목소리와 언어를 확인해 주세요.');
+  if(!['include','omit'].includes(option.Parentheses))throw Error('괄호 안 내용의 읽기 여부를 선택해 주세요.');
   values[col]=option;
  }
  return values;
@@ -111,12 +134,19 @@ function cancel(){
  const run=running;if(!run)return;
  release(run);progress(0,'취소했습니다.');
 }
+function resetDownload(){
+ if(downloadUrl){URL.revokeObjectURL(downloadUrl);downloadUrl=null;}
+ const link=el('mp3ExportDownload');
+ link.hidden=true;link.removeAttribute('href');
+ el('mp3ExportShowDownload').hidden=true;
+}
+el('mp3DownloadClose').onclick=()=>downloadDialog.close();
+el('mp3ExportShowDownload').onclick=()=>{if(downloadUrl)downloadDialog.showModal();};
 el('openMp3Export').onclick=()=>{
  if(running)return;
  slotId=currentSlotId;title=slotNames[slotId-1]||'목록';
  el('mp3ExportTitle').textContent=title+' · MP3 ZIP';
- if(downloadUrl){URL.revokeObjectURL(downloadUrl);downloadUrl=null;}
- el('mp3ExportDownload').hidden=true;progress(0,'열별 옵션을 선택하세요.');dialog.showModal();
+ resetDownload();progress(0,'열별 옵션을 선택하세요.');dialog.showModal();
 };
 el('mp3ExportClose').onclick=()=>{cancel();dialog.close();};
 el('mp3ExportCancel').onclick=cancel;
@@ -125,7 +155,7 @@ el('mp3ExportStart').onclick=async()=>{
  if(running)return;
  let run;
  try{
-  el('mp3ExportDownload').hidden=true;
+  resetDownload();
   const options=readOptions();
   const selectionMode=el('mp3SelectionMode').value;
   const selectionText=el('mp3SerialInput').value;
@@ -136,7 +166,7 @@ el('mp3ExportStart').onclick=async()=>{
   if(running!==run)return;
   const selected=selectionMode==='serials'?selectedSerials(selectionText,words.length):null;
   const jobs=words.map((word,i)=>({serial:i+1,name:filename(i+1,word.korean||''),segments:[1,2].map(col=>({
-   text:String(word[col===1?'korean':'english']||'').trim(),...options[col]
+   text:speechText(word[col===1?'korean':'english'],options[col].Parentheses),...options[col]
   })).filter(s=>s.text&&Number(s.Repeat)>0)})).filter(job=>(!selected||selected.has(job.serial))&&job.segments.length);
   if(!jobs.length)throw Error('선택한 열에 읽을 내용이 없습니다.');
   if(!await SolTTS.installed())throw Error('설정에서 오프라인 음성 파일을 먼저 다운로드해 주세요.');
@@ -183,6 +213,9 @@ el('mp3ExportStart').onclick=async()=>{
   link.download=filename(0,title).replace(/^0000_/,'').replace(/\.mp3$/,'.zip');
   link.hidden=false;link.textContent='ZIP 다운로드 ('+jobs.length+'개 MP3)';
   progress(100,jobs.length+'개 MP3와 ZIP 생성 완료');
+  el('mp3DownloadSummary').textContent=title+' · '+jobs.length+'개 MP3를 ZIP 파일로 묶었습니다.';
+  el('mp3ExportShowDownload').hidden=false;
+  downloadDialog.showModal();
  }catch(error){
   if(!run||running===run){progress(Math.min(99,Number(el('mp3ExportProgress').value)||0),'실패 · '+error.message);}
  }finally{if(run)release(run);}
