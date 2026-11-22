@@ -14,7 +14,7 @@
     }
     SolTTS.stop = function() { stopRound(); originalStop(); };
     SolTTS.speak = function(...args) { stopRound(); return originalSpeak(...args); };
-    SolTTS.canRound = () => !!self.SolAndroid || SolTTS.config.engine === 'supertonic';
+    SolTTS.canRound = () => !!self.SolAndroid || (SolTTS.config.engine === 'supertonic' && bmConfig.speedFront === bmConfig.speedBack);
     SolTTS.roundActive = () => !!session;
     SolTTS.roundMove = function(delta) {
         if (!session) return;
@@ -25,6 +25,7 @@
     };
     SolTTS.playRound = async function(cards,index,settings) {
         SolTTS.stop();
+        settings=SolSpeech.normalize(settings);
         const currentToken = token;
         const job = {cards,index,settings:{...settings},config:SolTTS.config,sessionId:Date.now()+'-'+Math.random()};
         if (self.SolAndroid) {
@@ -41,8 +42,8 @@
             if (currentToken !== token) return;
             offsets[i] = bytes/(sampleRate*2);
             const card = cards[i];
-            const front = [String(card.korean||'').replace(/<[^>]+>/g,'').replace(/[()[\]{}]/g,''),'ko',settings.repeatFront];
-            const back = [String(card.english||''),'en',settings.repeatBack];
+            const front = [SolSpeech.text(card.korean,'Front',settings),'ko',settings.repeatFront];
+            const back = [SolSpeech.text(card.english,'Back',settings),'en',settings.repeatBack];
             const sides = settings.order === 'ENG_KOR' ? [back,front] : [front,back];
             for (let side=0;side<sides.length;side++) {
                 const [text,lang,repeats] = sides[side];
@@ -52,11 +53,11 @@
                     const head = new DataView(await blob.slice(0,44).arrayBuffer());
                     if (head.getUint32(24,true)!==sampleRate) throw new Error('음성 파일의 샘플 속도가 다릅니다.');
                     pieces.push(blob.slice(44)); bytes += blob.size-44;
-                    if (r<repeats-1) gap(800*settings.speed);
+                    if (r<repeats-1) gap(800*settings.speedFront);
                 }
-                if (side===0 && sides.every(p=>p[2]>0)) gap(400*settings.speed);
+                if (side===0 && sides.every(p=>p[2]>0)) gap(400*settings.speedFront);
             }
-            gap(Number(settings.interval)*settings.speed);
+            gap(Number(settings.interval)*settings.speedFront);
             if (bytes>128*1024*1024) { stopRound(); throw new Error('화면 꺼짐용 음성이 너무 큽니다. 라운드 문장 수를 줄여주세요.'); }
             document.getElementById('bmStatus').textContent='화면 꺼짐용 음성 준비 '+(i+1)+' / '+cards.length;
         }
@@ -67,7 +68,7 @@
         v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sampleRate,true);v.setUint32(28,sampleRate*2,true);
         v.setUint16(32,2,true);v.setUint16(34,16,true);str(36,'data');v.setUint32(40,bytes,true);
         const url=URL.createObjectURL(new Blob([header,...pieces],{type:'audio/wav'}));
-        const audio=new Audio(url);audio.preload='auto';audio.preservesPitch=true;audio.playbackRate=settings.speed;
+        const audio=new Audio(url);audio.preload='auto';audio.preservesPitch=true;audio.playbackRate=settings.speedFront;
         audio.addEventListener('loadedmetadata',()=>{audio.currentTime=offsets[index];},{once:true});
         session={...job,audio,url,offsets};position(index);
         audio.ontimeupdate=()=>{

@@ -302,7 +302,7 @@
 
             <!-- 🌟 요청하신 [통계] 아이콘 밑 버전 표기 -->
             <div class="version-badge-container">
-                <span class="version-badge">솔메이트 · v1.1.0</span>
+                <span class="version-badge">솔메이트 · v1.1.1</span>
             </div>
         </div>
 
@@ -534,8 +534,14 @@
                 <option value="KOR_ENG">앞면(한국어) ➔ 뒷면(영어)</option>
                 <option value="ENG_KOR">뒷면(영어) ➔ 앞면(한국어)</option>
             </select>
-            <label style="font-size: 13px; font-weight:700; color:var(--text-main);">TTS 재생 속도 (<span id="setBmSpeedLabel">1.0</span>배속)</label>
-            <input type="range" id="setBmSpeed" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('setBmSpeedLabel').innerText=this.value" style="width:100%; margin-bottom: 14px;">
+            <label for="setBmSpeedFront">앞면 TTS 속도 (<span id="setBmSpeedFrontLabel">1.0</span>배속)</label>
+            <input type="range" id="setBmSpeedFront" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('setBmSpeedFrontLabel').innerText=this.value" style="width:100%; margin-bottom:14px;">
+            <label for="setBmParenthesesFront">앞면 괄호 안 내용</label>
+            <select id="setBmParenthesesFront" style="margin-bottom:14px;padding:10px;"><option value="include">읽기</option><option value="omit">읽지 않기</option></select>
+            <label for="setBmSpeedBack">뒷면 TTS 속도 (<span id="setBmSpeedBackLabel">1.0</span>배속)</label>
+            <input type="range" id="setBmSpeedBack" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('setBmSpeedBackLabel').innerText=this.value" style="width:100%; margin-bottom:14px;">
+            <label for="setBmParenthesesBack">뒷면 괄호 안 내용</label>
+            <select id="setBmParenthesesBack" style="margin-bottom:14px;padding:10px;"><option value="include">읽기</option><option value="omit">읽지 않기</option></select>
             <div style="display:flex; gap: 8px; margin-bottom: 14px;">
                 <div style="flex:1; display: flex; flex-direction: column;">
                     <label style="font-size: 13px; font-weight:700; color:var(--text-main);">앞면 반복(회)</label>
@@ -567,6 +573,7 @@
 
 <script src="./tts-assets.js"></script>
 <script src="./native.js"></script>
+<script src="./speech-settings.js"></script>
 <script src="./tts.js"></script>
 <script src="./round.js"></script>
 <script src="./mp3-export.js?v=3" defer></script>
@@ -797,13 +804,16 @@
         }
     }
 
-    let bmConfig = JSON.parse(localStorage.getItem('bmConfigNew')) || {
-        order: 'KOR_ENG', speed: 1.0, repeatFront: 1, repeatBack: 1, interval: 2000, sleepTimer: 0
-    };
+    let bmConfig = SolSpeech.load();
 
     function openBmSettings() {
         SolTTS.openSettings();
-        document.getElementById('setBmOrder').value = bmConfig.order; document.getElementById('setBmSpeed').value = bmConfig.speed; document.getElementById('setBmSpeedLabel').innerText = bmConfig.speed;
+        document.getElementById('setBmOrder').value = bmConfig.order;
+        for(const side of ['Front','Back']) {
+            document.getElementById('setBmSpeed'+side).value=bmConfig['speed'+side];
+            document.getElementById('setBmSpeed'+side+'Label').innerText=bmConfig['speed'+side];
+            document.getElementById('setBmParentheses'+side).value=bmConfig['parentheses'+side];
+        }
         document.getElementById('setBmRepeatFront').value = bmConfig.repeatFront; document.getElementById('setBmRepeatBack').value = bmConfig.repeatBack;
         document.getElementById('setBmInterval').value = bmConfig.interval; document.getElementById('setBmSleepTimer').value = bmConfig.sleepTimer;
         document.getElementById('bmSettingsModal').style.display = 'flex';
@@ -812,11 +822,13 @@
     function saveBmSettings() {
         SolTTS.saveSettings();
         bmConfig = {
-            order: document.getElementById('setBmOrder').value, speed: parseFloat(document.getElementById('setBmSpeed').value),
+            ...bmConfig, order: document.getElementById('setBmOrder').value,
+            speedFront: parseFloat(document.getElementById('setBmSpeedFront').value), speedBack: parseFloat(document.getElementById('setBmSpeedBack').value),
+            parenthesesFront: document.getElementById('setBmParenthesesFront').value, parenthesesBack: document.getElementById('setBmParenthesesBack').value,
             repeatFront: parseInt(document.getElementById('setBmRepeatFront').value) || 0, repeatBack: parseInt(document.getElementById('setBmRepeatBack').value) || 0,
             interval: parseInt(document.getElementById('setBmInterval').value), sleepTimer: parseInt(document.getElementById('setBmSleepTimer').value) || 0
         };
-        localStorage.setItem('bmConfigNew', JSON.stringify(bmConfig)); closeBmSettings();
+        SolSpeech.save(bmConfig); closeBmSettings();
     }
 
     // 브라우저 뷰 진입
@@ -898,13 +910,13 @@
                 const active = () => isBrowserModeActive && position === bmPositionVersion;
                 renderBrowserModeContent();
                 const q = quizQueue[currentQIdx];
-                const ko = String(q.korean || "").replace(/<[^>]+>/g,'').replace(/[()[\]{}]/g,'');
-                const en = String(q.english || "");
-                const front = [ko,'ko-KR',bmConfig.repeatFront], back = [en,'en-US',bmConfig.repeatBack];
+                const ko = SolSpeech.text(q.korean,'Front',bmConfig);
+                const en = SolSpeech.text(q.english,'Back',bmConfig);
+                const front = [ko,'ko-KR',bmConfig.repeatFront,bmConfig.speedFront], back = [en,'en-US',bmConfig.repeatBack,bmConfig.speedBack];
                 const parts = bmConfig.order === 'ENG_KOR' ? [back,front] : [front,back];
-                for (const [text,lang,repeats] of parts) {
+                for (const [text,lang,repeats,rate] of parts) {
                     for (let i = 0; i < repeats && active(); i++) {
-                        await playTTSPromisified(text,lang,bmConfig.speed);
+                        await playTTSPromisified(text,lang,rate);
                         if (i < repeats - 1 && active()) await sleep(800);
                     }
                     if (active() && parts.every(p => p[2] > 0)) await sleep(400);
@@ -1096,6 +1108,7 @@
     let quizQueue = []; let currentQIdx = 0; let roundCorrectCount = 0;
 
     async function startQuiz() {
+        SolSpeech.saveQuiz();
         unlockAudioAndTTS(); // 수동 시작 터치 시에도 음성 엔진 언락
         if (isBrowserModeActive) exitBrowserModeView(); 
         let words = await getWordsBySlot(currentSlotId); if(words.length === 0) return;
@@ -1210,7 +1223,7 @@
     async function playManualTTS() {
         unlockAudioAndTTS();
         const q = quizQueue[currentQIdx]; if (!q) return;
-        try { await SolTTS.speak(q.english,'en-US',bmConfig.speed); }
+        try { await SolTTS.speak(SolSpeech.text(q.english,'Back',bmConfig),'en-US',bmConfig.speedBack); }
         catch (e) { showToast(e.message); }
     }
 
@@ -1296,7 +1309,7 @@
             if(self.SolAndroid) {
                 const state=await SolAndroid.request('state');
                 if(state.active && state.cards && state.cards.length) {
-                    quizQueue=state.cards; currentQIdx=state.index; bmConfig=state.settings; isBrowserModeActive=true;bmLoopRunning=true;
+                    quizQueue=state.cards; currentQIdx=state.index; isBrowserModeActive=true;bmLoopRunning=true;
                     document.getElementById('mainHeader').style.display='none';document.getElementById('mainNav').style.display='none';
                     document.querySelectorAll('.view-content').forEach(el=>el.classList.remove('active'));
                     document.getElementById('viewBrowserMode').classList.add('active');renderBrowserModeContent();

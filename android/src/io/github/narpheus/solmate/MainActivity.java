@@ -68,7 +68,7 @@ public final class MainActivity extends Activity {
   if(Build.VERSION.SDK_INT>=33&&checkSelfPermission("android.permission.POST_NOTIFICATIONS")!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"},62);
  }
  private WebResourceResponse asset(String name)throws IOException{
-  String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")?"application/javascript":name.endsWith(".json")||name.endsWith(".webmanifest")?"application/json":name.endsWith(".ttf")?"font/ttf":"text/plain";
+  String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")||name.endsWith(".mjs")?"application/javascript":name.endsWith(".css")?"text/css":name.endsWith(".json")||name.endsWith(".webmanifest")?"application/json":name.endsWith(".ttf")?"font/ttf":"text/plain";
   return new WebResourceResponse(mime,"UTF-8",getAssets().open("web/"+name));
  }
  private WebResourceResponse denied(){return new WebResourceResponse("text/plain","UTF-8",404,"Not Found",Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}

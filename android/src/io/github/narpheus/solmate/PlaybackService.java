@@ -27,6 +27,7 @@ public final class PlaybackService extends Service {
  public File audioDir,modelDir;
  public volatile Observer observer;
  private MediaPlayer player;
+ private float currentRate=1;
  private MediaSession media;
  private AudioManager audioManager;
  private AudioFocusRequest focus;
@@ -43,7 +44,7 @@ public final class PlaybackService extends Service {
  private final ArrayList<Line> lines=new ArrayList<>();
  private static final int NOTIFY=41;
  private static final String CHANNEL="solmate-playback";
- private static final class Line {String text,lang;int gap;Line(String t,String l,int g){text=t;lang=l;gap=g;}}
+ private static final class Line {String text,lang;int gap;float rate;Line(String t,String l,int g,double speed){text=t;lang=l;gap=g;rate=(float)SpeechOptions.speed(speed,1);}}
  @Override public void onCreate(){
   super.onCreate();modelDir=new File(getFilesDir(),"supertonic3");audioDir=new File(getFilesDir(),"speech");engine=new SupertonicEngine(modelDir,audioDir);
   audioManager=(AudioManager)getSystemService(AUDIO_SERVICE);
@@ -109,11 +110,11 @@ public final class PlaybackService extends Service {
  }
  private void buildLines(){
   lines.clear();line=0;JSONObject card=cards.optJSONObject(index);if(card==null)return;
-  String ko=card.optString("korean","").replaceAll("<[^>]+>","").replaceAll("[()\\[\\]{}]","");String en=card.optString("english","");
+  String ko=SpeechOptions.text(card.optString("korean",""),true,settings.optString("parenthesesFront","include").equals("omit"));String en=SpeechOptions.text(card.optString("english",""),false,settings.optString("parenthesesBack","include").equals("omit"));
   boolean reverse=settings.optString("order","KOR_ENG").equals("ENG_KOR");
   for(int side=0;side<2;side++){
    boolean front=reverse?side==1:side==0;String text=front?ko:en;int repeats=Math.max(0,Math.min(100,settings.optInt(front?"repeatFront":"repeatBack",1)));
-   for(int r=0;r<repeats&&!text.trim().isEmpty();r++)lines.add(new Line(text,front?"ko":"en",r<repeats-1?800:400));
+   for(int r=0;r<repeats&&!text.trim().isEmpty();r++)lines.add(new Line(text,front?"ko":"en",r<repeats-1?800:400,settings.optDouble(front?"speedFront":"speedBack",settings.optDouble("speed",1))));
   }
   if(!lines.isEmpty())lines.get(lines.size()-1).gap=Math.max(0,settings.optInt("interval",2000));
  }
@@ -126,10 +127,11 @@ public final class PlaybackService extends Service {
   play(lines.get(line),null);
  }
  private void play(Line item,Reply reply){
+  currentRate=item.rate;
   int version=epoch;
   if(cfg.optString("engine","supertonic").equals("system")){
    if(!systemReady){nextTask=()->{if(version==epoch&&active)play(item,reply);};main.postDelayed(nextTask,300);return;}
-   systemTts.setLanguage(item.lang.equals("ko")?Locale.KOREAN:Locale.US);systemTts.setSpeechRate((float)settings.optDouble("speed",1));
+   systemTts.setLanguage(item.lang.equals("ko")?Locale.KOREAN:Locale.US);systemTts.setSpeechRate(item.rate);
    systemTts.speak(item.text,TextToSpeech.QUEUE_FLUSH,null,"s"+version);return;
   }
   engineWork.execute(()->{
@@ -139,7 +141,7 @@ public final class PlaybackService extends Service {
      releasePlayer();player=new MediaPlayer();player.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
      player.setWakeMode(this,PowerManager.PARTIAL_WAKE_LOCK);player.setDataSource(audio.getAbsolutePath());player.prepare();
      player.setOnCompletionListener(p->{if(version==epoch)completed();});player.setOnErrorListener((p,w,e)->{fail("음성 재생에 실패했습니다.");return true;});
-     if(!paused){player.setPlaybackParams(new PlaybackParams().setSpeed((float)settings.optDouble("speed",1)).setPitch(1));player.start();}prefetch();
+     if(!paused){player.setPlaybackParams(new PlaybackParams().setSpeed(item.rate).setPitch(1));player.start();}prefetch();
     }catch(Exception e){fail(e.getMessage());}});
    }catch(Exception e){main.post(()->{if(version==epoch)fail(e.getMessage());});}
   });
@@ -147,7 +149,7 @@ public final class PlaybackService extends Service {
  private void prefetch(){
   if(!active||cards.length()==0||cfg.optString("engine","supertonic").equals("system"))return;
   ArrayList<Line> upcoming=new ArrayList<>();for(int i=line+1;i<Math.min(lines.size(),line+3);i++)upcoming.add(lines.get(i));
-  JSONObject next=cards.optJSONObject(index+1);if(upcoming.size()<2&&next!=null)upcoming.add(new Line(next.optString("english",""),"en",0));
+  JSONObject next=cards.optJSONObject(index+1);if(upcoming.size()<2&&next!=null)upcoming.add(new Line(SpeechOptions.text(next.optString("english",""),false,settings.optString("parenthesesBack","include").equals("omit")),"en",0,settings.optDouble("speedBack",settings.optDouble("speed",1))));
   String voice=cfg.optString("voice","M1");int steps=cfg.optInt("steps",8),version=epoch;
   for(Line item:upcoming)engineWork.execute(()->{if(version!=epoch||!active||item.text.isEmpty())return;try{engine.generate(item.text,item.lang,voice,steps);}catch(Exception ignored){}});
  }
@@ -158,11 +160,11 @@ public final class PlaybackService extends Service {
  }
  public void speak(JSONObject payload,Reply reply){
   clear(false);cards=new JSONArray();cfg=payload;settings=new JSONObject();try{settings.put("speed",payload.optDouble("rate",1));}catch(Exception ignored){}
-  manualReply=reply;begin();startService(new Intent(this,PlaybackService.class).setAction("QUEUE_ACTIVE"));play(new Line(payload.optString("text",""),payload.optString("lang","en"),0),reply);
+  manualReply=reply;begin();startService(new Intent(this,PlaybackService.class).setAction("QUEUE_ACTIVE"));play(new Line(payload.optString("text",""),payload.optString("lang","en"),0,payload.optDouble("rate",1)),reply);
  }
  public void move(int delta){if(!active||cards.length()==0)return;epoch++;releasePlayer();index=Math.max(0,Math.min(cards.length()-1,index+delta));buildLines();save();mediaState();emit(null,null);advance();}
  public void pause(){if(!active)return;paused=true;if(player!=null&&player.isPlaying())player.pause();if(systemTts!=null)systemTts.stop();if(nextTask!=null)main.removeCallbacks(nextTask);if(wake.isHeld())wake.release();mediaState();emit(null,null);}
- public void resume(){if(!active)return;paused=false;if(!wake.isHeld())wake.acquire();if(player!=null){try{player.setPlaybackParams(new PlaybackParams().setSpeed((float)settings.optDouble("speed",1)).setPitch(1));player.start();}catch(Exception e){advance();}}else advance();mediaState();emit(null,null);}
+ public void resume(){if(!active)return;paused=false;if(!wake.isHeld())wake.acquire();if(player!=null){try{player.setPlaybackParams(new PlaybackParams().setSpeed(currentRate).setPitch(1));player.start();}catch(Exception e){advance();}}else advance();mediaState();emit(null,null);}
  private void fail(String error){Reply failed=manualReply;manualReply=null;clear(false);if(failed!=null)failed.done(null,error);emit(null,error==null?"음성 처리에 실패했습니다.":error);}
  private void save(){if(job==null)return;try{job.put("index",index);File file=new File(getFilesDir(),"queue.json");try(FileOutputStream out=new FileOutputStream(file)){out.write(job.toString().getBytes(StandardCharsets.UTF_8));}}catch(Exception ignored){}}
  public JSONObject snapshot(){JSONObject state=new JSONObject();try{state.put("active",active).put("paused",paused).put("index",index).put("cards",cards).put("settings",settings).put("config",cfg).put("sessionId",job==null?"":job.optString("sessionId",""));}catch(Exception ignored){}return state;}

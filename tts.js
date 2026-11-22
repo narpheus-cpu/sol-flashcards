@@ -5,10 +5,6 @@
     let config;
     try { config = JSON.parse(localStorage.getItem(settingsKey)) || {}; } catch (_) { config = {}; }
     config = Object.assign({engine:'supertonic', voice:'M1', steps:8, provider:'auto'}, config);
-    if (config.defaultsRevision !== 2) {
-        config.engine = 'supertonic'; config.voice = 'M1'; config.steps = 8; config.defaultsRevision = 2;
-        localStorage.setItem(settingsKey, JSON.stringify(config));
-    }
     let worker, nextId = 0, pending = new Map(), generating = new Map(), audio = new Audio();
     let playback = 0, finishAudio = null, cancelWaiting = null, prefetchVersion = 0, downloadAbort, preparing = false;
     let dbPromise, swPromise, backend = '', prepared = 0;
@@ -231,8 +227,8 @@
     function tasks(cards, mode) {
         const out = [];
         for (const q of cards) {
-            const ko = String(q.korean || '').replace(/<[^>]+>/g,'').replace(/[()[\]{}]/g,'');
-            const en = String(q.english || '');
+            const ko = SolSpeech.text(q.korean,'Front',bmConfig);
+            const en = SolSpeech.text(q.english,'Back',bmConfig);
             if (mode === 'manual') { if (en.trim()) out.push([en,'en']); continue; }
             const front = bmConfig.repeatFront > 0 && ko.trim() ? [[ko,'ko']] : [];
             const back = bmConfig.repeatBack > 0 && en.trim() ? [[en,'en']] : [];
