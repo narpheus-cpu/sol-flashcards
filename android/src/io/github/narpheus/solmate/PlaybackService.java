@@ -44,7 +44,7 @@ public final class PlaybackService extends Service {
  private final ArrayList<Line> lines=new ArrayList<>();
  private static final int NOTIFY=41;
  private static final String CHANNEL="solmate-playback";
- private static final class Line {String text,lang;int gap;float rate;Line(String t,String l,int g,double speed){text=t;lang=l;gap=g;rate=(float)SpeechOptions.speed(speed,1);}}
+ private static final class Line {String text,lang,voice;int gap;float rate;Line(String t,String l,int g,double speed,String speaker){text=t;lang=l;gap=g;rate=(float)SpeechOptions.speed(speed,1);voice=SpeechOptions.voice(speaker,"M1");}}
  @Override public void onCreate(){
   super.onCreate();modelDir=new File(getFilesDir(),"supertonic3");audioDir=new File(getFilesDir(),"speech");engine=new SupertonicEngine(modelDir,audioDir);
   audioManager=(AudioManager)getSystemService(AUDIO_SERVICE);
@@ -114,7 +114,8 @@ public final class PlaybackService extends Service {
   boolean reverse=settings.optString("order","KOR_ENG").equals("ENG_KOR");
   for(int side=0;side<2;side++){
    boolean front=reverse?side==1:side==0;String text=front?ko:en;int repeats=Math.max(0,Math.min(100,settings.optInt(front?"repeatFront":"repeatBack",1)));
-   for(int r=0;r<repeats&&!text.trim().isEmpty();r++)lines.add(new Line(text,front?"ko":"en",r<repeats-1?800:400,settings.optDouble(front?"speedFront":"speedBack",settings.optDouble("speed",1))));
+   String voice=SpeechOptions.voice(settings.optString(front?"voiceFront":"voiceBack","default"),cfg.optString("voice","M1"));
+   for(int r=0;r<repeats&&!text.trim().isEmpty();r++)lines.add(new Line(text,front?"ko":"en",r<repeats-1?800:400,settings.optDouble(front?"speedFront":"speedBack",settings.optDouble("speed",1)),voice));
   }
   if(!lines.isEmpty())lines.get(lines.size()-1).gap=Math.max(0,settings.optInt("interval",2000));
  }
@@ -136,7 +137,7 @@ public final class PlaybackService extends Service {
   }
   engineWork.execute(()->{
    try{
-    File audio=engine.generate(item.text,item.lang,cfg.optString("voice","M1"),cfg.optInt("steps",8));
+    File audio=engine.generate(item.text,item.lang,item.voice,cfg.optInt("steps",8));
     main.post(()->{if(version!=epoch||!active)return;try{
      releasePlayer();player=new MediaPlayer();player.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
      player.setWakeMode(this,PowerManager.PARTIAL_WAKE_LOCK);player.setDataSource(audio.getAbsolutePath());player.prepare();
@@ -149,9 +150,9 @@ public final class PlaybackService extends Service {
  private void prefetch(){
   if(!active||cards.length()==0||cfg.optString("engine","supertonic").equals("system"))return;
   ArrayList<Line> upcoming=new ArrayList<>();for(int i=line+1;i<Math.min(lines.size(),line+3);i++)upcoming.add(lines.get(i));
-  JSONObject next=cards.optJSONObject(index+1);if(upcoming.size()<2&&next!=null)upcoming.add(new Line(SpeechOptions.text(next.optString("english",""),false,settings.optString("parenthesesBack","include").equals("omit")),"en",0,settings.optDouble("speedBack",settings.optDouble("speed",1))));
-  String voice=cfg.optString("voice","M1");int steps=cfg.optInt("steps",8),version=epoch;
-  for(Line item:upcoming)engineWork.execute(()->{if(version!=epoch||!active||item.text.isEmpty())return;try{engine.generate(item.text,item.lang,voice,steps);}catch(Exception ignored){}});
+  JSONObject next=cards.optJSONObject(index+1);if(upcoming.size()<2&&next!=null)upcoming.add(new Line(SpeechOptions.text(next.optString("english",""),false,settings.optString("parenthesesBack","include").equals("omit")),"en",0,settings.optDouble("speedBack",settings.optDouble("speed",1)),SpeechOptions.voice(settings.optString("voiceBack","default"),cfg.optString("voice","M1"))));
+  int steps=cfg.optInt("steps",8),version=epoch;
+  for(Line item:upcoming)engineWork.execute(()->{if(version!=epoch||!active||item.text.isEmpty())return;try{engine.generate(item.text,item.lang,item.voice,steps);}catch(Exception ignored){}});
  }
  private void completed(){
   if(manualReply!=null){clear(true);return;}
@@ -160,7 +161,7 @@ public final class PlaybackService extends Service {
  }
  public void speak(JSONObject payload,Reply reply){
   clear(false);cards=new JSONArray();cfg=payload;settings=new JSONObject();try{settings.put("speed",payload.optDouble("rate",1));}catch(Exception ignored){}
-  manualReply=reply;begin();startService(new Intent(this,PlaybackService.class).setAction("QUEUE_ACTIVE"));play(new Line(payload.optString("text",""),payload.optString("lang","en"),0,payload.optDouble("rate",1)),reply);
+  manualReply=reply;begin();startService(new Intent(this,PlaybackService.class).setAction("QUEUE_ACTIVE"));play(new Line(payload.optString("text",""),payload.optString("lang","en"),0,payload.optDouble("rate",1),payload.optString("voice","M1")),reply);
  }
  public void move(int delta){if(!active||cards.length()==0)return;epoch++;releasePlayer();index=Math.max(0,Math.min(cards.length()-1,index+delta));buildLines();save();mediaState();emit(null,null);advance();}
  public void pause(){if(!active)return;paused=true;if(player!=null&&player.isPlaying())player.pause();if(systemTts!=null)systemTts.stop();if(nextTask!=null)main.removeCallbacks(nextTask);if(wake.isHeld())wake.release();mediaState();emit(null,null);}
@@ -211,3 +212,4 @@ public final class PlaybackService extends Service {
  @Override public void onTaskRemoved(Intent rootIntent){/* Keep foreground playback when its UI task is dismissed. */super.onTaskRemoved(rootIntent);}
  @Override public void onDestroy(){clear(false);engineWork.shutdownNow();downloads.shutdownNow();if(systemTts!=null)systemTts.shutdown();media.release();super.onDestroy();}
 }
+

@@ -42,13 +42,13 @@
             if (currentToken !== token) return;
             offsets[i] = bytes/(sampleRate*2);
             const card = cards[i];
-            const front = [SolSpeech.text(card.korean,'Front',settings),'ko',settings.repeatFront];
-            const back = [SolSpeech.text(card.english,'Back',settings),'en',settings.repeatBack];
+            const front = [SolSpeech.text(card.korean,'Front',settings),'ko',settings.repeatFront,SolSpeech.voice('Front',settings,job.config.voice)];
+            const back = [SolSpeech.text(card.english,'Back',settings),'en',settings.repeatBack,SolSpeech.voice('Back',settings,job.config.voice)];
             const sides = settings.order === 'ENG_KOR' ? [back,front] : [front,back];
             for (let side=0;side<sides.length;side++) {
-                const [text,lang,repeats] = sides[side];
+                const [text,lang,repeats,voice] = sides[side];
                 for (let r=0;r<repeats && text.trim();r++) {
-                    const blob = await SolTTS.prepareAudio(text,lang);
+                    const blob = await SolTTS.prepareAudio(text,lang,'foreground',{voice});
                     if (currentToken !== token) return;
                     const head = new DataView(await blob.slice(0,44).arrayBuffer());
                     if (head.getUint32(24,true)!==sampleRate) throw new Error('음성 파일의 샘플 속도가 다릅니다.');
@@ -100,3 +100,4 @@
     });
     SolTTS.restoreRound = state => new Promise((resolve,reject) => {session={...state,resolve,reject};});
 })();
+

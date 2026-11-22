@@ -170,19 +170,20 @@
             audio.src = url; audio.play().catch(() => {}).finally(() => URL.revokeObjectURL(url));
         }
     }
-    async function speak(text, lang = 'en-US', rate = 1) {
+    async function speak(text, lang = 'en-US', rate = 1, overrides = {}) {
         stop(); const token = playback;
+        const opts = {...config,...overrides};
         const requestedAt = performance.now();
         if (!String(text || '').trim()) return;
         if (self.SolAndroid) {
-            await SolAndroid.request('speak', {text:String(text),lang:lang.startsWith('ko')?'ko':'en',rate,...config});
+            await SolAndroid.request('speak', {...opts,text:String(text),lang:lang.startsWith('ko')?'ko':'en',rate});
             return;
         }
         if (config.engine === 'system') return systemSpeak(text,lang,rate,token);
         status('음성 준비 중…');
         try {
             const waiting = new Promise(resolve => { cancelWaiting = () => resolve(null); });
-            const blob = await Promise.race([generate(String(text), lang.startsWith('ko') ? 'ko' : 'en'), waiting]);
+            const blob = await Promise.race([generate(String(text), lang.startsWith('ko') ? 'ko' : 'en','foreground',opts), waiting]);
             if (token !== playback || !blob) return;
             cancelWaiting = null;
             await new Promise((resolve,reject) => {
@@ -229,9 +230,10 @@
         for (const q of cards) {
             const ko = SolSpeech.text(q.korean,'Front',bmConfig);
             const en = SolSpeech.text(q.english,'Back',bmConfig);
-            if (mode === 'manual') { if (en.trim()) out.push([en,'en']); continue; }
-            const front = bmConfig.repeatFront > 0 && ko.trim() ? [[ko,'ko']] : [];
-            const back = bmConfig.repeatBack > 0 && en.trim() ? [[en,'en']] : [];
+            const frontVoice=SolSpeech.voice('Front',bmConfig,config.voice),backVoice=SolSpeech.voice('Back',bmConfig,config.voice);
+            if (mode === 'manual') { if (en.trim()) out.push([en,'en',backVoice]); continue; }
+            const front = bmConfig.repeatFront > 0 && ko.trim() ? [[ko,'ko',frontVoice]] : [];
+            const back = bmConfig.repeatBack > 0 && en.trim() ? [[en,'en',backVoice]] : [];
             out.push(...(bmConfig.order === 'ENG_KOR' ? [...back,...front] : [...front,...back]));
         }
         return out;
@@ -244,9 +246,9 @@
             await ensureSW();
             if (!(await installed())) return;
             // Prioritize current card; keep only a small look-ahead on mobile.
-            for (const [text,lang] of tasks(cards.slice(index,index + 4),mode)) {
+            for (const [text,lang,voice] of tasks(cards.slice(index,index + 4),mode)) {
                 if (version !== prefetchVersion || document.hidden) return;
-                await generate(text,lang,'background');
+                await generate(text,lang,'background',{voice});
             }
         })().catch(e => { if (e.message !== 'cancelled') status(e.message); });
     }
@@ -326,9 +328,9 @@
             try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (_) {}
             const words = await getWordsBySlot(currentSlotId);
             const all = tasks(words,'both'); prepared = 0;
-            for (const [text,lang] of all) {
+            for (const [text,lang,voice] of all) {
                 if (!preparing || version !== prefetchVersion) break;
-                await generate(text,lang,'background');
+                await generate(text,lang,'background',{voice});
                 status('현재 목록 음성 저장 ' + (++prepared) + '/' + all.length + ' · 저장된 음성은 재생 즉시 시작');
             }
             if (version === prefetchVersion) status('현재 목록 음성 준비 완료 · ' + prepared + '개 (저장 한도 96 MB, 초과 시 오래된 음성부터 정리)');
@@ -346,3 +348,4 @@
         get config() { return {...config}; }, installed, audioKey};
     ensureSW().then(async () => { if (config.engine === 'supertonic' && await installed()) await warm(); }).catch(e => status(e.message));
 })();
+

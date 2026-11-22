@@ -43,6 +43,7 @@ with zipfile.ZipFile(BUILD/'unsigned.apk','a',compression=zipfile.ZIP_DEFLATED,c
     for file in (BUILD/'dex').glob('*.dex'): archive.write(file,file.name)
 run(TOOLS/'zipalign.exe','-f','4',BUILD/'unsigned.apk',BUILD/'aligned.apk')
 key = pathlib.Path(os.environ['SOLMATE_KEYSTORE'])
-run(TOOLS/'apksigner.bat','sign','--ks',key,'--ks-key-alias','solmate','--ks-pass','env:SOLMATE_KEY_PASS','--key-pass','env:SOLMATE_KEY_PASS','--out',BUILD/'Solmate-1.1.1.apk',BUILD/'aligned.apk')
-run(TOOLS/'apksigner.bat','verify','--verbose',BUILD/'Solmate-1.1.1.apk')
-print(BUILD/'Solmate-1.1.1.apk')
+run(TOOLS/'apksigner.bat','sign','--ks',key,'--ks-key-alias','solmate','--ks-pass','env:SOLMATE_KEY_PASS','--key-pass','env:SOLMATE_KEY_PASS','--out',BUILD/'Solmate-1.1.2.apk',BUILD/'aligned.apk')
+run(TOOLS/'apksigner.bat','verify','--verbose',BUILD/'Solmate-1.1.2.apk')
+print(BUILD/'Solmate-1.1.2.apk')
+

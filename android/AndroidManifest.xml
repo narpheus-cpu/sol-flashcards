@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.narpheus.solmate" android:versionCode="111" android:versionName="1.1.1">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.narpheus.solmate" android:versionCode="112" android:versionName="1.1.2">
  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35"/>
  <uses-permission android:name="android.permission.INTERNET"/>
  <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -12,3 +12,4 @@
   <service android:name=".PlaybackService" android:exported="false" android:foregroundServiceType="mediaPlayback" android:stopWithTask="false"/>
  </application>
 </manifest>
+

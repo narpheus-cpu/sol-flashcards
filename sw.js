@@ -1,5 +1,5 @@
 importScripts('./tts-assets.js');
-const SHELL = 'solmate-shell-v11';
+const SHELL = 'solmate-shell-v12';
 const ROOT = new URL('./', self.location.href);
 const XLSX = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
 const FILES = ['./speech-settings.js', './', './index.html', './mp3-export.js?v=3', './mp3-export.css?v=3', './mp3-worker.js?v=2', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
@@ -51,3 +51,4 @@ self.addEventListener('fetch', event => {
         event.respondWith(caches.open(SHELL).then(async c => await c.match(req) || fetch(req)));
     }
 });
+
