@@ -13,6 +13,9 @@ dialog.innerHTML='<header><strong id="mp3ExportTitle"></strong><button type="but
  '<div id="mp3SelectionGroup" hidden><label for="mp3SerialInput">일련번호 또는 구간</label>'+
  '<input id="mp3SerialInput" type="text" placeholder="0003~0100 또는 0003, 0005, 0010" autocomplete="off" aria-describedby="mp3SerialHelp">'+
  '<p id="mp3SerialHelp">구간과 개별 번호를 함께 입력할 수 있습니다. 예: 0003~0010, 0015, 0020</p></div></fieldset>'+
+ '<fieldset class="mp3-column"><legend>MP3 태그</legend><label for="mp3TitleColumn">곡 제목으로 사용할 문장</label>'+
+ '<select id="mp3TitleColumn"><option value="2" selected>2열 문장 (기본)</option><option value="1">1열 문장</option></select>'+
+ '<p>아티스트: 솔메이트 · MP3 파일명은 일련번호와 1열 문장을 사용합니다.</p></fieldset>'+
  '<p>입력순으로 항목마다 하나의 MP3를 만듭니다. 1열 다음 2열 순서로 읽으며 반복 0회는 제외합니다.</p>'+
  [1,2].map(n=>'<fieldset class="mp3-column"><legend>'+n+'열</legend><div class="mp3-options">'+
  '<label>Supertonic 목소리<select id="mp3Voice'+n+'">'+voices+'</select></label>'+
@@ -29,14 +32,18 @@ const downloadDialog=document.createElement('dialog');
 downloadDialog.id='mp3DownloadDialog';
 downloadDialog.setAttribute('aria-labelledby','mp3DownloadTitle');
 downloadDialog.setAttribute('aria-describedby','mp3DownloadSummary');
-downloadDialog.innerHTML='<header><h2 id="mp3DownloadTitle">MP3 생성 완료</h2><button type="button" id="mp3DownloadClose">닫기</button></header>'+
- '<p id="mp3DownloadSummary"></p><a id="mp3ExportDownload" class="btn-primary" hidden download autofocus>ZIP 다운로드</a>'+
- '<p class="mp3-download-help">버튼을 눌러 저장하세요. 이 창을 닫아도 설정 창에서 다시 다운로드할 수 있습니다.</p>';
+downloadDialog.innerHTML='<header><h2 id="mp3DownloadTitle">MP3·엑셀 생성 완료</h2><button type="button" id="mp3DownloadClose">닫기</button></header>'+
+ '<p id="mp3DownloadSummary"></p><button type="button" id="mp3DownloadBoth" class="btn-primary" hidden autofocus>ZIP과 엑셀 함께 다운로드</button>'+
+ '<div class="mp3-individual-downloads"><a id="mp3ExportDownload" hidden download>ZIP만 다운로드</a><a id="mp3ExcelDownload" hidden download>엑셀만 다운로드</a></div>'+
+ '<p id="mp3SaveStatus" role="status" aria-live="polite"></p>'+
+ '<p class="mp3-download-help">두 파일을 별도로 저장합니다. 브라우저에서 여러 파일 다운로드를 요청하면 허용해 주세요. 개별 버튼으로도 저장할 수 있습니다.</p>';
 document.body.append(downloadDialog);
 const el=id=>document.getElementById(id);
-let running=null,downloadUrl,slotId,title;
+let running=null,downloadUrl,excelUrl,files,slotId,title;
 let saved;
 try{saved=JSON.parse(localStorage.getItem('solMp3OptionsV1'));}catch{}
+try{const column=localStorage.getItem('solMp3TagTitleColumnV1');if(column==='1'||column==='2')el('mp3TitleColumn').value=column;}catch{}
+el('mp3TitleColumn').addEventListener('input',()=>{try{localStorage.setItem('solMp3TagTitleColumnV1',el('mp3TitleColumn').value);}catch{}});
 for(let col=1;col<=2;col++){
  for(const field of ['Voice','Lang','Rate','Repeat','Parentheses']){
   const input=el('mp3'+field+col);
@@ -136,10 +143,27 @@ function cancel(){
 }
 function resetDownload(){
  if(downloadUrl){URL.revokeObjectURL(downloadUrl);downloadUrl=null;}
- const link=el('mp3ExportDownload');
- link.hidden=true;link.removeAttribute('href');
+ if(excelUrl){URL.revokeObjectURL(excelUrl);excelUrl=null;}
+ files=null;
+ for(const id of ['mp3ExportDownload','mp3ExcelDownload']){const link=el(id);link.hidden=true;link.removeAttribute('href');}
+ el('mp3DownloadBoth').hidden=true;el('mp3SaveStatus').textContent='';
  el('mp3ExportShowDownload').hidden=true;
 }
+el('mp3DownloadBoth').onclick=async()=>{
+ if(!files)return;
+ const button=el('mp3DownloadBoth');button.disabled=true;
+ try{
+  if(self.SolAndroid?.saveFiles){
+   el('mp3SaveStatus').textContent='ZIP과 엑셀의 저장 위치를 차례로 선택하세요.';
+   const saved=await SolAndroid.saveFiles(files);
+   el('mp3SaveStatus').textContent=saved?'ZIP과 엑셀을 저장했습니다.':'저장을 취소했습니다. 개별 버튼으로 다시 저장할 수 있습니다.';
+  }else{
+   el('mp3ExportDownload').click();el('mp3ExcelDownload').click();
+   el('mp3SaveStatus').textContent='ZIP과 엑셀 다운로드를 요청했습니다. 저장되지 않은 파일은 개별 버튼을 눌러주세요.';
+  }
+ }catch(error){el('mp3SaveStatus').textContent='저장 실패 · '+error.message;}
+ finally{button.disabled=false;}
+};
 el('mp3DownloadClose').onclick=()=>downloadDialog.close();
 el('mp3ExportShowDownload').onclick=()=>{if(downloadUrl)downloadDialog.showModal();};
 el('openMp3Export').onclick=()=>{
@@ -159,22 +183,27 @@ el('mp3ExportStart').onclick=async()=>{
   const options=readOptions();
   const selectionMode=el('mp3SelectionMode').value;
   const selectionText=el('mp3SerialInput').value;
+  const titleColumn=el('mp3TitleColumn').value;
+  if(!['1','2'].includes(titleColumn))throw Error('곡 제목으로 사용할 열을 선택해 주세요.');
+  if(typeof XLSX==='undefined')throw Error('엑셀 기능을 불러오지 못했습니다. 새로고침한 뒤 다시 시도해 주세요.');
   if(!Object.values(options).some(o=>Number(o.Repeat)>0))throw Error('한 열 이상 반복횟수를 1회 이상으로 선택해 주세요.');
   run={serial:0,pending:new Map(),worker:null};
   running=run;busy(true);progress(0,'목록을 확인하는 중…');
   const words=inputOrderedWords(await getWordsBySlot(slotId));
   if(running!==run)return;
   const selected=selectionMode==='serials'?selectedSerials(selectionText,words.length):null;
-  const jobs=words.map((word,i)=>({serial:i+1,name:filename(i+1,word.korean||''),segments:[1,2].map(col=>({
-   text:speechText(word[col===1?'korean':'english'],options[col].Parentheses),...options[col]
-  })).filter(s=>s.text&&Number(s.Repeat)>0)})).filter(job=>(!selected||selected.has(job.serial))&&job.segments.length);
+  const rows=words.map((word,i)=>({serial:i+1,first:String(word.korean??''),second:String(word.english??'')})).filter(row=>!selected||selected.has(row.serial));
+  const excel=SolMp3Files.workbook(rows,XLSX);
+  const jobs=rows.map(row=>({serial:row.serial,name:filename(row.serial,row.first),title:titleColumn==='1'?row.first:row.second,segments:[1,2].map(col=>({
+   text:speechText(row[col===1?'first':'second'],options[col].Parentheses),...options[col]
+  })).filter(s=>s.text&&Number(s.Repeat)>0)})).filter(job=>job.segments.length);
   if(!jobs.length)throw Error('선택한 열에 읽을 내용이 없습니다.');
   if(!await SolTTS.installed())throw Error('설정에서 오프라인 음성 파일을 먼저 다운로드해 주세요.');
   if(running!==run)return;
   SolTTS.stop();
   el('mp3ExportDownload').hidden=true;
   progress(0,'합성을 준비하는 중…');
-  run.worker=new Worker('./mp3-worker.js?v=2');
+  run.worker=new Worker('./mp3-worker.js?v=3');
   run.worker.onmessage=({data})=>{
    if(data.event==='zip'){run.blob=data.blob;return;}
    const p=run.pending.get(data.id);if(!p)return;
@@ -191,7 +220,7 @@ el('mp3ExportStart').onclick=async()=>{
   await rpc(run,'init');
   for(const job of jobs){
    if(running!==run)return;
-   await rpc(run,'track',{name:job.name});
+   await rpc(run,'track',{name:job.name,title:job.title,serial:job.serial});
    for(const s of job.segments){
     progress(Math.floor(95*done/total),completed+'/'+jobs.length+'개 완료 · '+job.name+' 합성 중');
     const blob=await SolTTS.prepareAudio(s.text,s.Lang==='auto'?await autoLanguage(s.text):s.Lang,'foreground',{voice:s.Voice,steps:8});
@@ -212,8 +241,13 @@ el('mp3ExportStart').onclick=async()=>{
   const link=el('mp3ExportDownload');link.href=downloadUrl;
   link.download=filename(0,title).replace(/^0000_/,'').replace(/\.mp3$/,'.zip');
   link.hidden=false;link.textContent='ZIP 다운로드 ('+jobs.length+'개 MP3)';
-  progress(100,jobs.length+'개 MP3와 ZIP 생성 완료');
-  el('mp3DownloadSummary').textContent=title+' · '+jobs.length+'개 MP3를 ZIP 파일로 묶었습니다.';
+  excelUrl=URL.createObjectURL(excel.blob);
+  const excelLink=el('mp3ExcelDownload');excelLink.href=excelUrl;excelLink.download=excel.name;
+  excelLink.hidden=false;excelLink.textContent='엑셀 다운로드 ('+rows.length+'개 문장 원문)';
+  files=[{blob:run.blob,name:link.download},{blob:excel.blob,name:excel.name}];
+  el('mp3DownloadBoth').hidden=false;
+  progress(100,jobs.length+'개 MP3와 엑셀 생성 완료');
+  el('mp3DownloadSummary').textContent=title+' · 태그를 넣은 MP3 '+jobs.length+'개와 선택 범위 '+rows.length+'개 문장의 원문 엑셀을 만들었습니다.';
   el('mp3ExportShowDownload').hidden=false;
   downloadDialog.showModal();
  }catch(error){
@@ -221,3 +255,4 @@ el('mp3ExportStart').onclick=async()=>{
  }finally{if(run)release(run);}
 };
 })();
+
