@@ -23,3 +23,12 @@
 .mp3-download-help{font-size:14px;line-height:1.6}
 #mp3ExportShowDownload{width:100%;margin-top:12px}
 #mp3ExportShowDownload[hidden]{display:none}
+
+#mp3TitleColumn{box-sizing:border-box;width:100%;font-size:16px;padding:9px;margin:6px 0}
+#mp3DownloadBoth{box-sizing:border-box;width:100%;padding:16px;font-size:18px;font-weight:700;border-radius:8px}
+#mp3DownloadBoth[hidden]{display:none}
+.mp3-individual-downloads{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;margin:14px 0}
+#mp3DownloadDialog .mp3-individual-downloads a{width:auto;margin:0;padding:8px 0;font-size:15px;text-decoration:underline}
+#mp3ExcelDownload[hidden]{display:none}
+#mp3SaveStatus{font-size:14px;line-height:1.6}
+

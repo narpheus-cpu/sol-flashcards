@@ -1,4 +1,4 @@
-importScripts('./vendor/lame.min.js','./vendor/fflate.js');
+importScripts('./vendor/lame.min.js','./vendor/fflate.js','./mp3-files.js?v=1');
 let zip,track,encoder,zipChunks,bytes=0;
 let rate=0;
 function output(buffer){if(buffer.length)track.push(new Uint8Array(buffer),false);}
@@ -63,7 +63,7 @@ onmessage=({data:m})=>{
  queue=queue.then(async()=>{
   try{
    if(m.action==='init')beginZip();
-   if(m.action==='track'){track=new fflate.ZipPassThrough(m.name);zip.add(track);encoder=null;}
+   if(m.action==='track'){track=new fflate.ZipPassThrough(m.name);zip.add(track);track.push(SolMp3Files.id3(m.title,m.serial),false);encoder=null;}
    if(m.action==='segment')await encodeSegment(m.wav,m.speed,m.repeats);
    if(m.action==='endTrack'){if(!encoder)throw Error('이 항목에 읽을 내용이 없습니다.');output(encoder.flush());track.push(new Uint8Array(),true);encoder=null;track=null;}
    if(m.action==='finish'){zip.end();zipChunks=[];}
@@ -71,3 +71,4 @@ onmessage=({data:m})=>{
   }catch(error){postMessage({id:m.id,error:error.message||String(error)});}
  });
 };
+
