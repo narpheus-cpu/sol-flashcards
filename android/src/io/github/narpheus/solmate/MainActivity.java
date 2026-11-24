@@ -18,7 +18,8 @@ public final class MainActivity extends Activity {
  private PlaybackService service;
  private boolean bound=false,destroyed=false;
  private ValueCallback<Uri[]> fileChoice;
- private byte[] exportBytes;
+ private OutputStream exportStream;
+ private int exportRequestId=-1;
  private static final String ORIGIN="https://appassets.androidplatform.net";
  private final ServiceConnection connection=new ServiceConnection(){
   @Override public void onServiceConnected(ComponentName name,IBinder binder){
@@ -68,7 +69,7 @@ public final class MainActivity extends Activity {
   if(Build.VERSION.SDK_INT>=33&&checkSelfPermission("android.permission.POST_NOTIFICATIONS")!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"},62);
  }
  private WebResourceResponse asset(String name)throws IOException{
-  String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")?"application/javascript":name.endsWith(".json")||name.endsWith(".webmanifest")?"application/json":name.endsWith(".ttf")?"font/ttf":"text/plain";
+  String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")||name.endsWith(".mjs")?"application/javascript":name.endsWith(".css")?"text/css":name.endsWith(".json")||name.endsWith(".webmanifest")?"application/json":name.endsWith(".ttf")?"font/ttf":"text/plain";
   return new WebResourceResponse(mime,"UTF-8",getAssets().open("web/"+name));
  }
  private WebResourceResponse denied(){return new WebResourceResponse("text/plain","UTF-8",404,"Not Found",Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}
@@ -80,8 +81,15 @@ public final class MainActivity extends Activity {
    try{JSONObject message=new JSONObject(raw);int id=message.getInt("id");String method=message.getString("method");JSONObject data=message.optJSONObject("payload");if(data==null)data=new JSONObject();final JSONObject payload=data;
     runOnUiThread(()->{
      if(destroyed||web.getUrl()==null||!web.getUrl().startsWith(ORIGIN+"/assets/")){reply(id,null,"앱 화면에서만 사용할 수 있습니다.");return;}
-     if(method.equals("export")){
-      try{exportBytes=Base64.decode(payload.optString("data",""),Base64.DEFAULT);Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(payload.optString("mime","application/json"));intent.putExtra(Intent.EXTRA_TITLE,payload.optString("name","solmate-backup.json"));startActivityForResult(intent,63);reply(id,new JSONObject(),null);}catch(Exception e){reply(id,null,e.getMessage());}return;
+     if(method.equals("exportBegin")){
+      if(exportRequestId!=-1||exportStream!=null){reply(id,null,"다른 파일을 저장하고 있습니다.");return;}
+      try{exportRequestId=id;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(payload.optString("mime","application/octet-stream"));intent.putExtra(Intent.EXTRA_TITLE,payload.optString("name","solmate-export"));startActivityForResult(intent,63);}catch(Exception e){exportRequestId=-1;reply(id,null,e.getMessage());}return;
+     }
+     if(method.equals("exportChunk")){
+      try{if(exportStream==null)throw new IOException("저장할 파일이 열려 있지 않습니다.");String encodedChunk=payload.optString("data","");if(encodedChunk.length()>300000)throw new IOException("저장 조각이 너무 큽니다.");exportStream.write(Base64.decode(encodedChunk,Base64.DEFAULT));reply(id,new JSONObject(),null);}catch(Exception e){reply(id,null,e.getMessage());}return;
+     }
+     if(method.equals("exportFinish")||method.equals("exportAbort")){
+      try{if(exportStream!=null){try{if(method.equals("exportFinish"))exportStream.flush();}finally{exportStream.close();exportStream=null;}}else if(method.equals("exportFinish"))throw new IOException("저장할 파일이 열려 있지 않습니다.");reply(id,new JSONObject(),null);}catch(Exception e){reply(id,null,e.getMessage());}return;
      }
      if(service==null){reply(id,null,"음성 서비스에 연결 중입니다. 잠시 후 다시 눌러주세요.");return;}
      if(method.equals("download"))getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -93,8 +101,9 @@ public final class MainActivity extends Activity {
  @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
   super.onActivityResult(requestCode,resultCode,data);
   if(requestCode==61&&fileChoice!=null){Uri[] result=resultCode==RESULT_OK&&data!=null&&data.getData()!=null?new Uri[]{data.getData()}:null;fileChoice.onReceiveValue(result);fileChoice=null;}
-  if(requestCode==63&&resultCode==RESULT_OK&&data!=null&&exportBytes!=null){try(OutputStream out=getContentResolver().openOutputStream(data.getData())){out.write(exportBytes);exportBytes=null;}catch(Exception e){new AlertDialog.Builder(this).setMessage("백업 저장 실패: "+e.getMessage()).setPositiveButton("확인",null).show();}}
+  if(requestCode==63&&exportRequestId!=-1){int id=exportRequestId;exportRequestId=-1;try{JSONObject result=new JSONObject();if(resultCode!=RESULT_OK||data==null||data.getData()==null)result.put("cancelled",true);else{exportStream=getContentResolver().openOutputStream(data.getData(),"w");if(exportStream==null)throw new IOException("파일을 열지 못했습니다.");result.put("cancelled",false);}reply(id,result,null);}catch(Exception e){reply(id,null,e.getMessage());}}
  }
  @Override public void onBackPressed(){finish();}
- @Override protected void onDestroy(){destroyed=true;if(service!=null)service.observer=null;if(bound)unbindService(connection);if(web!=null){web.removeJavascriptInterface("AndroidHost");web.destroy();web=null;}super.onDestroy();}
+ @Override protected void onDestroy(){destroyed=true;try{if(exportStream!=null)exportStream.close();}catch(IOException ignored){}exportStream=null;if(service!=null)service.observer=null;if(bound)unbindService(connection);if(web!=null){web.removeJavascriptInterface("AndroidHost");web.destroy();web=null;}super.onDestroy();}
 }
+

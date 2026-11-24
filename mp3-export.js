@@ -239,7 +239,7 @@ el('mp3ExportStart').onclick=async()=>{
   if(downloadUrl)URL.revokeObjectURL(downloadUrl);
   downloadUrl=URL.createObjectURL(run.blob);
   const link=el('mp3ExportDownload');link.href=downloadUrl;
-  link.download=excel.name.replace(/\.xlsx$/,'.zip');
+  link.download=SolMp3Files.zipName(rows,title);
   link.hidden=false;link.textContent='ZIP 다운로드 ('+jobs.length+'개 MP3)';
   excelUrl=URL.createObjectURL(excel.blob);
   const excelLink=el('mp3ExcelDownload');excelLink.href=excelUrl;excelLink.download=excel.name;

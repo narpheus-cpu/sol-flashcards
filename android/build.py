@@ -20,9 +20,10 @@ with zipfile.ZipFile(ROOT/'deps/onnxruntime-android.aar') as archive:
             target = BUILD/'lib'/pathlib.Path(item.filename).relative_to('jni')
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(archive.read(item))
-files = ['index.html','tts-assets.js','native.js','tts.js','round.js','tts-worker.js','supertonic-core.js','sw.js','manifest.webmanifest','SUPERTONIC-LICENSE.txt','SUPERTONIC-MODEL-LICENSE.txt']
+files = ['reading-mode.js','reading-mode.css','mp3-files.js','speech-settings.js','mp3-export.js','mp3-export.css','mp3-worker.js','index.html','tts-assets.js','native.js','tts.js','round.js','tts-worker.js','supertonic-core.js','sw.js','manifest.webmanifest','SUPERTONIC-LICENSE.txt','SUPERTONIC-MODEL-LICENSE.txt']
 for name in files:
     shutil.copyfile(WEB/name, BUILD/'assets/web'/name)
+shutil.copytree(WEB/'vendor', BUILD/'assets/web/vendor', dirs_exist_ok=True)
 vendor = ROOT/'assets/web/vendor/xlsx.full.min.js'
 if not vendor.exists():
     vendor.parent.mkdir(parents=True, exist_ok=True)
@@ -42,6 +43,7 @@ with zipfile.ZipFile(BUILD/'unsigned.apk','a',compression=zipfile.ZIP_DEFLATED,c
     for file in (BUILD/'dex').glob('*.dex'): archive.write(file,file.name)
 run(TOOLS/'zipalign.exe','-f','4',BUILD/'unsigned.apk',BUILD/'aligned.apk')
 key = pathlib.Path(os.environ['SOLMATE_KEYSTORE'])
-run(TOOLS/'apksigner.bat','sign','--ks',key,'--ks-key-alias','solmate','--ks-pass','env:SOLMATE_KEY_PASS','--key-pass','env:SOLMATE_KEY_PASS','--out',BUILD/'Solmate-1.1.0.apk',BUILD/'aligned.apk')
-run(TOOLS/'apksigner.bat','verify','--verbose',BUILD/'Solmate-1.1.0.apk')
-print(BUILD/'Solmate-1.1.0.apk')
+run(TOOLS/'apksigner.bat','sign','--ks',key,'--ks-key-alias','solmate','--ks-pass','env:SOLMATE_KEY_PASS','--key-pass','env:SOLMATE_KEY_PASS','--out',BUILD/'Solmate-1.2.0.apk',BUILD/'aligned.apk')
+run(TOOLS/'apksigner.bat','verify','--verbose',BUILD/'Solmate-1.2.0.apk')
+print(BUILD/'Solmate-1.2.0.apk')
+

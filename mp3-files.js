@@ -30,5 +30,6 @@
    blob:new Blob([XLSX.write(book,{bookType:'xlsx',type:'array',compression:true})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
   };
  }
- scope.SolMp3Files={id3,workbook};
+ function zipName(rows,slot){if(!rows.length)throw Error('다운로드할 문장이 없습니다.');return label(slot)+'_'+String(rows[0].serial).padStart(5,'0')+'-'+String(rows[rows.length-1].serial).padStart(5,'0')+'.ZIP';}
+ scope.SolMp3Files={id3,workbook,zipName};
 })(self);

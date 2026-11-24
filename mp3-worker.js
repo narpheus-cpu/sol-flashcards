@@ -1,4 +1,4 @@
-importScripts('./vendor/lame.min.js','./vendor/fflate.js','./mp3-files.js?v=1');
+importScripts('./vendor/lame.min.js','./vendor/fflate.js','./mp3-files.js?v=2');
 let zip,track,encoder,zipChunks,bytes=0;
 let rate=0;
 function output(buffer){if(buffer.length)track.push(new Uint8Array(buffer),false);}
