@@ -8,6 +8,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>솔메이트</title>
 <link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="./icons/favicon-16.png" type="image/png" sizes="16x16">
+<link rel="icon" href="./icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="shortcut icon" href="./icons/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" sizes="180x180">
+<link rel="stylesheet" href="./pwa-install.css?v=1">
+<script src="./pwa-install.js?v=1" defer></script>
 <meta name="application-name" content="솔메이트">
 <script>if(!window.AndroidHost&&"serviceWorker"in navigator){let reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!reloaded){reloaded=true;location.reload();}});}</script>
 <meta name="apple-mobile-web-app-title" content="솔메이트">
@@ -301,6 +308,10 @@
             </div>
 
             <!-- 🌟 요청하신 [통계] 아이콘 밑 버전 표기 -->
+            <div id="pwaInstallPanel" class="pwa-install-panel">
+                <button id="installSolmate" class="pwa-install-button" type="button"><img src="./icons/favicon-32.png" alt="">솔메이트 앱 설치</button>
+                <p id="pwaInstallHint" class="pwa-install-hint">작업표시줄 아이콘에서 전용 창으로 실행할 수 있어요.</p>
+            </div>
             <div class="version-badge-container">
                 <span class="version-badge">솔메이트 · v1.2.0</span>
             </div>
