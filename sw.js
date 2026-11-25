@@ -1,8 +1,8 @@
 importScripts('./tts-assets.js');
-const SHELL = 'solmate-shell-v23';
+const SHELL = 'solmate-shell-v24';
 const ROOT = new URL('./', self.location.href);
 const XLSX = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-const FILES = ['./pwa-install.js?v=1', './pwa-install.css?v=1', './icons/favicon-16.png', './icons/favicon-32.png', './icons/favicon.ico', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png', './reading-mode.js?v=1', './reading-mode.css?v=1', './mp3-files.js?v=2', './speech-settings.js', './', './index.html', './mp3-export.js?v=6', './mp3-export.css?v=4', './mp3-worker.js?v=3', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
+const FILES = ['./default-files.js?v=1', './default-files.css?v=1', './default-files.json', './pwa-install.js?v=1', './pwa-install.css?v=1', './icons/favicon-16.png', './icons/favicon-32.png', './icons/favicon.ico', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png', './reading-mode.js?v=1', './reading-mode.css?v=1', './mp3-files.js?v=2', './speech-settings.js', './', './index.html', './mp3-export.js?v=6', './mp3-export.css?v=4', './mp3-worker.js?v=3', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
 self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const cache = await caches.open(SHELL);
@@ -23,6 +23,14 @@ self.addEventListener('fetch', event => {
     const req = event.request;
     if (req.method !== 'GET') return;
     const url = new URL(req.url);
+    if (url.href.split('?')[0] === new URL('default-files.json', ROOT).href) {
+        event.respondWith((async () => {
+            const cache = await caches.open(SHELL);
+            try { const live = await fetch(new Request(req, {cache:'no-store'})); if (live.ok) {await cache.put(req, live.clone()); return live;} return await cache.match(req,{ignoreSearch:true}) || live; }
+            catch (_) {return await cache.match(req,{ignoreSearch:true}) || new Response('기본 파일 목록을 불러올 수 없습니다.',{status:503});}
+        })());
+        return;
+    }
     const runtimePrefix = new URL('tts-runtime/', ROOT).href;
     if (req.url.startsWith(runtimePrefix)) {
         event.respondWith((async () => {
@@ -51,4 +59,5 @@ self.addEventListener('fetch', event => {
         event.respondWith(caches.open(SHELL).then(async c => await c.match(req) || fetch(req)));
     }
 });
+
 

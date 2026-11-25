@@ -14,6 +14,8 @@
 <link rel="shortcut icon" href="./icons/favicon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" sizes="180x180">
 <link rel="stylesheet" href="./pwa-install.css?v=1">
+<link rel="stylesheet" href="./default-files.css?v=1">
+<script src="./default-files.js?v=1" defer></script>
 <script src="./pwa-install.js?v=1" defer></script>
 <meta name="application-name" content="솔메이트">
 <script>if(!window.AndroidHost&&"serviceWorker"in navigator){let reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!reloaded){reloaded=true;location.reload();}});}</script>
@@ -334,10 +336,13 @@
                     <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="loadFromPresetUrl()">내려받기</button>
                 </div>
 
-                <div class="control-group">
-                    <button class="btn-outline" onclick="document.getElementById('fileInput').click()">파일 직접 불러오기 (PC/폰)</button>
+                <div class="control-group default-file-actions">
+                    <button id="importLocalFile" class="btn-outline" onclick="document.getElementById('fileInput').click()">파일 직접 불러오기 (PC/폰)</button>
+                    <button id="addDefaultFile" type="button" class="btn-outline" hidden>기본 파일 추가하기</button>
+                    <button id="deleteDefaultFile" type="button" class="btn-outline" hidden>기본 파일 삭제하기</button>
                     <input type="file" id="fileInput" style="display:none;" onchange="importExcel(event)">
                 </div>
+                <p id="defaultFilesStatus" class="sol-default-status" role="status" hidden></p>
                 <textarea id="pasteArea" rows="2" placeholder="탭 또는 콤마로 구분된 텍스트 붙여넣기"></textarea>
                 <button class="btn-primary" style="margin-top:8px;" onclick="importText()">텍스트 등록</button>
             </div>
@@ -989,7 +994,8 @@
     async function renderSlotCards(containerId) {
         const stats = await getSlotStats(); const container = document.getElementById(containerId); container.innerHTML = '';
         for (let i = 1; i <= 5; i++) {
-            container.innerHTML += `<div class="slot-row-item" onclick="selectSlot(${i})"><div class="slot-title">${slotNames[i-1]}</div><div class="slot-info">${stats[i-1]}개 데이터</div><div class="slot-arrow">❯</div></div>`;
+            const safeName = String(slotNames[i-1]).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            container.innerHTML += `<div class="slot-row-item" onclick="selectSlot(${i})"><div class="slot-title">${safeName}</div><div class="slot-info">${stats[i-1]}개 데이터</div><div class="slot-arrow">❯</div></div>`;
         }
     }
 
@@ -1055,8 +1061,15 @@
         let rawFileName = urlInput.split('/').pop().split('?')[0] || '단어장'; try { rawFileName = decodeURIComponent(rawFileName); } catch(e) {}
         let cleanFileName = rawFileName.replace(/\.[^/.]+$/, ""); 
         try {
-            const response = await fetch(urlInput); if (!response.ok) throw new Error(`파일을 불러오지 못했습니다.`);
-            const buffer = await response.arrayBuffer(); const ext = rawFileName.split('.').pop().toLowerCase(); let rows = [];
+            let buffer;
+            if (window.SolDefaultFiles?.active) {
+                const selected = await SolDefaultFiles.readSelected();
+                buffer = selected.buffer; rawFileName = selected.fileName; cleanFileName = selected.title;
+            } else {
+                const response = await fetch(urlInput); if (!response.ok) throw new Error(`파일을 불러오지 못했습니다.`);
+                buffer = await response.arrayBuffer();
+            }
+            const ext = rawFileName.split('.').pop().toLowerCase(); let rows = [];
             if (ext === 'txt' || ext === 'csv' || ext === 'tsv') {
                 let rawText = ''; try { rawText = new TextDecoder('utf-8', { fatal: true }).decode(buffer); } catch (err) { rawText = new TextDecoder('euc-kr').decode(buffer); }
                 const lines = rawText.split('\n'); rows = lines.map(line => { if (line.includes('\t')) return line.split('\t'); if (line.includes(',')) return line.split(','); return [line]; });
@@ -1341,4 +1354,5 @@
 </script>
 </body>
 </html>
+
 

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "files": [
+    {"id":"seed-battery","name":"배터리가 없어","fileName":"배터리가 없어.txt","path":"배터리가 없어.txt"},
+    {"id":"seed-challenge","name":"암기챌린지","fileName":"암기챌린지.txt","path":"암기챌린지.txt"},
+    {"id":"seed-canenglish","name":"캔잉글리시","fileName":"캔잉글리시.txt","path":"캔잉글리시.txt"},
+    {"id":"seed-radio","name":"10년의 영어방송 회화표현 9400","fileName":"10년의 영어방송 회화표현 9400.txt","path":"10년의 영어방송 회화표현 9400.txt"},
+    {"id":"seed-synopsis","name":"영화 시놉시스","fileName":"영화 시놉시스.txt","path":"영화 시놉시스.txt"}
+  ]
+}
