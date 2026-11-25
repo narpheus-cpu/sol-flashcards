@@ -6,7 +6,7 @@
 })(typeof globalThis==='object'?globalThis:this,function(){
     'use strict';
     const REPO='narpheus-cpu/sol-flashcards',BRANCH='main',MANIFEST='default-files.json';
-    const API='https://api.github.com/repos/'+REPO+'/',MAX_BYTES=20*1024*1024;
+    const API='https://api.github.com/repos/'+REPO,MAX_BYTES=20*1024*1024;
     const SEEDS=[['seed-battery','배터리가 없어'],['seed-challenge','암기챌린지'],['seed-canenglish','캔잉글리시'],['seed-radio','10년의 영어방송 회화표현 9400'],['seed-synopsis','영화 시놉시스']].map(([id,name])=>({id,name,fileName:name+'.txt',path:name+'.txt'}));
     const seedPaths=new Set(SEEDS.map(f=>f.path));
     const extension=name=>String(name).split('.').pop().toLowerCase();
@@ -47,7 +47,7 @@
             if(token())headers.Authorization='Bearer '+token();
             if(body!==undefined)headers['Content-Type']='application/json';
             try{
-                const response=await fetcher(API+path,{method,headers,cache:'no-store',signal:controller.signal,...(body===undefined?{}:{body:JSON.stringify(body)})});
+                const response=await fetcher(API+(path?'/'+path:''),{method,headers,cache:'no-store',signal:controller.signal,...(body===undefined?{}:{body:JSON.stringify(body)})});
                 if(!response.ok){const error=new Error(errorMessage(response.status));error.status=response.status;throw error;}
                 return await response.json();
             }catch(error){if(error.name==='AbortError')throw new Error('GitHub 응답 시간이 길어졌습니다. 잠시 후 다시 시도해 주세요.');throw error;}

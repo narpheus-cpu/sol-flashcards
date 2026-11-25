@@ -29,8 +29,10 @@ function repo(){
    const commit=commits.get(ref==='main'?head:ref),sha=commit&&trees.get(commit.tree.sha).get(file);
    return sha?response(200,blobs.get(sha)):response(404,{});
   }
-  assert.ok(url.startsWith('https://api.github.com/repos/narpheus-cpu/sol-flashcards/'));
-  const endpoint=url.split('/sol-flashcards/')[1];
+  const base='https://api.github.com/repos/narpheus-cpu/sol-flashcards';
+  assert.ok(url===base||url.startsWith(base+'/'));
+  assert.notEqual(url,base+'/','repository requests must omit the trailing slash');
+  const endpoint=url===base?'':url.slice(base.length+1);
   if((method!=='GET'||endpoint==='')&&options.headers?.Authorization!=='Bearer unit-test-token')return response(401,{});
   if(state.denyWrites&&method!=='GET')return response(403,{});
   if(endpoint==='')return response(200,{permissions:{push:true}});
