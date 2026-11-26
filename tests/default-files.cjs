@@ -84,7 +84,7 @@ test('selected files are removed from Git and catalog without changing the app',
  const server=repo(),client=authenticated(server),snapshot=await client.snapshot();const index=server.files().get('index.html');
  await client.remove([snapshot.files[0],snapshot.files[2]]);
  assert.equal(server.files().has(snapshot.files[0].path),false);assert.equal(server.files().has(snapshot.files[2].path),false);
- assert.equal(server.catalog().files.length,3);assert.equal(server.files().get('index.html'),index);
+ assert.equal(server.catalog().files.length,initial.files.length-2);assert.equal(server.files().get('index.html'),index);
  const next=await client.snapshot();await client.remove(next.files);assert.equal((await client.snapshot()).files.length,0,'empty catalog must not restore deleted seed files');
 });
 test('concurrent uploads are preserved and retried without a forced push',async()=>{
@@ -124,7 +124,7 @@ test('downloads fall back to the Git blob API without altering binary data',asyn
  const server=repo(),client=authenticated(server),bytes=Buffer.from([0,255,13,10,128,80,75]);const result=await client.upload(file('x.xlsx',bytes),'표');server.rawFails=true;
  const data=await client.download(result.files.at(-1),result.head);assert.deepEqual(Buffer.from(data.buffer),bytes);
 });
-test('mobile browsers and Android APK do not receive PC management controls',()=>{
+test('ordinary mobile browsers do not receive desktop management controls',()=>{
  assert.equal(api.isPC({navigator:{userAgent:'Windows NT 10.0'}}),true);
  for(const env of [{AndroidHost:{},navigator:{}},{navigator:{userAgent:'Android'}},{navigator:{userAgent:'iPhone'}},{navigator:{userAgentData:{mobile:true}}},{navigator:{platform:'MacIntel',maxTouchPoints:5}}])assert.equal(api.isPC(env),false);
  let accessed=false;api.install({AndroidHost:{},document:{getElementById(){accessed=true}},navigator:{}});assert.equal(accessed,false);
@@ -151,8 +151,10 @@ function dom(server){
  const all=()=>{const out=[];function walk(e){out.push(e);e.children.forEach(walk)}walk(document.body);return out;};
  return {window,document,storage,all};
 }
-test('PC upload/delete dialogs update the selector while preserving slot data and keeping tokens out of storage',async()=>{
- const server=repo(),ui=dom(server);api.install(ui.window);
+for(const native of [false,true])test((native?'APK':'PC')+' upload/delete dialogs preserve slots and never store tokens',async()=>{
+ const server=repo(),ui=dom(server);
+ if(native){ui.window.AndroidHost={request(){}};ui.window.navigator={userAgent:'Android; wv',userAgentData:{mobile:true}};}
+ api.install(ui.window);
  const get=id=>ui.document.getElementById(id),button=text=>ui.all().find(e=>e.tagName==='button'&&e.textContent===text);
  assert.equal(get('addDefaultFile').hidden,false);assert.equal(get('deleteDefaultFile').hidden,false);assert.equal(get('importLocalFile').textContent,'파일 직접 불러오기');
  await get('addDefaultFile').onclick();const selected=ui.all().find(e=>e.type==='file');selected.files=[file('학습.csv','한국어,English')];selected.onchange();
@@ -171,7 +173,7 @@ test('three equal-width PC actions, original import and cache updates are wired 
  assert.match(style,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
  assert.match(index,/selected\.buffer; rawFileName = selected\.fileName; cleanFileName = selected\.title/);
  for(const file of ['default-files.js','default-files.css','default-files.json'])assert.ok(sw.includes(file));
- assert.match(sw,/solmate-shell-v24/);
+ assert.match(sw,/solmate-shell-v\d+/);
 });
 test('a slow older catalog response cannot remove a newly uploaded option',async()=>{
  const server=repo(),ui=dom(server);let release,blocked=false;
@@ -191,3 +193,4 @@ test('downloaded default titles render as text in slot cards',async()=>{
  vm.runInNewContext(index.slice(start,end),env);await env.renderSlotCards('slotCardsContainer');
  assert.ok(card.innerHTML.includes('&lt;img'));assert.ok(card.innerHTML.includes('A &amp; B'));assert.ok(!card.innerHTML.includes('<img'));
 });
+

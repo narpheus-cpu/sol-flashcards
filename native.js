@@ -42,6 +42,8 @@
         return true;
     };
     document.addEventListener('DOMContentLoaded',()=>{
+        const version=document.querySelector('.version-badge');
+        if(version)version.textContent='솔메이트 앱 v1.2.1';
         const option=document.querySelector('#setTtsProvider option[value="auto"]');
         if(option)option.textContent='자동 · Android 네이티브';
     });
@@ -56,4 +58,5 @@
         } catch(e) { if (self.showToast) showToast(e.message); }
     },true);
 })();
+
 

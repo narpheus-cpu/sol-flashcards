@@ -1,4 +1,4 @@
-/* PC-only GitHub-backed shared study files. Slot progress and credentials are never committed by this module. */
+/* Shared study files for desktop browsers and the packaged Android app. Slot progress and credentials are never committed by this module. */
 (function(root,factory){
     const api=factory();
     if(typeof module==='object'&&module.exports)module.exports=api;
@@ -136,11 +136,13 @@
         return !env.AndroidHost&&!env.SolAndroid&&!nav.userAgentData?.mobile&&!/Android|iPhone|iPad|iPod/i.test(ua)&&!(nav.platform==='MacIntel'&&nav.maxTouchPoints>1);
     }
     function install(env){
-        if(!isPC(env))return;
+        const native=typeof env.AndroidHost?.request==='function';
+        if(!native&&!isPC(env))return;
         function start(){
             const doc=env.document,select=doc.getElementById('presetUrlSelect'),add=doc.getElementById('addDefaultFile'),del=doc.getElementById('deleteDefaultFile');
             if(!select||!add||!del)return;
             doc.documentElement.classList.add('sol-pc-default-files');add.hidden=del.hidden=false;
+            if(native)doc.documentElement.classList.add('sol-native-default-files');
             doc.getElementById('importLocalFile').textContent='파일 직접 불러오기';
             const status=doc.getElementById('defaultFilesStatus'),cacheKey='solmate-default-files-v1:'+REPO;
             let accessToken='',data={head:BRANCH,catalog:{version:1,files:SEEDS},files:SEEDS},lastFetch=0,pending=null,busy=false,revision=0;
@@ -241,3 +243,4 @@
     }
     return {client,catalog,validPath,rawURL,safeName,isPC,MAX_BYTES,install};
 });
+
