@@ -23,7 +23,7 @@
  const n=navigator,u=n.userAgent||'';
  if(window.AndroidHost||n.userAgentData?.mobile||/Android|iPhone|iPad|iPod|Mobile/i.test(u)||(n.platform==='MacIntel'&&n.maxTouchPoints>1))return;
  const css=document.createElement('link');css.rel='stylesheet';css.href='./pc-quiz.css?v=2';
- const script=document.createElement('script');script.src='./pc-quiz.js?v=2';
+ const script=document.createElement('script');script.src='./pc-quiz-controls.js?v=3';
  document.head.append(css,script);
 })();
 </script>

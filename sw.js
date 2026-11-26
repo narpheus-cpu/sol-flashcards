@@ -1,8 +1,8 @@
 importScripts('./tts-assets.js');
-const SHELL = 'solmate-shell-v27';
+const SHELL = 'solmate-shell-v28';
 const ROOT = new URL('./', self.location.href);
 const XLSX = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-const FILES = ['./pc-quiz.js?v=2', './pc-quiz.css?v=2', './default-files.js?v=1', './default-files.css?v=1', './default-files.json', './pwa-install.js?v=1', './pwa-install.css?v=1', './icons/favicon-16.png', './icons/favicon-32.png', './icons/favicon.ico', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png', './reading-mode.js?v=1', './reading-mode.css?v=1', './mp3-files.js?v=2', './speech-settings.js', './', './index.html', './mp3-export.js?v=6', './mp3-export.css?v=4', './mp3-worker.js?v=3', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
+const FILES = ['./pc-quiz-controls.js?v=3', './pc-quiz.css?v=2', './default-files.js?v=1', './default-files.css?v=1', './default-files.json', './pwa-install.js?v=1', './pwa-install.css?v=1', './icons/favicon-16.png', './icons/favicon-32.png', './icons/favicon.ico', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png', './reading-mode.js?v=1', './reading-mode.css?v=1', './mp3-files.js?v=2', './speech-settings.js', './', './index.html', './mp3-export.js?v=6', './mp3-export.css?v=4', './mp3-worker.js?v=3', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
 self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const cache = await caches.open(SHELL);
@@ -28,6 +28,21 @@ self.addEventListener('fetch', event => {
             const cache = await caches.open(SHELL);
             try { const live = await fetch(new Request(req, {cache:'no-store'})); if (live.ok) {await cache.put(req, live.clone()); return live;} return await cache.match(req,{ignoreSearch:true}) || live; }
             catch (_) {return await cache.match(req,{ignoreSearch:true}) || new Response('기본 파일 목록을 불러올 수 없습니다.',{status:503});}
+        })());
+        return;
+    }
+    // Desktop quiz updates must not reuse an older script with another version.
+    const pcAssets = ['pc-quiz.js', 'pc-quiz-controls.js', 'pc-quiz.css'].map(path => new URL(path, ROOT).href);
+    if (pcAssets.includes(url.href.split('?')[0])) {
+        event.respondWith((async () => {
+            const cache = await caches.open(SHELL);
+            try {
+                const live = await fetch(new Request(req, {cache:'no-cache'}));
+                if (live.ok) { await cache.put(req, live.clone()); return live; }
+                return await cache.match(req) || live;
+            } catch (_) {
+                return await cache.match(req) || new Response('PC 퀴즈 파일을 불러올 수 없습니다.', {status:503});
+            }
         })());
         return;
     }

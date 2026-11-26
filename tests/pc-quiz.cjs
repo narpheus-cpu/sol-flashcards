@@ -1,8 +1,8 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const root=__dirname+'/../',html=fs.readFileSync(root+'index.html','utf8'),script=fs.readFileSync(root+'pc-quiz.js','utf8');
+const root=__dirname+'/../',html=fs.readFileSync(root+'index.html','utf8'),script=fs.readFileSync(root+'pc-quiz-controls.js','utf8');
 for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);
 function setup(options={}){
- const ids=new Map(),listeners=new Map(),timers=[],storage=options.storage||new Map(),writes=[],history=[],messages=[];
+ const ids=new Map(),listeners=new Map(),windowListeners=[],timers=[],storage=options.storage||new Map(),writes=[],history=[],messages=[],renderStates=[];
  let doc;
  class Text{constructor(value){this.nodeType=3;this.nodeValue=value;this.parentNode=null;}get textContent(){return this.nodeValue;}replaceWith(node){this.parentNode.replace(this,node);}}
  class Element{
@@ -45,7 +45,8 @@ function setup(options={}){
  doc={readyState:'complete',documentElement:htmlRoot,body,head:new Element('head'),getElementById:id=>ids.get(id),createElement:tag=>new Element(tag),createTextNode:value=>new Text(value),createDocumentFragment:()=>new Element('fragment',11),querySelector:s=>htmlRoot.querySelector(s),addEventListener:(name,fn)=>{if(!listeners.has(name))listeners.set(name,[]);listeners.get(name).push(fn);}};
  const c={document:doc,navigator:{userAgent:options.mobile?'Mozilla Android Mobile':'Mozilla Windows NT 10.0',platform:'Win32',maxTouchPoints:0},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},console,Map,Set,Date,Array,Object,Number,innerWidth:1000,innerHeight:800,card,
  quizQueue:[{id:'a',korean:'나는 / 집에 간다.',english:'I/read/it and you / go.',score:0,serialNum:1,totalSlotCount:3},{id:'b',korean:'둘째 / 문장',english:'Second card.',score:2,serialNum:2,totalSlotCount:3},{id:'c',korean:'마지막',english:'Last card.',score:0,serialNum:3,totalSlotCount:3}],currentQIdx:0,roundCorrectCount:0,isBrowserModeActive:false,
- SolTTS:{stop(){},prepare(){}},updateWord:async q=>writes.push({...q}),recordStudyHistory:async(id,result)=>history.push({id,result}),updateFavoriteBtnUI(){},updateMediaSessionMetadata(){},alert(){},showToast:message=>messages.push(message),enterBrowserModeView(){c.isBrowserModeActive=true;},endQuiz(){c.ended=true;view.classList.remove('active');},setTimeout:fn=>{timers.push(fn);return timers.length;}};
+ SolTTS:{stop(){},prepare(){renderStates.push({transition:card.style.transition,animation:card.style.animation});}},updateWord:async q=>writes.push({...q}),recordStudyHistory:async(id,result)=>history.push({id,result}),updateFavoriteBtnUI(){},updateMediaSessionMetadata(){},alert(){},showToast:message=>messages.push(message),enterBrowserModeView(){c.isBrowserModeActive=true;},endQuiz(){c.ended=true;view.classList.remove('active');},setTimeout:fn=>{timers.push(fn);return timers.length;}};
+ c.addEventListener=(name,fn,options)=>windowListeners.push({name,fn,capture:options===true||!!options?.capture});
  c.playManualTTS=()=>{c.readCount=(c.readCount||0)+1;};
  c.self=c;c.window=c;if(options.native)c.AndroidHost={};vm.createContext(c);
  const extract=(start,end)=>html.slice(html.indexOf(start),html.indexOf(end,html.indexOf(start)));
@@ -53,8 +54,16 @@ function setup(options={}){
  vm.runInContext(extract('    function renderCurrentQuestion(','    function toggleEditCard('),c);
  vm.runInContext(extract('    async function handleQuizResult(','    function endQuiz('),c);
  const originals={render:c.renderCurrentQuestion,result:c.handleQuizResult,previous:c.prevQuestion};vm.runInContext(script,c);c.renderCurrentQuestion();
- const key=(name,extra={})=>{const e={key:name,target:body,repeat:false,prevented:false,preventDefault(){this.prevented=true},...extra};for(const fn of listeners.get('keydown')||[])fn(e);return e;};
- return {c,ids,view,back,front,header,editor,storage,writes,history,originals,timers,key,element:tag=>new Element(tag),flush(){for(const fn of timers.splice(0))fn();},masks:()=>back.querySelectorAll('.quiz-mask-word')};
+ const key=(name,extra={})=>{
+  const e={key:name,target:body,repeat:false,prevented:false,stopped:false,preventDefault(){this.prevented=true},stopImmediatePropagation(){this.stopped=true},stopPropagation(){this.stopped=true},...extra};
+  for(const listener of windowListeners.filter(l=>l.name==='keydown'&&l.capture)){listener.fn(e);if(e.stopped)break;}
+  if(!e.stopped)e.target.onkeydown?.(e);
+  if(!e.stopped)for(const fn of listeners.get('keydown')||[]){fn(e);if(e.stopped)break;}
+  if(!e.stopped)for(const listener of windowListeners.filter(l=>l.name==='keydown'&&!l.capture)){listener.fn(e);if(e.stopped)break;}
+  if(!e.prevented&&['ArrowUp','ArrowDown'].includes(name))c.focusMoves=(c.focusMoves||0)+1;
+  return e;
+ };
+ return {c,ids,view,back,front,header,editor,storage,writes,history,originals,timers,key,renderStates,element:tag=>new Element(tag),flush(){for(const fn of timers.splice(0))fn();},masks:()=>back.querySelectorAll('.quiz-mask-word')};
 }
 const settle=async()=>{for(let i=0;i<10;i++)await Promise.resolve();};
 const check=(value,message)=>{assert.ok(value,message);console.log('PASS '+message);};
@@ -76,6 +85,10 @@ const check=(value,message)=>{assert.ok(value,message);console.log('PASS '+messa
  for(const unit of a.masks())unit.onclick({stopPropagation(){}});a.key('PageDown');for(const unit of a.masks())unit.onclick({stopPropagation(){}});a.key('PageUp');check(a.c.currentQIdx===0&&a.writes.length===0&&a.history.length===0,'PageUp and PageDown also leave fully revealed cards ungraded');
  a.key('PageDown',{repeat:true});check(a.c.currentQIdx===0,'holding PageDown does not skip multiple cards');
  a.key('ArrowDown');a.key('ArrowDown',{repeat:true});check(a.c.readCount===1&&a.writes.length===0,'down arrow invokes the existing reading button action once without grading');
+ const focused=setup(),focusedButton=focused.element('button');let buttonKeyCalls=0;focusedButton.onkeydown=e=>{buttonKeyCalls++;e.stopPropagation();};focusedButton.focus();
+ const down=focused.key('ArrowDown',{target:focusedButton});check(down.prevented&&down.stopped&&focused.c.readCount===1&&!buttonKeyCalls&&!focused.c.focusMoves,'capture handles down arrow before a focused button and prevents native focus movement');
+ const up=focused.key('ArrowUp',{target:focusedButton});await settle();check(up.prevented&&up.stopped&&focused.history.length===1&&focused.history[0].result===false&&!buttonKeyCalls&&!focused.c.focusMoves,'capture handles up arrow before a focused button and grades instead of moving focus');
+ const still=setup();still.c.card.style.transition='transform .25s, opacity .2s';still.c.card.style.animation='sample .2s';still.key('PageDown');check(still.renderStates.at(-1).transition==='none'&&still.renderStates.at(-1).animation==='none'&&still.c.currentQIdx===1&&still.history.length===0,'PageDown renders the next card with transitions and animations disabled');still.key('PageUp');check(still.renderStates.at(-1).transition==='none'&&still.renderStates.at(-1).animation==='none'&&still.c.currentQIdx===0&&still.history.length===0,'PageUp renders the previous card without motion or grading');check(still.c.card.style.transition==='transform .25s, opacity .2s'&&still.c.card.style.animation==='sample .2s','navigation restores the existing grading animation only after the stationary card is laid out');
  const graded=setup(),flash=graded.c.document.querySelector('.pc-quiz-feedback');
  graded.key('Enter');await settle();check(graded.writes.length===0&&flash.textContent==='','Enter does nothing while any mask is closed');
  graded.masks()[0].onclick({stopPropagation(){}});graded.key('ArrowRight');graded.key('ArrowRight');graded.key('ArrowLeft');graded.key('Enter');check(graded.writes.length===0,'hiding a revealed group blocks Enter again');graded.key('ArrowRight');

@@ -85,18 +85,27 @@
    if(document.querySelector('dialog[open]'))return true;
    const editor=el('quizEditCard');return !!editor&&editor.style.display!=='none'&&editor.style.display!=='';
   }
-  document.addEventListener('keydown',event=>{
-   if(!['PageUp','PageDown','Enter','ArrowUp','ArrowDown','ArrowRight','ArrowLeft'].includes(event.key)||blocked(event))return;
-   event.preventDefault();if(busy)return;
-   if(event.key==='PageUp'){if(!event.repeat)prevQuestion();return;}
-   if(event.key==='PageDown'){if(!event.repeat)skipQuestion();return;}
-   if(event.key==='ArrowDown'){if(!event.repeat)playManualTTS();return;}
-   if(event.key==='ArrowUp'){if(!event.repeat)gradeFromKeyboard(false);return;}
+  function navigateWithoutMotion(move){
+   const card=el('quizCard'),transition=card.style.transition,animation=card.style.animation;
+   card.style.transition='none';card.style.animation='none';
+   try{return move();}finally{void card.offsetWidth;card.style.transition=transition;card.style.animation=animation;}
+  }
+  // Capture before focused buttons and cancel browser focus navigation as well.
+  self.addEventListener('keydown',event=>{
+   const keys=['PageUp','PageDown','Enter','ArrowUp','ArrowDown','ArrowRight','ArrowLeft'];
+   const aliases={Up:'ArrowUp',Down:'ArrowDown',Right:'ArrowRight',Left:'ArrowLeft'};
+   const pressed=keys.includes(event.key)?event.key:aliases[event.key]||event.code||({13:'Enter',33:'PageUp',34:'PageDown',37:'ArrowLeft',38:'ArrowUp',39:'ArrowRight',40:'ArrowDown'}[event.keyCode]);
+   if(!keys.includes(pressed)||blocked(event))return;
+   event.preventDefault();event.stopImmediatePropagation();if(busy)return;
+   if(pressed==='PageUp'){if(!event.repeat)navigateWithoutMotion(prevQuestion);return;}
+   if(pressed==='PageDown'){if(!event.repeat)navigateWithoutMotion(skipQuestion);return;}
+   if(pressed==='ArrowDown'){if(!event.repeat)playManualTTS();return;}
+   if(pressed==='ArrowUp'){if(!event.repeat)gradeFromKeyboard(false);return;}
    const units=masks();
-   if(event.key==='Enter'){if(!event.repeat&&units.every(unit=>unit.classList.contains('revealed')))gradeFromKeyboard(true);return;}
-   if(event.key==='ArrowRight'){const next=units.find(unit=>!unit.classList.contains('revealed'));if(next)setRevealed(next,true,true);}
+   if(pressed==='Enter'){if(!event.repeat&&units.every(unit=>unit.classList.contains('revealed')))gradeFromKeyboard(true);return;}
+   if(pressed==='ArrowRight'){const next=units.find(unit=>!unit.classList.contains('revealed'));if(next)setRevealed(next,true,true);}
    else{const recent=[...revealOrder].reverse().find(unit=>units.includes(unit)&&unit.classList.contains('revealed'))||[...units].reverse().find(unit=>unit.classList.contains('revealed'));if(recent)setRevealed(recent,false,true);}
-  });
+  },{capture:true,passive:false});
   apply();if(view.classList.contains('active')){bindMasks(el('qEnglishMasked'));slashText(el('qKorean'));}self.SolPCQuiz={openSettings,get settings(){return {...prefs};}};
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
