@@ -23,9 +23,18 @@
    '<fieldset><legend>2열 · 영어 문장과 마스킹</legend><div class="pc-quiz-settings-grid">'+field('backSize','글꼴 크기 · pt',.5)+field('backLeading','줄간격 · 배',.05)+'</div></fieldset>'+
    '<fieldset><legend>문장 사이</legend>'+field('columnGap','1열과 2열 사이 간격 · pt',1)+'</fieldset>'+
    '<fieldset><legend>슬래시 / · 두 열에 공통 적용</legend><div class="pc-quiz-settings-grid">'+field('slashSize','글자 크기 · 해당 본문 대비 %',5)+field('slashBefore','/ 앞 강제 여백 · pt',.5)+field('slashAfter','/ 뒤 강제 여백 · pt',.5)+'</div></fieldset>'+
-   '<p>PageUp: 이전 카드 · PageDown: 오답 처리 후 다음 카드<br>→: 마스킹 한 묶음 열기 · ←: 최근에 연 묶음 닫기</p>'+
+   '<p>PageUp / PageDown: 채점 없이 이전 / 다음 카드<br>Enter: 마스킹을 모두 열었을 때 정답 처리 후 다음 카드<br>↑: 오답 처리 후 다음 카드 · ↓: 낭독<br>→: 마스킹 한 묶음 열기 · ←: 최근에 연 묶음 닫기</p>'+
    '<p id="pcQuizSettingsError" role="alert"></p><div class="pc-quiz-settings-actions"><button type="button" id="pcQuizSettingsCancel" class="btn-outline">취소</button><button type="button" id="pcQuizSettingsSave" class="btn-primary">저장</button></div>';
   document.body.append(dialog);
+  const feedback=document.createElement('div');feedback.className='pc-quiz-feedback';feedback.setAttribute('aria-hidden','true');document.body.append(feedback);
+  function gradeFromKeyboard(correct){
+   if(!quizQueue[currentQIdx])return;
+   const rect=el('quizCard').getBoundingClientRect();
+   feedback.textContent=correct?'O':'X';feedback.style.color=correct?'#2b8a3e':'#e03131';
+   feedback.style.left=(rect.left+rect.width/2)+'px';feedback.style.top=(rect.top+rect.height/2)+'px';
+   feedback.classList.remove('pc-quiz-feedback-show');void feedback.offsetWidth;feedback.classList.add('pc-quiz-feedback-show');
+   handleQuizResult(correct,correct?'X':'Y');
+  }
   function apply(){
    const variables={'front-size':prefs.frontSize+'pt','back-size':prefs.backSize+'pt','front-leading':prefs.frontLeading,'back-leading':prefs.backLeading,'column-gap':prefs.columnGap+'pt','slash-size':prefs.slashSize+'%','slash-before':prefs.slashBefore+'pt','slash-after':prefs.slashAfter+'pt'};
    for(const [name,value]of Object.entries(variables))view.style.setProperty('--pc-quiz-'+name,String(value));
@@ -77,11 +86,14 @@
    const editor=el('quizEditCard');return !!editor&&editor.style.display!=='none'&&editor.style.display!=='';
   }
   document.addEventListener('keydown',event=>{
-   if(!['PageUp','PageDown','ArrowRight','ArrowLeft'].includes(event.key)||blocked(event))return;
+   if(!['PageUp','PageDown','Enter','ArrowUp','ArrowDown','ArrowRight','ArrowLeft'].includes(event.key)||blocked(event))return;
    event.preventDefault();if(busy)return;
    if(event.key==='PageUp'){if(!event.repeat)prevQuestion();return;}
-   if(event.key==='PageDown'){if(!event.repeat)handleQuizResult(false,'Y');return;}
+   if(event.key==='PageDown'){if(!event.repeat)skipQuestion();return;}
+   if(event.key==='ArrowDown'){if(!event.repeat)playManualTTS();return;}
+   if(event.key==='ArrowUp'){if(!event.repeat)gradeFromKeyboard(false);return;}
    const units=masks();
+   if(event.key==='Enter'){if(!event.repeat&&units.every(unit=>unit.classList.contains('revealed')))gradeFromKeyboard(true);return;}
    if(event.key==='ArrowRight'){const next=units.find(unit=>!unit.classList.contains('revealed'));if(next)setRevealed(next,true,true);}
    else{const recent=[...revealOrder].reverse().find(unit=>units.includes(unit)&&unit.classList.contains('revealed'))||[...units].reverse().find(unit=>unit.classList.contains('revealed'));if(recent)setRevealed(recent,false,true);}
   });

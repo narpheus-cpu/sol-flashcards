@@ -34,6 +34,7 @@ function setup(options={}){
   querySelectorAll(selector){const out=[];const walk=node=>{for(const child of node.children){if(child.matches(selector))out.push(child);walk(child);}};walk(this);return out;}
   querySelector(selector){return this.querySelectorAll(selector)[0]||null;}
   showModal(){this.open=true;}close(){this.open=false;}focus(){doc.activeElement=this;}
+  getBoundingClientRect(){return {left:100,top:120,width:600,height:400};}
  }
  const element=(id,tag='div',parent)=>{const node=new Element(tag);node.id=id;if(parent)parent.append(node);return node;};
  const htmlRoot=new Element('html'),body=new Element('body');htmlRoot.append(body);
@@ -45,6 +46,7 @@ function setup(options={}){
  const c={document:doc,navigator:{userAgent:options.mobile?'Mozilla Android Mobile':'Mozilla Windows NT 10.0',platform:'Win32',maxTouchPoints:0},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},console,Map,Set,Date,Array,Object,Number,innerWidth:1000,innerHeight:800,card,
  quizQueue:[{id:'a',korean:'나는 / 집에 간다.',english:'I/read/it and you / go.',score:0,serialNum:1,totalSlotCount:3},{id:'b',korean:'둘째 / 문장',english:'Second card.',score:2,serialNum:2,totalSlotCount:3},{id:'c',korean:'마지막',english:'Last card.',score:0,serialNum:3,totalSlotCount:3}],currentQIdx:0,roundCorrectCount:0,isBrowserModeActive:false,
  SolTTS:{stop(){},prepare(){}},updateWord:async q=>writes.push({...q}),recordStudyHistory:async(id,result)=>history.push({id,result}),updateFavoriteBtnUI(){},updateMediaSessionMetadata(){},alert(){},showToast:message=>messages.push(message),enterBrowserModeView(){c.isBrowserModeActive=true;},endQuiz(){c.ended=true;view.classList.remove('active');},setTimeout:fn=>{timers.push(fn);return timers.length;}};
+ c.playManualTTS=()=>{c.readCount=(c.readCount||0)+1;};
  c.self=c;c.window=c;if(options.native)c.AndroidHost={};vm.createContext(c);
  const extract=(start,end)=>html.slice(html.indexOf(start),html.indexOf(end,html.indexOf(start)));
  vm.runInContext(extract('    function renderMaskedText(','    function updateFavoriteBtnUI('),c);
@@ -69,13 +71,24 @@ const check=(value,message)=>{assert.ok(value,message);console.log('PASS '+messa
  check(a.masks()[0]===first&&first.classList.contains('revealed'),'saving appearance settings preserves already opened masks');
  check(first.querySelectorAll('.pc-quiz-slash').length===4&&a.front.textContent==='나는 / 집에 간다.','slash styling preserves original text and uses identical markup for mask and answer');
  const b=setup({storage:a.storage});check(b.c.SolPCQuiz.settings.backSize===21&&b.c.SolPCQuiz.settings.slashSize===70,'PC appearance preferences persist after reopening');
- a.key('PageDown');a.key('PageDown');a.key('PageUp');await settle();check(a.writes.length===1&&a.history.length===1&&a.history[0].result===false&&a.c.quizQueue[0].score===-1&&a.c.currentQIdx===0,'PageDown uses the real wrong-answer grader and ignores overlapping navigation');
- a.flush();check(a.c.currentQIdx===1,'grading moves to exactly the next card');
- a.key('PageUp');check(a.c.currentQIdx===0&&a.writes.length===1,'PageUp goes back without a score change');
- a.key('PageDown',{repeat:true});await settle();check(a.writes.length===1,'holding PageDown does not repeatedly penalize cards');
+ a.key('PageDown');check(a.c.currentQIdx===1&&a.writes.length===0&&a.history.length===0&&a.c.quizQueue[0].score===0,'PageDown moves past a partly masked card without grading');
+ a.key('PageUp');check(a.c.currentQIdx===0&&a.writes.length===0&&a.history.length===0,'PageUp moves past a fully masked card without grading');
+ for(const unit of a.masks())unit.onclick({stopPropagation(){}});a.key('PageDown');for(const unit of a.masks())unit.onclick({stopPropagation(){}});a.key('PageUp');check(a.c.currentQIdx===0&&a.writes.length===0&&a.history.length===0,'PageUp and PageDown also leave fully revealed cards ungraded');
+ a.key('PageDown',{repeat:true});check(a.c.currentQIdx===0,'holding PageDown does not skip multiple cards');
+ a.key('ArrowDown');a.key('ArrowDown',{repeat:true});check(a.c.readCount===1&&a.writes.length===0,'down arrow invokes the existing reading button action once without grading');
+ const graded=setup(),flash=graded.c.document.querySelector('.pc-quiz-feedback');
+ graded.key('Enter');await settle();check(graded.writes.length===0&&flash.textContent==='','Enter does nothing while any mask is closed');
+ graded.masks()[0].onclick({stopPropagation(){}});graded.key('ArrowRight');graded.key('ArrowRight');graded.key('ArrowLeft');graded.key('Enter');check(graded.writes.length===0,'hiding a revealed group blocks Enter again');graded.key('ArrowRight');
+ graded.key('Enter');graded.key('Enter');graded.key('ArrowUp');graded.key('PageDown');graded.key('PageUp');await settle();
+ check(graded.writes.length===1&&graded.history.length===1&&graded.history[0].result===true&&graded.c.quizQueue[0].score===1&&graded.c.roundCorrectCount===1,'Enter grades a fully revealed card exactly once and blocks overlapping actions');
+ check(flash.textContent==='O'&&flash.style.color==='#2b8a3e'&&flash.style.left==='400px'&&flash.style.top==='320px'&&flash.classList.contains('pc-quiz-feedback-show'),'correct feedback flashes a green O centered over the card');
+ graded.flush();check(graded.c.currentQIdx===1,'Enter advances exactly one card after recording the result');
+ graded.key('Enter',{repeat:true});graded.key('ArrowUp',{repeat:true});check(graded.writes.length===1,'holding a grading key cannot grade the following card');
+ graded.key('ArrowUp');await settle();check(graded.history.at(-1).result===false&&graded.c.quizQueue[1].score===1&&flash.textContent==='X'&&flash.style.color==='#e03131','up arrow grades an unopened card wrong and flashes a red X');graded.flush();check(graded.c.currentQIdx===2,'up arrow advances exactly one card');
  for(const extra of [{target:a.ids.get('editEnglishInput')},{target:a.element('textarea')},{ctrlKey:true},{altKey:true},{metaKey:true},{shiftKey:true},{isComposing:true}])check(!a.key('PageDown',extra).prevented,'typing and modified keys keep native behavior');
  a.editor.style.display='block';check(!a.key('ArrowRight').prevented,'inline sentence editing is protected');a.editor.style.display='none';a.c.isBrowserModeActive=true;check(!a.key('PageDown').prevented,'automatic reading is outside manual-quiz shortcuts');a.c.isBrowserModeActive=false;
- a.c.currentQIdx=2;a.c.renderCurrentQuestion();a.key('PageDown');await settle();a.flush();check(a.c.ended&&a.history.at(-1).id==='c'&&a.history.at(-1).result===false,'PageDown grades the last card before finishing the round');
+ a.c.currentQIdx=2;a.c.renderCurrentQuestion();a.key('PageDown');check(a.c.ended&&a.history.length===0&&a.c.quizQueue[2].score===0,'PageDown finishes the last card without recording any result');
+ graded.key('ArrowUp');await settle();graded.flush();check(graded.c.ended&&graded.history.at(-1).id==='c'&&graded.history.at(-1).result===false,'up arrow records the last card wrong before finishing');
  const mouse=setup(),keyboard=setup();mouse.masks()[0].onclick({stopPropagation(){}});keyboard.key('ArrowRight');await mouse.c.handleQuizResult(true,'X');await keyboard.c.handleQuizResult(true,'X');check(mouse.c.quizQueue[0].score===keyboard.c.quizQueue[0].score&&mouse.c.roundCorrectCount===keyboard.c.roundCorrectCount&&mouse.history[0].result===keyboard.history[0].result,'mouse and keyboard reveals receive identical existing score judgments');
  for(const options of [{native:true},{mobile:true}]){const m=setup(options);check(!m.c.SolPCQuiz&&!m.ids.has('pcQuizSettingsButton')&&m.c.handleQuizResult===m.originals.result&&m.c.prevQuestion===m.originals.previous,'mobile and Android retain their original rendering, controls and scoring');}
  console.log('All PC quiz behavior checks passed.');

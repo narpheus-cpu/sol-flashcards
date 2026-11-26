@@ -9,6 +9,9 @@ html.sol-pc-quiz #viewQuizPlay .quiz-mask-word>span{font-size:inherit;line-heigh
 html.sol-pc-quiz #viewQuizPlay .pc-quiz-slash{display:inline-block;font-size:var(--pc-quiz-slash-size,100%);margin-left:var(--pc-quiz-slash-before,0pt);margin-right:var(--pc-quiz-slash-after,0pt);vertical-align:baseline}
 html.sol-pc-quiz #viewQuizPlay .quiz-mask-word.pc-keyboard-hidden .mask-layer{opacity:1}
 html.sol-pc-quiz #viewQuizPlay .quiz-mask-word.pc-keyboard-hidden .real-layer{opacity:0}
+.pc-quiz-feedback{position:fixed;transform:translate(-50%,-50%);font:900 140px/1 sans-serif;opacity:0;pointer-events:none;z-index:9999}
+.pc-quiz-feedback-show{animation:pc-quiz-feedback-flash 180ms ease-out both}
+@keyframes pc-quiz-feedback-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.85)}15%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.12)}}
 #pcQuizSettingsDialog{box-sizing:border-box;width:min(510px,94vw);max-height:90dvh;overflow:auto;border:1px solid #adb5bd;border-radius:12px;padding:22px;color:#212529;background:#fff}
 #pcQuizSettingsDialog::backdrop{background:#0008}
 #pcQuizSettingsDialog h2{font-size:19px;margin:0 0 8px}
