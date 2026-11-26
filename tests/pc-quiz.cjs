@@ -1,5 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const root=__dirname+'/../',html=fs.readFileSync(root+'index.html','utf8'),script=fs.readFileSync(root+'pc-quiz-controls.js','utf8');
+const speechSource=fs.readFileSync(root+'speech-settings.js','utf8');
 for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);
 function setup(options={}){
  const ids=new Map(),listeners=new Map(),windowListeners=[],timers=[],storage=options.storage||new Map(),writes=[],history=[],messages=[],renderStates=[];
@@ -48,7 +49,10 @@ function setup(options={}){
  SolTTS:{stop(){},prepare(){renderStates.push({transition:card.style.transition,animation:card.style.animation});}},updateWord:async q=>writes.push({...q}),recordStudyHistory:async(id,result)=>history.push({id,result}),updateFavoriteBtnUI(){},updateMediaSessionMetadata(){},alert(){},showToast:message=>messages.push(message),enterBrowserModeView(){c.isBrowserModeActive=true;},endQuiz(){c.ended=true;view.classList.remove('active');},setTimeout:fn=>{timers.push(fn);return timers.length;}};
  c.addEventListener=(name,fn,options)=>windowListeners.push({name,fn,capture:options===true||!!options?.capture});
  c.playManualTTS=()=>{c.readCount=(c.readCount||0)+1;};
+ c.bmConfig={speedBack:.85,voiceBack:'F1',parenthesesBack:options.omitExisting?'omit':'include'};c.speeches=[];c.unlockAudioAndTTS=()=>{c.unlockCount=(c.unlockCount||0)+1;};c.SolTTS.config={voice:'M1'};c.SolTTS.speak=async(text,lang,rate,options)=>{c.readCount=(c.readCount||0)+1;c.speeches.push({text,lang,rate,options});};
  c.self=c;c.window=c;if(options.native)c.AndroidHost={};vm.createContext(c);
+ vm.runInContext(speechSource.slice(speechSource.indexOf(' function voice('),speechSource.indexOf(' function normalize(')),c);
+ vm.runInContext(speechSource.slice(speechSource.indexOf(' function text('),speechSource.indexOf(' function save(')),c);c.SolSpeech={text:c.text,voice:c.voice};
  const extract=(start,end)=>html.slice(html.indexOf(start),html.indexOf(end,html.indexOf(start)));
  vm.runInContext(extract('    function renderMaskedText(','    function updateFavoriteBtnUI('),c);
  vm.runInContext(extract('    function renderCurrentQuestion(','    function toggleEditCard('),c);
@@ -80,6 +84,14 @@ const check=(value,message)=>{assert.ok(value,message);console.log('PASS '+messa
  check(a.masks()[0]===first&&first.classList.contains('revealed'),'saving appearance settings preserves already opened masks');
  check(first.querySelectorAll('.pc-quiz-slash').length===4&&a.front.textContent==='나는 / 집에 간다.','slash styling preserves original text and uses identical markup for mask and answer');
  const b=setup({storage:a.storage});check(b.c.SolPCQuiz.settings.backSize===21&&b.c.SolPCQuiz.settings.slashSize===70,'PC appearance preferences persist after reopening');
+ const speech=setup(),sentence='I (really (truly)) read （quietly） books.',autoSettings=JSON.stringify(speech.c.bmConfig);speech.c.quizQueue[0].english=sentence;speech.c.renderCurrentQuestion();const masksBefore=speech.masks();
+ speech.c.SolPCQuiz.openSettings();speech.ids.get('pcQuiz-readParentheses').checked=false;speech.ids.get('pcQuizSettingsSave').onclick();await speech.c.playManualTTS();speech.key('ArrowDown');await settle();
+ check(speech.c.speeches.length===2&&speech.c.speeches.every(s=>s.text==='I read books.'),'the reading button and down arrow both omit nested and full-width parentheses when unchecked');
+ check(speech.c.speeches.every(s=>s.lang==='en-US'&&s.rate===.85&&s.options.voice==='F1')&&JSON.stringify(speech.c.bmConfig)===autoSettings,'manual parentheses preference keeps selected voice, speed and automatic reading settings');
+ check(speech.c.quizQueue[0].english===sentence&&speech.masks()[0]===masksBefore[0],'speech-only omission preserves the original sentence and current masks');
+ const reopened=setup({storage:speech.storage});reopened.c.quizQueue[0].english=sentence;await reopened.c.playManualTTS();check(reopened.c.SolPCQuiz.settings.readParentheses===false&&reopened.c.speeches[0].text==='I read books.','the manual reading checkbox remains saved after reopening');
+ speech.c.SolPCQuiz.openSettings();speech.ids.get('pcQuiz-readParentheses').checked=true;speech.ids.get('pcQuizSettingsSave').onclick();await speech.c.playManualTTS();speech.key('ArrowDown');await settle();check(speech.c.speeches.slice(-2).every(s=>s.text===sentence),'checking the option restores parentheses for both reading controls');
+ check(setup({omitExisting:true}).c.SolPCQuiz.settings.readParentheses===false,'first use respects the existing reading preference');
  a.key('PageDown');check(a.c.currentQIdx===1&&a.writes.length===0&&a.history.length===0&&a.c.quizQueue[0].score===0,'PageDown moves past a partly masked card without grading');
  a.key('PageUp');check(a.c.currentQIdx===0&&a.writes.length===0&&a.history.length===0,'PageUp moves past a fully masked card without grading');
  for(const unit of a.masks())unit.onclick({stopPropagation(){}});a.key('PageDown');for(const unit of a.masks())unit.onclick({stopPropagation(){}});a.key('PageUp');check(a.c.currentQIdx===0&&a.writes.length===0&&a.history.length===0,'PageUp and PageDown also leave fully revealed cards ungraded');
