@@ -11,5 +11,5 @@ async function request(path){let promise;listeners.get('fetch')({request:new Req
  let response=await request('pc-quiz-controls.js?v=4');assert.equal(await response.text(),'fresh controls');assert.equal(requests.at(-1).cache,'no-cache');console.log('PASS online PC controls replace cached code before it can handle keys');
  online=false;response=await request('pc-quiz-controls.js?v=4');assert.equal(await response.text(),'fresh controls');console.log('PASS the exact cached controls version still works offline');
  response=await request('pc-quiz-controls.js?v=5');assert.equal(response.status,503);console.log('PASS offline loading never substitutes controls from a different version');
- assert.ok(html.includes("script.src='./pc-quiz-controls.js?v=4'"));assert.ok(!html.includes("script.src='./pc-quiz.js"));assert.ok(source.includes("'./pc-quiz-controls.js?v=4'"));console.log('PASS the current version and new filename bypass stale controls');
+ const versionedScript=html.match(/script\.src='(\.\/pc-quiz-controls\.js\?v=\d+)'/)[1];assert.ok(!html.includes("script.src='./pc-quiz.js"));assert.ok(source.includes("'"+versionedScript+"'"));console.log('PASS the current version and new filename bypass stale controls');
 })().catch(error=>{console.error(error);process.exitCode=1});

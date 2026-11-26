@@ -22,8 +22,8 @@
 (function(){
  const n=navigator,u=n.userAgent||'';
  if(window.AndroidHost||n.userAgentData?.mobile||/Android|iPhone|iPad|iPod|Mobile/i.test(u)||(n.platform==='MacIntel'&&n.maxTouchPoints>1))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='./pc-quiz.css?v=3';
- const script=document.createElement('script');script.src='./pc-quiz-controls.js?v=4';
+ const css=document.createElement('link');css.rel='stylesheet';css.href='./pc-quiz.css?v=4';
+ const script=document.createElement('script');script.src='./pc-quiz-controls.js?v=5';
  document.head.append(css,script);
 })();
 </script>

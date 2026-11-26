@@ -1,8 +1,8 @@
 importScripts('./tts-assets.js');
-const SHELL = 'solmate-shell-v29';
+const SHELL = 'solmate-shell-v30';
 const ROOT = new URL('./', self.location.href);
 const XLSX = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-const FILES = ['./pc-quiz-controls.js?v=4', './pc-quiz.css?v=3', './default-files.js?v=1', './default-files.css?v=1', './default-files.json', './pwa-install.js?v=1', './pwa-install.css?v=1', './icons/favicon-16.png', './icons/favicon-32.png', './icons/favicon.ico', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png', './reading-mode.js?v=1', './reading-mode.css?v=1', './mp3-files.js?v=2', './speech-settings.js', './', './index.html', './mp3-export.js?v=6', './mp3-export.css?v=4', './mp3-worker.js?v=3', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
+const FILES = ['./pc-quiz-controls.js?v=5', './pc-quiz.css?v=4', './default-files.js?v=1', './default-files.css?v=1', './default-files.json', './pwa-install.js?v=1', './pwa-install.css?v=1', './icons/favicon-16.png', './icons/favicon-32.png', './icons/favicon.ico', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png', './reading-mode.js?v=1', './reading-mode.css?v=1', './mp3-files.js?v=2', './speech-settings.js', './', './index.html', './mp3-export.js?v=6', './mp3-export.css?v=4', './mp3-worker.js?v=3', './vendor/lame.min.js', './vendor/fflate.js', './vendor/soundtouch.js', './vendor/franc.mjs', './tts-assets.js', './native.js', './tts.js', './round.js', './tts-worker.js', './supertonic-core.js', './manifest.webmanifest', './SUPERTONIC-LICENSE.txt', './SUPERTONIC-MODEL-LICENSE.txt', XLSX];
 self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const cache = await caches.open(SHELL);

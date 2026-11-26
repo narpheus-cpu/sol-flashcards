@@ -16,6 +16,12 @@
   document.documentElement.classList.add('sol-pc-quiz');
   const actions=document.createElement('div');actions.className='pc-quiz-header-actions';edit.replaceWith(actions);actions.append(edit);
   const button=document.createElement('button');button.id='pcQuizSettingsButton';button.type='button';button.textContent='설정';button.setAttribute('aria-haspopup','dialog');actions.append(button);
+  const navRow=view.querySelector('.nav-btn-row');
+  if(navRow){
+   const shortcuts=document.createElement('p');shortcuts.className='pc-quiz-shortcuts';shortcuts.setAttribute('role','note');
+   shortcuts.textContent='PageUp: 이전 카드 · PageDown: 다음 카드 (둘 다 채점 없음)\n→: 마스킹 한 묶음 열기 · ←: 최근에 연 묶음 닫기\nEnter: 모두 열었을 때 정답·다음 · ↑: 오답·다음 · ↓: 낭독';
+   navRow.after(shortcuts);
+  }
   const dialog=document.createElement('dialog');dialog.id='pcQuizSettingsDialog';dialog.setAttribute('aria-labelledby','pcQuizSettingsTitle');
   const field=(name,label,step)=>'<label for="pcQuiz-'+name+'">'+label+'<input id="pcQuiz-'+name+'" type="number" min="'+limits[name][0]+'" max="'+limits[name][1]+'" step="'+step+'" required></label>';
   dialog.innerHTML='<h2 id="pcQuizSettingsTitle">PC 퀴즈 화면 설정</h2><p>마스킹 글자도 해당 열의 글꼴 크기에 맞춰 함께 조절됩니다.</p>'+
