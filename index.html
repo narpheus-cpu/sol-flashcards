@@ -18,6 +18,15 @@
 <script src="./default-files.js?v=1" defer></script>
 <script src="./pwa-install.js?v=1" defer></script>
 <meta name="application-name" content="솔메이트">
+<script>
+(function(){
+ const n=navigator,u=n.userAgent||'';
+ if(window.AndroidHost||n.userAgentData?.mobile||/Android|iPhone|iPad|iPod|Mobile/i.test(u)||(n.platform==='MacIntel'&&n.maxTouchPoints>1))return;
+ const css=document.createElement('link');css.rel='stylesheet';css.href='./pc-quiz.css?v=1';
+ const script=document.createElement('script');script.src='./pc-quiz.js?v=1';
+ document.head.append(css,script);
+})();
+</script>
 <script>if(!window.AndroidHost&&"serviceWorker"in navigator){let reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!reloaded){reloaded=true;location.reload();}});}</script>
 <meta name="apple-mobile-web-app-title" content="솔메이트">
     <!-- 엑셀/텍스트 파싱 라이브러리 -->
@@ -1354,5 +1363,4 @@
 </script>
 </body>
 </html>
-
 
